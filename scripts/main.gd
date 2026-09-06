@@ -29,6 +29,7 @@ var _output_media: MediaObject  # 当前输出端播放的媒体对象（null = 
 var _thumb_cache := {}  # 媒体路径 -> ImageTexture
 var _project_cache_dir := ""  # 当前项目的 X_cache/ 目录（无项目时为空）
 var _pending_ppt_preview := ""  # 等待转换完成后自动预览的 pptx 路径
+var _pending_ppt_output := ""  # 等待转换完成后直接在输出端起播的 pptx 路径（卡片「播放」）
 var _status_timer := 0.0
 var _project_name := ProjectStore.DEFAULT_PROJECT_NAME
 var _project_path := ""
@@ -605,6 +606,8 @@ func _on_pptx_convert_done(ok: bool, out_path: String, page_count: int) -> void:
 		if _pending_ppt_preview == m.path:
 			_pending_ppt_preview = ""
 			_preview_label.text = "PPT 转换失败\n" + m.display_name()
+		if _pending_ppt_output == m.path:
+			_pending_ppt_output = ""
 		return
 	if page_count > 0 and m.page_count != page_count:
 		m.page_count = page_count
@@ -616,6 +619,13 @@ func _on_pptx_convert_done(ok: bool, out_path: String, page_count: int) -> void:
 		_preview.load_slides(out_path, m.page_count, 0, m.path)
 		_preview.set_view_transform(m.scale, m.offset())
 		_schedule_ppt_cover_grab(m)
+	# 卡片「播放」触发的转换：完成后直接在输出端 + 投屏窗口起播
+	if _pending_ppt_output == m.path:
+		_pending_ppt_output = ""
+		_output_media = m
+		_output.load_slides(out_path, m.page_count, 0, m.path)
+		_apply_output_media_prefs()
+		_show_cast_window()
 
 
 ## PPT 封面：预览加载缓存 HTML 后第 2 秒从浏览器纹理抓第一页画面
@@ -663,8 +673,50 @@ func _on_card_preview(card: MediaItemCard) -> void:
 func _on_card_push(card: MediaItemCard) -> void:
 	if not card.media.is_playable():
 		return
-	_on_card_preview(card)
-	_on_quick_switch_pressed()
+	# 卡片「播放」= 直接送输出端 + 投屏窗口播放，不经过预览端
+	_load_output(card.media)
+
+
+## 直接加载到输出端（从开头自动播放）：视频/音频走 mpv，图片走静态纹理，
+## 网页走 CEF，PPT 走缓存 HTML（无缓存时后台转换，完成自动起播）
+func _load_output(m: MediaObject) -> void:
+	_output_media = m
+	match m.type:
+		MediaObject.Type.IMAGE:
+			_output.load_static(m.path)
+		MediaObject.Type.HTML:
+			_output.load_web(m.path)
+		MediaObject.Type.PPT:
+			var html := _pptx_html_for(m)
+			if html.is_empty():
+				_pending_ppt_output = m.path
+				var card := _find_card(m.path)
+				if card != null:
+					card.set_converting(true)
+				_pptx_converter.convert(m.path)
+				return  # 转换完成后由 _on_pptx_convert_done 起播
+			_output.load_slides(html, m.page_count, 0, m.path)
+		_:
+			_output.load_media(m.path, true, 0.0)
+	_apply_output_media_prefs()
+	_show_cast_window()
+
+
+## 输出端加载媒体后的统一收尾：条目级循环/静音偏好（静音与全局开关为或关系）、
+## 画面变换、投屏画面变换；音频无画面时显示 ♪ 符号
+func _apply_output_media_prefs() -> void:
+	if _output_media == null:
+		return
+	_output.set_looping(_output_media.loop)
+	_output.set_muted(_output_muted_state())
+	_refresh_audio_ui()
+	_output.set_view_transform(_output_media.scale, _output_media.offset())
+	_apply_settings()  # 投屏画面变换 = 全局缩放/平移 × 条目缩放/偏移
+	if _output_media.type == MediaObject.Type.AUDIO:
+		%OutputVideoView.visible = false
+		%OutputScreenLabel.text = "♪ " + _output_media.display_name()
+		%OutputScreenLabel.visible = true
+		_cast_video_view.visible = false
 
 
 func _on_card_settings(card: MediaItemCard) -> void:
@@ -790,19 +842,7 @@ func _on_quick_switch_pressed() -> void:
 		_output.load_slides(html, _output_media.page_count, int(state.get("page", 0)), path)
 	else:
 		_output.load_media(path, bool(state["playing"]), float(state["time_pos"]))
-	if _output_media != null:
-		# 条目级循环/静音偏好推送到输出端（静音与全局声音开关为或关系）
-		_output.set_looping(_output_media.loop)
-		_output.set_muted(_output_muted_state())
-		_refresh_audio_ui()
-		_output.set_view_transform(_output_media.scale, _output_media.offset())
-		_apply_settings()  # 投屏画面变换 = 全局缩放/平移 × 条目缩放/偏移
-	# 音频没有画面：输出端同样隐藏视频视图并显示播放符号
-	if _output_media != null and _output_media.type == MediaObject.Type.AUDIO:
-		%OutputVideoView.visible = false
-		%OutputScreenLabel.text = "♪ " + _output_media.display_name()
-		%OutputScreenLabel.visible = true
-		_cast_video_view.visible = false
+	_apply_output_media_prefs()  # 条目级循环/静音/画面变换推送到输出端
 	_show_cast_window()
 
 
