@@ -1,0 +1,514 @@
+[gd_scene format=3 uid="uid://dxfurqqwqawst"]
+
+[ext_resource type="Theme" uid="uid://cr6h2asd0je3b" path="res://ui/theme.tres" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://bubk361wtf7so" path="res://scripts/main.gd" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://d6k0gkntp2y6" path="res://scripts/settings_window.gd" id="3_h2yge"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0xm2m"]
+bg_color = Color(0.0667, 0.0784, 0.098, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
+bg_color = Color(0.0667, 0.0784, 0.098, 1)
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
+bg_color = Color(0.0353, 0.0431, 0.0549, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lquwl"]
+bg_color = Color(0.0353, 0.0431, 0.0549, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_272bh"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+bg_color = Color(0.0588, 0.0706, 0.0902, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
+bg_color = Color(0.0667, 0.0784, 0.098, 1)
+border_width_top = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+
+[node name="MainWindow" type="PanelContainer" unique_id=1541358816]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_ig7tw")
+theme_override_styles/panel = SubResource("StyleBoxFlat_0xm2m")
+script = ExtResource("2_0xm2m")
+
+[node name="RootVBox" type="VBoxContainer" parent="." unique_id=1161101272]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="MenuBar" type="PanelContainer" parent="RootVBox" unique_id=814525627]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_h2yge")
+
+[node name="MenuMargin" type="MarginContainer" parent="RootVBox/MenuBar" unique_id=1855282670]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="MenuHBox" type="HBoxContainer" parent="RootVBox/MenuBar/MenuMargin" unique_id=142715658]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MenuFile" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=223655072]
+unique_name_in_owner = true
+layout_mode = 2
+text = "文件"
+
+[node name="MenuWindow" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=2101645290]
+unique_name_in_owner = true
+layout_mode = 2
+text = "窗口"
+
+[node name="MenuSettings" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=778198550]
+unique_name_in_owner = true
+layout_mode = 2
+text = "设置"
+
+[node name="MenuHelp" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=536627899]
+unique_name_in_owner = true
+layout_mode = 2
+text = "帮助"
+
+[node name="MainContent" type="MarginContainer" parent="RootVBox" unique_id=673106860]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="MainHBox" type="HBoxContainer" parent="RootVBox/MainContent" unique_id=1233154046]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MainLeft" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox" unique_id=98044273]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PlayersSection" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft" unique_id=2008513137]
+custom_minimum_size = Vector2(0, 310)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewPlayer" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection" unique_id=2005433384]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PreviewVBox" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer" unique_id=2054149145]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewHeader" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=2127850067]
+layout_mode = 2
+
+[node name="PreviewTitle" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewHeader" unique_id=1890253301]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "预览播放器"
+
+[node name="PreviewScreen" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=2074223818]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1bvp3")
+
+[node name="PreviewScreenLabel" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreen" unique_id=1081432917]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3608, 0.4039, 0.4706, 1)
+text = "未加载预览媒体"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VideoView" type="TextureRect" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreen" unique_id=939304378]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PreviewControls" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1839191732]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PreviewButtons" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1680052939]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PreviewPlay" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=15278169]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶"
+
+[node name="PreviewStop" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=160637239]
+unique_name_in_owner = true
+layout_mode = 2
+text = "■"
+
+[node name="PreviewProgress" type="HSlider" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1306791199]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 0.1
+editable = false
+
+[node name="PreviewTime" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1476090968]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4431, 0.4941, 0.5686, 1)
+theme_override_font_sizes/font_size = 12
+text = "00:00 / 00:00"
+
+[node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection" unique_id=363366299]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+text = "快速切换"
+
+[node name="OutputPlayer" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection" unique_id=58785956]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="OutputVBox" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer" unique_id=2740667]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OutputHeader" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox" unique_id=1385628]
+layout_mode = 2
+
+[node name="OutputTitle" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputHeader" unique_id=1693657217]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "输出播放器"
+
+[node name="OutputDetails" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputHeader" unique_id=1927900627]
+layout_mode = 2
+text = "详情"
+
+[node name="OutputScreen" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox" unique_id=1454429609]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_lquwl")
+
+[node name="OutputScreenLabel" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreen" unique_id=651427524]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3608, 0.4039, 0.4706, 1)
+text = "未加载输出媒体"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OutputVideoView" type="TextureRect" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreen" unique_id=745118987]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OutputControls" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox" unique_id=22644085]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="OutputButtons" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=629596362]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OutputPlay" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=80473041]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶"
+
+[node name="OutputStop" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=1525202474]
+unique_name_in_owner = true
+layout_mode = 2
+text = "■"
+
+[node name="OutputProgress" type="HSlider" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=1958909645]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 0.1
+editable = false
+
+[node name="OutputMute" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=1017476724]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "静音"
+text = "🔊"
+
+[node name="OutputTime" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=2121415499]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4431, 0.4941, 0.5686, 1)
+theme_override_font_sizes/font_size = 12
+text = "00:00 / 00:00"
+
+[node name="MediaPanel" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/MainLeft" unique_id=1645081064]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MediaVBox" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel" unique_id=1869273203]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MediaHeader" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox" unique_id=1190766219]
+layout_mode = 2
+
+[node name="MediaTitle" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox/MediaHeader" unique_id=271535463]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "媒体"
+
+[node name="AddFileButton" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox/MediaHeader" unique_id=503021764]
+unique_name_in_owner = true
+layout_mode = 2
+text = "添加文件"
+
+[node name="MediaDesc" type="Label" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox" unique_id=532759839]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 12
+text = "选择一个 MP4/H.264 文件开始验证同步播放。"
+autowrap_mode = 2
+
+[node name="MediaScroll" type="ScrollContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox" unique_id=2004433061]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_272bh")
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="MediaGrid" type="HFlowContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/MediaPanel/MediaVBox/MediaScroll" unique_id=1284114014]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="SidePanels" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox" unique_id=2055403929]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UtilityPanel" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/SidePanels" unique_id=849937805]
+layout_mode = 2
+
+[node name="UtilityVBox" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel" unique_id=889557225]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UtilityTitle" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel/UtilityVBox" unique_id=1859056847]
+layout_mode = 2
+text = "实用功能"
+
+[node name="UtilityButtons" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel/UtilityVBox" unique_id=267442567]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HideCastButton" type="Button" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel/UtilityVBox/UtilityButtons" unique_id=1584931370]
+unique_name_in_owner = true
+layout_mode = 2
+text = "隐藏投屏"
+
+[node name="RestartButton" type="Button" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel/UtilityVBox/UtilityButtons" unique_id=1659045481]
+unique_name_in_owner = true
+layout_mode = 2
+text = "重启软件"
+
+[node name="UtilityDesc" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/UtilityPanel/UtilityVBox" unique_id=277299369]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "主窗口输出播放器与投屏窗口共享同一解码实例与纹理，画面和声音完全一致。"
+autowrap_mode = 2
+
+[node name="AudioPanel" type="PanelContainer" parent="RootVBox/MainContent/MainHBox/SidePanels" unique_id=1132858405]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AudioVBox" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel" unique_id=594224731]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AudioTitle" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox" unique_id=1653412239]
+layout_mode = 2
+text = "音频控制"
+
+[node name="AudioDesc" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox" unique_id=1031981160]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "各端音量独立调节；静音开关在设置窗口。"
+autowrap_mode = 2
+
+[node name="AudioSliders" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox" unique_id=1300776366]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AudioOutputRow" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox/AudioSliders" unique_id=1568876912]
+layout_mode = 2
+
+[node name="AudioOutputLabel" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=33346520]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "输出"
+
+[node name="AudioOutputSlider" type="HSlider" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=688258318]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="AudioOutputValue" type="Label" parent="RootVBox/MainContent/MainHBox/SidePanels/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=986122294]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+text = "100"
+
+[node name="StatusBar" type="PanelContainer" parent="RootVBox" unique_id=1906594481]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_7mycd")
+
+[node name="StatusMargin" type="MarginContainer" parent="RootVBox/StatusBar" unique_id=1247083327]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="StatusHBox" type="HBoxContainer" parent="RootVBox/StatusBar/StatusMargin" unique_id=1742129392]
+layout_mode = 2
+alignment = 1
+
+[node name="StatusItems" type="HBoxContainer" parent="RootVBox/StatusBar/StatusMargin/StatusHBox" unique_id=177058428]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="StatusCpu" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox/StatusItems" unique_id=1863822912]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "本软件 CPU 0%"
+
+[node name="StatusGpu" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox/StatusItems" unique_id=907939924]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "GPU 0%"
+
+[node name="StatusMem" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox/StatusItems" unique_id=726678702]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "内存 38 MB"
+
+[node name="StatusPid" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox/StatusItems" unique_id=692256794]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "PID 25444"
+
+[node name="StatusSample" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox/StatusItems" unique_id=1387276835]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "采样 system-info-worker"
+
+[node name="StatusVersion" type="Label" parent="RootVBox/StatusBar/StatusMargin/StatusHBox" unique_id=404631302]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
+theme_override_font_sizes/font_size = 11
+text = "v0.1.1"
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=1189890964]
+unique_name_in_owner = true
+title = "Open File(s)"
+file_mode = 1
+access = 2
+filters = PackedStringArray("*.mp4,*.mkv,*.avi,*.mov,*.m4v,*.webm,*.flv,*.ts,*.wmv ; 视频文件", "*.mp3,*.wav,*.ogg,*.flac,*.aac,*.m4a,*.wma,*.opus ; 音频文件", "*.png,*.jpg,*.jpeg,*.webp,*.bmp,*.gif,*.tga ; 图片", "*.html,*.htm ; 网页", "*.ppt,*.pptx ; 演示文稿", "*.* ; 所有文件")
+use_native_dialog = true
+
+[node name="CastWindow" type="Window" parent="." unique_id=1285624469]
+unique_name_in_owner = true
+oversampling_override = 1.0
+title = "投屏输出"
+size = Vector2i(960, 540)
+visible = false
+borderless = true
+always_on_top = true
+
+[node name="CastVideoView" type="TextureRect" parent="CastWindow" unique_id=2106438678]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AboutDialog" type="AcceptDialog" parent="." unique_id=2042728291]
+unique_name_in_owner = true
+title = "关于"
+
+[node name="ProjectOpenDialog" type="FileDialog" parent="." unique_id=1416298285]
+unique_name_in_owner = true
+title = "Open a File"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.splproj ; ScreenPlayer 项目")
+use_native_dialog = true
+
+[node name="ProjectSaveDialog" type="FileDialog" parent="." unique_id=2093887285]
+unique_name_in_owner = true
+title = "项目另存为"
+access = 2
+filters = PackedStringArray("*.splproj ; ScreenPlayer 项目")
+use_native_dialog = true
+
+[node name="SettingsWindow" type="Window" parent="." unique_id=193637230]
+unique_name_in_owner = true
+oversampling_override = 1.0
+title = "设置"
+size = Vector2i(460, 480)
+visible = false
+transient = true
+script = ExtResource("3_h2yge")

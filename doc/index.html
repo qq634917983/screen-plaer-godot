@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScreenPlayer - Desktop Application</title>
+<style>
+    :root {
+        --bg-color: #111419;
+        --panel-bg: #181c23;
+        --text-primary: #d1d9e6;
+        --text-secondary: #8e99a8;
+        --accent-color: #3b82f6;
+        --border-color: #272d38;
+        --button-bg: #252b36;
+        --button-text: #c1cad9;
+        --player-bg: #090b0e;
+        --text-inactive: #5c6778;
+        --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: var(--text-primary);
+        font-family: var(--font-family);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* 主窗口框架 */
+    .app-window {
+        width: 1000px;
+        height: 670px;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* 菜单栏 */
+    .menu-bar {
+        height: 32px;
+        background-color: var(--bg-color);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        font-size: 13px;
+        color: var(--button-text);
+    }
+    .menu-bar > span {
+        margin-right: 20px;
+        cursor: pointer;
+    }
+
+    /* 核心区域：左右结构布局 */
+    .main-content {
+        flex: 1;
+        padding: 10px;
+        display: flex;
+        gap: 10px;
+        overflow: hidden;
+    }
+
+    /* 左侧内容区 (播放器 + 媒体列表) */
+    .main-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    /* 播放器双屏组合区域 */
+    .players-section {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 310px;
+    }
+
+    /* 单个播放器面板 */
+    .player-panel {
+        flex: 1;
+        height: 100%;
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 中间“快速切换”按钮区域 */
+    .quick-switch-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .quick-switch-btn {
+        background-color: var(--button-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 12px;
+        color: var(--button-text);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .quick-switch-btn:hover {
+        background-color: #2d3543;
+        color: #fff;
+    }
+
+    /* 通用面板头 */
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .panel-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .details-link {
+        font-size: 12px;
+        color: var(--button-text);
+        background: #252b36;
+        border: 1px solid var(--border-color);
+        padding: 2px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    /* 播放器黑框与控件 */
+    .player-screen {
+        flex: 1;
+        background-color: var(--player-bg);
+        border-radius: 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-inactive);
+        font-size: 13px;
+    }
+
+    .player-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #717e91;
+    }
+
+    .controls-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .progress-bar-wrap {
+        flex: 1;
+        height: 3px;
+        background-color: #31394a;
+        margin: 0 10px;
+        position: relative;
+        border-radius: 2px;
+    }
+    .progress-bar-wrap::after {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: -3px;
+        width: 8px;
+        height: 8px;
+        background-color: #fff;
+        border-radius: 50%;
+    }
+
+    /* 媒体文件列表面板 */
+    .media-panel {
+        flex: 1;
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .add-file-btn {
+        background-color: var(--button-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 4px 12px;
+        font-size: 12px;
+        color: var(--button-text);
+        cursor: pointer;
+    }
+
+    .media-content {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* 右侧侧边栏 (side-panels) */
+    .side-panels {
+        width: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* 实用功能面板 */
+    .utility-panel {
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 12px;
+    }
+
+    .util-btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 12px 0;
+    }
+
+    .action-btn {
+        background-color: var(--button-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 13px;
+        color: var(--text-primary);
+        text-align: center;
+        cursor: pointer;
+    }
+    .action-btn:hover {
+        background-color: #2e3644;
+    }
+
+    .panel-desc {
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* 音频控制面板 */
+    .audio-panel {
+        flex: 1;
+        background-color: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 12px;
+    }
+
+    /* 底部状态栏 */
+    .status-bar {
+        height: 24px;
+        background-color: var(--bg-color);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+
+    .status-items {
+        display: flex;
+        gap: 15px;
+    }
+</style>
+</head>
+<body>
+
+    <div class="app-window">
+        <!-- 菜单栏 -->
+        <div class="menu-bar">
+            <span>文件</span>
+            <span>窗口</span>
+            <span>设置</span>
+            <span>帮助</span>
+        </div>
+
+        <!-- 主内容区域（左右结构） -->
+        <div class="main-content">
+            
+            <!-- 左侧内容区：播放器组 + 媒体列表 -->
+            <div class="main-left">
+                <!-- 播放器组（预览 + 切换 + 输出） -->
+                <div class="players-section">
+                    <!-- 预览播放器 -->
+                    <div class="player-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">预览播放器</span>
+                            <span class="details-link">详情</span>
+                        </div>
+                        <div class="player-screen">未加载输出媒体</div>
+                        <div class="player-controls">
+                            <div class="controls-group">
+                                <span>▶</span>
+                                <span>🔄</span>
+                                <span>■</span>
+                            </div>
+                            <div class="progress-bar-wrap"></div>
+                            <span>00:00 / 00:00</span>
+                        </div>
+                    </div>
+
+                    <!-- 快速切换按钮 -->
+                    <div class="quick-switch-box">
+                        <button class="quick-switch-btn">快速切换</button>
+                    </div>
+
+                    <!-- 输出播放器 -->
+                    <div class="player-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">输出播放器</span>
+                            <span class="details-link">详情</span>
+                        </div>
+                        <div class="player-screen">未加载输出媒体</div>
+                        <div class="player-controls">
+                            <div class="controls-group">
+                                <span>▶</span>
+                                <span>🔄</span>
+                                <span>■</span>
+                            </div>
+                            <div class="progress-bar-wrap"></div>
+                            <div class="controls-group">
+                                <span>🔊</span>
+                                <span>00:00 / 00:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 媒体列表面板 -->
+                <div class="media-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">媒体</span>
+                        <button class="add-file-btn">添加文件</button>
+                    </div>
+                    <div class="media-content">
+                        选择一个 MP4/H.264 文件开始验证同步播放。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧侧边栏（side-panels） -->
+            <div class="side-panels">
+                <!-- 实用功能 -->
+                <div class="utility-panel">
+                    <div class="panel-title">实用功能</div>
+                    <div class="util-btn-group">
+                        <div class="action-btn">隐藏投屏</div>
+                        <div class="action-btn">重启软件</div>
+                    </div>
+                    <p class="panel-desc">主窗口输出播放器与投屏窗口分别播放同一个 streamUrl，后端只同步播放状态。</p>
+                </div>
+
+                <!-- 音频控制 -->
+                <div class="audio-panel">
+                    <div class="panel-title">音频控制</div>
+                    <p class="panel-desc" style="margin-top: 10px;">Phase 1 暂不实现音频控制台。</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 底部状态栏 -->
+        <div class="status-bar">
+            <div class="status-items">
+                <span>本软件 CPU 0%</span>
+                <span>GPU 0%</span>
+                <span>内存 38 MB</span>
+                <span>PID 25444</span>
+                <span>采样 system-info-worker</span>
+            </div>
+            <div>v0.1.1</div>
+        </div>
+    </div>
+
+</body>
+</html>

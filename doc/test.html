@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HTML 播放器综合测试页</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#0b0d12;color:#e8eaf0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  body{padding:10px;overflow:hidden}
+  h1{margin:0 0 2px;font-size:19px}
+  .sub{color:#9298a6;font-size:11px;margin-bottom:8px}
+  .layout{max-width:1600px;margin:auto;height:calc(100vh - 20px);display:flex;flex-direction:column}
+  .content{flex:1;min-height:0}
+  .card{background:#151821;border:1px solid #292e3a;border-radius:9px;padding:10px}
+  .video-wrap{position:relative;background:#000;border-radius:7px;overflow:hidden;aspect-ratio:16/9;max-height:calc(100vh - 220px)}
+  video{width:100%;height:100%;display:block;background:#000}
+  .controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  button,input,select{background:#202531;color:#e8eaf0;border:1px solid #363d4c;border-radius:7px;padding:7px 9px}
+  button{cursor:pointer} button:hover{background:#2a3140}
+  input[type=range]{padding:0;width:130px}
+  .time{font-variant-numeric:tabular-nums;color:#b9beca}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .test{padding:11px;background:#10131a;border:1px solid #272c37;border-radius:8px}
+  .test b{display:block;margin-bottom:6px}
+  .ok{color:#67e08a}.warn{color:#f1c75b}.bad{color:#ff7070}
+  .log{height:210px;overflow:auto;background:#090b10;border-radius:8px;padding:9px;font:12px ui-monospace,monospace;white-space:pre-wrap}
+  .stage{height:230px;position:relative;overflow:hidden;border-radius:8px;background:
+    linear-gradient(90deg,transparent 49.5%,#242936 50%,transparent 50.5%),
+    linear-gradient(0deg,transparent 49.5%,#242936 50%,transparent 50.5%),#0c1017}
+  .ball{position:absolute;width:44px;height:44px;border-radius:50%;background:#fff;left:10px;top:10px;animation:bounce 2s infinite alternate ease-in-out}
+  @keyframes bounce{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(280px,150px) rotate(720deg)}}
+  .pulse{width:70px;height:70px;margin:20px auto;border-radius:50%;background:#7b61ff;animation:pulse 1.2s infinite}
+  @keyframes pulse{50%{transform:scale(1.45);opacity:.35}}
+  .marquee{white-space:nowrap;overflow:hidden;border:1px solid #303645;padding:8px}
+  .marquee span{display:inline-block;animation:marquee 5s linear infinite}
+  @keyframes marquee{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+  .stat{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}
+  .stat div{background:#10131a;padding:7px;border-radius:6px}
+  code{color:#c7d0ff}
+
+  .tabs{display:flex;gap:5px;overflow-x:auto;padding:5px 0 7px;flex:none}
+  .tab{padding:6px 11px;font-size:12px;border-radius:7px;white-space:nowrap}
+  .tab.active{background:#3a4355;border-color:#59657a}
+  .panel{display:none;height:100%;overflow:auto}
+  .panel.active{display:block}
+  .player-card{height:100%;display:flex;flex-direction:column}
+  .player-card .video-wrap{flex:1;min-height:180px;max-height:none;aspect-ratio:16/9;margin:auto;width:min(100%,calc((100vh - 190px)*1.777))}
+  .player-card .controls{flex:none}
+  .animation-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .animation-grid .card{min-width:0}
+
+  @media(max-width:700px){.animation-grid{grid-template-columns:1fr}.controls{font-size:11px}input[type=range]{width:90px}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <header>
+    <h1>HTML 播放器综合测试页</h1>
+    <div class="sub">单屏布局 · 页面过高时使用 Tab 切换 · Video / Audio / 动画 / API / 事件日志</div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="player">🎬 播放器</button>
+    <button class="tab" data-tab="animation">🎨 动画</button>
+    <button class="tab" data-tab="audio">🎵 音频</button>
+    <button class="tab" data-tab="status">📊 状态</button>
+    <button class="tab" data-tab="api">🧪 API 检查</button>
+    <button class="tab" data-tab="logtab">📋 事件日志</button>
+  </nav>
+
+  <div class="content">
+    <section id="player" class="panel active">
+      <div class="card player-card">
+        <div class="video-wrap">
+          <video id="video" controls playsinline preload="metadata"
+            poster="https://interactive-examples.mdn.mozilla.net/media/cc0-images/flower.jpg"
+            crossorigin="anonymous">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+            <track kind="subtitles" srclang="zh" label="中文测试字幕" default
+              src="data:text/vtt;charset=utf-8,WEBVTT%0A%0A00%3A00.000%20--%3E%2000%3A03.000%0A%E5%AD%97%E5%B9%95%E6%B5%8B%E8%AF%95%EF%BC%9A%E8%BF%99%E6%98%AF%E4%B8%80%E4%B8%AA%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E6%B5%8B%E8%AF%95%E3%80%82">
+          </video>
+        </div>
+        <div class="controls">
+          <button id="play">▶ 播放</button><button id="mute">🔊 静音</button>
+          <button id="back">-10s</button><button id="forward">+10s</button>
+          <label>音量 <input id="volume" type="range" min="0" max="1" step=".01" value="1"></label>
+          <label>倍速 <select id="rate"><option>.25</option><option>.5</option><option selected>1</option><option>1.25</option><option>1.5</option><option>2</option><option>4</option></select></label>
+          <button id="pip">画中画</button><button id="fs">全屏</button>
+          <span class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
+          <input id="seek" type="range" min="0" max="100" value="0" style="flex:1;min-width:120px">
+        </div>
+      </div>
+    </section>
+
+    <section id="animation" class="panel">
+      <div class="grid animation-grid">
+        <div class="card">
+          <h3>CSS / DOM 动画</h3>
+          <div class="stage"><div class="ball"></div></div>
+        </div>
+        <div class="card">
+          <h3>常见动画属性</h3>
+          <div class="test"><b>Pulse</b><div class="pulse"></div></div>
+          <div class="test"><b>Marquee</b><div class="marquee"><span>animation / transform / opacity / overflow 测试文字 → → →</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="audio" class="panel">
+      <div class="card">
+        <h3>独立 Audio 测试</h3>
+        <audio id="audio" controls preload="metadata">
+          <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3" type="audio/mpeg">
+        </audio>
+        <p class="sub">测试独立 Audio、音量、暂停、进度和事件。</p>
+      </div>
+    </section>
+
+    <section id="status" class="panel">
+      <div class="card">
+        <h3>播放器实时状态</h3>
+        <div class="stat">
+          <div>readyState: <code id="ready">-</code></div><div>networkState: <code id="network">-</code></div>
+          <div>paused: <code id="paused">-</code></div><div>ended: <code id="ended">-</code></div>
+          <div>buffered: <code id="buffered">-</code></div><div>duration: <code id="duration">-</code></div>
+          <div>currentTime: <code id="ct">-</code></div><div>volume: <code id="vol">-</code></div>
+          <div>muted: <code id="muted">-</code></div><div>rate: <code id="rateState">-</code></div>
+          <div>videoWidth: <code id="vw">-</code></div><div>videoHeight: <code id="vh">-</code></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="api" class="panel">
+      <div class="card">
+        <h3>API / 特性检查</h3>
+        <div id="checks" class="test"></div>
+      </div>
+    </section>
+
+    <section id="logtab" class="panel">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0">事件日志</h3><button id="clear">清空</button>
+        </div>
+        <div id="log" class="log" style="margin-top:8px;height:calc(100vh - 175px)"></div>
+      </div>
+    </section>
+  </div>
+</div></div>
+
+<script>
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===tab.dataset.tab));
+  });
+});
+const v=document.getElementById('video'), a=document.getElementById('audio');
+const $=id=>document.getElementById(id);
+const logEl=$('log');
+const fmt=t=>{if(!Number.isFinite(t))return '--:--';t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+function log(e){logEl.textContent+=new Date().toLocaleTimeString()+`  ${e}\n`;logEl.scrollTop=logEl.scrollHeight}
+[
+'loadstart','durationchange','loadedmetadata','loadeddata','progress','canplay',
+'canplaythrough','play','playing','pause','timeupdate','seeking','seeked',
+'waiting','stalled','suspend','ratechange','volumechange','emptied','ended',
+'error','abort','resize','enterpictureinpicture','leavepictureinpicture'
+].forEach(e=>v.addEventListener(e,()=>{log(e);update()}));
+
+function update(){
+ $('ready').textContent=v.readyState;
+ $('network').textContent=v.networkState;
+ $('paused').textContent=v.paused;
+ $('ended').textContent=v.ended;
+ $('duration').textContent=Number.isFinite(v.duration)?v.duration.toFixed(2):'NaN';
+ $('ct').textContent=v.currentTime.toFixed(2);
+ $('vol').textContent=v.volume.toFixed(2);
+ $('muted').textContent=v.muted;
+ $('rateState').textContent=v.playbackRate;
+ $('vw').textContent=v.videoWidth||0;
+ $('vh').textContent=v.videoHeight||0;
+ $('buffered').textContent=v.buffered.length?Array.from({length:v.buffered.length},(_,i)=>`${v.buffered.start(i).toFixed(1)}-${v.buffered.end(i).toFixed(1)}`).join(', '):'none';
+ $('cur').textContent=fmt(v.currentTime);$('dur').textContent=fmt(v.duration);
+ $('seek').value=Number.isFinite(v.duration)&&v.duration?v.currentTime/v.duration*100:0;
+ $('play').textContent=v.paused?'▶ 播放':'⏸ 暂停';
+}
+$('play').onclick=()=>v.paused?v.play():v.pause();
+$('mute').onclick=()=>v.muted=!v.muted;
+$('back').onclick=()=>v.currentTime=Math.max(0,v.currentTime-10);
+$('forward').onclick=()=>v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
+$('volume').oninput=e=>v.volume=+e.target.value;
+$('rate').onchange=e=>v.playbackRate=+e.target.value;
+$('seek').oninput=e=>{if(Number.isFinite(v.duration))v.currentTime=v.duration*(+e.target.value/100)};
+$('fs').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await v.requestFullscreen()}catch(e){log('fullscreen error: '+e.message)}};
+$('pip').onclick=async()=>{try{if(document.pictureInPictureElement)await document.exitPictureInPicture();else await v.requestPictureInPicture()}catch(e){log('PiP error: '+e.message)}};
+$('clear').onclick=()=>logEl.textContent='';
+
+const tests=[
+ ['HTMLVideoElement','HTMLVideoElement' in window],
+ ['HTMLAudioElement','HTMLAudioElement' in window],
+ ['MediaSource','MediaSource' in window],
+ ['MediaCapabilities','mediaCapabilities' in navigator],
+ ['Fullscreen API','document.fullscreenEnabled'],
+ ['Picture-in-Picture','document.pictureInPictureEnabled'],
+ ['requestVideoFrameCallback','"requestVideoFrameCallback" in HTMLVideoElement.prototype],
+ ['TextTrack API','"textTracks" in HTMLMediaElement.prototype],
+ ['Media Session','"mediaSession" in navigator],
+ ['WebCodecs','"VideoDecoder" in window],
+ ['Web Audio','"AudioContext" in window || "webkitAudioContext" in window],
+ ['Canvas','"HTMLCanvasElement" in window],
+];
+$('checks').innerHTML=tests.map(x=>`<div class="${x[1]?'ok':'bad'}">${x[1]?'✓':'✗'} ${x[0]}</div>`).join('');
+
+setInterval(update,250); update(); log('page ready');
+</script>
+</body>
+</html>

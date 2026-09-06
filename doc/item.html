@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体播放器控制面板</title>
+    <!-- 引入 FontAwesome 图标库以模拟图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #333; /* 页面背景色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        .panel {
+            width: 500px;
+            background-color: #2b2b2b;
+            border: 2px solid #555; /* 外部边框保持深色 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background-color: #333;
+            color: #ddd;
+            padding: 8px 12px;
+            font-size: 18px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+        }
+
+        .title-num {
+            color: #5a9eff; /* 蓝色数字 */
+            margin-right: 8px;
+        }
+
+        /* 主显示区 - 16:9 比例 */
+        .display-area {
+            background-color: #000;
+            width: 100%;
+            aspect-ratio: 16 / 9; /* 强制 16:9 比例 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* 添加一条底边线与按钮区隔开 */
+            border-bottom: 2px solid #ccc; 
+        }
+
+        /* 十字准星 */
+        .crosshair {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: #fff;
+        }
+
+        .crosshair::before {
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair::after {
+            left: 0;
+            top: 50%;
+            height: 4px;
+            width: 100%;
+            transform: translateY(-50%);
+        }
+
+        /* 底部按钮区 - 修改为无缝网格 */
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0; /* 取消间隙 */
+            padding: 0; /* 取消内边距 */
+            background-color: #ccc; /* 设置背景色为亮线颜色，作为底层 */
+        }
+
+        .btn {
+            background-color: #5a5a5a; /* 按钮深色背景 */
+            border: none; /* 清除默认边框 */
+            outline: 1px solid #ccc; /* 使用 outline 添加亮色边框，避免双重边框变粗 */
+            outline-offset: -1px; /* 向内部缩进，确保线在网格内部 */
+            color: #fff;
+            padding: 12px 0;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #6a6a6a;
+        }
+
+        .btn:active {
+            background-color: #4a4a4a;
+        }
+
+        .btn i {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <!-- 标题栏 -->
+        <div class="header">
+            <span class="title-num">2</span>
+            <span>空白</span>
+        </div>
+
+        <!-- 16:9 黑色显示区与十字光标 -->
+        <div class="display-area">
+            <div class="crosshair"></div>
+        </div>
+
+        <!-- 按钮网格 (无缝连接，亮线分隔) -->
+        <div class="button-grid">
+            <button class="btn">
+                <i class="fa-solid fa-play"></i>
+                播放
+            </button>
+            <button class="btn">
+                <i class="fa-solid fa-volume-xmark"></i>
+                静音
+            </button>
+            <button class="btn">
+                <i class="fa-solid fa-rotate-right"></i>
+                循环
+            </button>
+            
+            <button class="btn">
+                <i class="fa-solid fa-desktop"></i>
+                预览
+            </button>
+            <button class="btn">
+                <i class="fa-solid fa-gear"></i>
+                设置
+            </button>
+            <button class="btn">
+                <i class="fa-solid fa-trash-can"></i>
+                删除
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

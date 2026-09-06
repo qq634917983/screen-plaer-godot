@@ -1,0 +1,102 @@
+[gd_resource type="Theme" format=3 uid="uid://cr6h2asd0je3b"]
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.145098, 0.168627, 0.211765, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.152941, 0.176471, 0.219608, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.176471, 0.207843, 0.262745, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.152941, 0.176471, 0.219608, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="itemlist_hovered"]
+bg_color = Color(0.145098, 0.168627, 0.211765, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="itemlist_panel"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+bg_color = Color(0.058824, 0.070588, 0.090196, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.152941, 0.176471, 0.219608, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="itemlist_selected"]
+bg_color = Color(0.231373, 0.509804, 0.965686, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="panel_default"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.094118, 0.109804, 0.137255, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.152941, 0.176471, 0.219608, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="SystemFont" id="font_default"]
+font_names = PackedStringArray("Microsoft YaHei", "Segoe UI Emoji", "Segoe UI Symbol", "PingFang SC", "Noto Sans CJK SC")
+
+[resource]
+default_font = SubResource("font_default")
+default_font_size = 13
+Button/colors/font_color = Color(0.756863, 0.792157, 0.85098, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/styles/focus = SubResource("btn_normal")
+Button/styles/hover = SubResource("btn_hover")
+Button/styles/normal = SubResource("btn_normal")
+Button/styles/pressed = SubResource("btn_normal")
+ItemList/colors/font_color = Color(0.556863, 0.6, 0.658824, 1)
+ItemList/colors/font_hovered_color = Color(0.819608, 0.85098, 0.901961, 1)
+ItemList/colors/font_selected_color = Color(1, 1, 1, 1)
+ItemList/font_sizes/font_size = 12
+ItemList/styles/hovered = SubResource("itemlist_hovered")
+ItemList/styles/panel = SubResource("itemlist_panel")
+ItemList/styles/selected = SubResource("itemlist_selected")
+ItemList/styles/selected_focus = SubResource("itemlist_selected")
+PanelContainer/styles/panel = SubResource("panel_default")
