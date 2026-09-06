@@ -159,20 +159,24 @@ layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PreviewPageButtons" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow" unique_id=42572335]
+[node name="PreviewPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen" unique_id=576092420]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="PreviewPagePrev" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewPageButtons" unique_id=1917258095]
+[node name="PreviewPagePrev" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen/PreviewPageButtons" unique_id=1917258095]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 8
 text = "<"
 
-[node name="PreviewPageNext" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewPageButtons" unique_id=879368641]
+[node name="PreviewPageNext" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen/PreviewPageButtons" unique_id=879368641]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 8
 text = ">"
 
 [node name="PreviewControls" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1839191732]
@@ -260,20 +264,24 @@ layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="OutputPageButtons" type="VBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow" unique_id=428420365]
+[node name="OutputPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen" unique_id=865733452]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="OutputPagePrev" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputPageButtons" unique_id=1312579814]
+[node name="OutputPagePrev" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen/OutputPageButtons" unique_id=1312579814]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 8
 text = "<"
 
-[node name="OutputPageNext" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputPageButtons" unique_id=553678009]
+[node name="OutputPageNext" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen/OutputPageButtons" unique_id=553678009]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 8
 text = ">"
 
 [node name="OutputControls" type="HBoxContainer" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/OutputPlayer/OutputVBox" unique_id=22644085]

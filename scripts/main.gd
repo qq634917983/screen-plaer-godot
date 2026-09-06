@@ -63,8 +63,8 @@ var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 @onready var _cast_video_view: TextureRect = %CastVideoView
 @onready var _preview_progress: HSlider = %PreviewProgress
 @onready var _output_progress: HSlider = %OutputProgress
-@onready var _preview_page_buttons: VBoxContainer = %PreviewPageButtons
-@onready var _output_page_buttons: VBoxContainer = %OutputPageButtons
+@onready var _preview_page_buttons: HBoxContainer = %PreviewPageButtons
+@onready var _output_page_buttons: HBoxContainer = %OutputPageButtons
 @onready var _output_mute_button: Button = %OutputMute
 @onready var _audio_output_slider: HSlider = %AudioOutputSlider
 @onready var _audio_output_value: Label = %AudioOutputValue
@@ -921,7 +921,7 @@ func _update_progress_ui() -> void:
 
 
 ## PPT 翻页按钮：仅 SLIDE 帧源显示；首页禁用 <，末页禁用 >（页数未知时不禁用）
-func _update_page_buttons(slot: PlayerSlot, container: VBoxContainer) -> void:
+func _update_page_buttons(slot: PlayerSlot, container: HBoxContainer) -> void:
 	var is_slide := slot.source_kind == PlayerSlot.SourceKind.SLIDE
 	if container.visible != is_slide:
 		container.visible = is_slide
