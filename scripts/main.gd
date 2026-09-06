@@ -15,6 +15,8 @@ extends PanelContainer
 const MediaItemCardScene := preload("res://scripts/media_item_card.gd")
 const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
+const TitleBarScript := preload("res://scripts/title_bar.gd")
+const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
@@ -32,6 +34,7 @@ var _project_name := ProjectStore.DEFAULT_PROJECT_NAME
 var _project_path := ""
 var _preview_dragging := false
 var _output_dragging := false
+var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -70,6 +73,15 @@ var _output_dragging := false
 
 
 func _ready() -> void:
+	# 无边框主窗口 + 自绘标题栏 + 手动边缘缩放：窗口拖动/缩放由代码逐帧完成，
+	# 不进入 Windows 的模态移动/缩放消息循环（该循环会冻结整个进程主循环），
+	# 因此拖动主窗口时播放与投屏画面不再中断
+	get_window().borderless = true
+	_title_bar = TitleBarScript.new()
+	$RootVBox.add_child(_title_bar)
+	$RootVBox.move_child(_title_bar, 0)
+	add_child(WindowResizerScript.new())
+
 	_preview = PlayerSlot.new()
 	_preview.name = "PreviewSlot"
 	add_child(_preview)
@@ -359,7 +371,9 @@ func _on_project_save_file_selected(path: String) -> void:
 
 
 func _update_title() -> void:
-	get_window().title = "ScreenPlayer — " + _project_name
+	var t := "ScreenPlayer — " + _project_name
+	get_window().title = t
+	_title_bar.set_title(t)
 
 
 # ---------- 媒体库（卡片式） ----------

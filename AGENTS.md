@@ -27,6 +27,13 @@
 
 - Phase 0-9、11-12 全部完成（doc/TODO.md）；Phase 10（播放体验增强：顺序播放 /
   网页缩放 / PPT 翻页快捷键）已立项待做
+- 无边框主窗口（解决拖动冻结）：Windows 拖动/缩放原生窗口会进入模态消息循环，
+  冻结整个进程主循环（mpv 音频在自己线程所以声音不停）。现主窗口
+  borderless + 自绘标题栏（scripts/title_bar.gd：代码逐帧移动窗口，拖动时
+  播放/投屏画面不中断；最小化/最大化/关闭按钮；双击标题栏最大化）+
+  手动边缘缩放（scripts/window_resizer.gd：边缘 6px 八向缩放，最小 1024×600）。
+  注意：无边框窗口的 mode 切换请求偶发被系统丢弃（TitleBar 有逐帧校验重试），
+  最大化还原后系统不恢复旧几何（靠持续记录的 _windowed_rect 手动写回）
 - Phase 12（卡片重构，参照 doc/item.html）：标题栏（蓝色序号+文件名+类型徽标）
   + 16:9 画面区 + 无缝 3×2 按钮网格（播放/静音/循环/预览/设置/删除）；
   静音/循环为条目级偏好（MediaObject.loop/muted，持久化），推送输出时应用，
@@ -109,6 +116,10 @@
   unique_name，脚本里用 `%Name` 引用；`%CastWindow` 为独立投屏窗口，
   内含 `%CastVideoView` TextureRect 共享输出纹理）
 - `scripts/main.gd` — 主逻辑（媒体库卡片 + 预览/输出两端调度 + 快速切换 + 项目管理）
+- `scripts/title_bar.gd` — 无边框主窗口自绘标题栏（逐帧拖动避开 Windows 模态
+  循环，最小化/最大化/关闭，mode 切换重试 + 窗口态几何记录）
+- `scripts/window_resizer.gd` — 无边框主窗口手动边缘缩放（边缘 6px 八向，
+  边缘点击 accept 事件避免与标题栏拖动冲突）
 - `scripts/media_object.gd` — MediaObject 媒体对象模型（类型推断 + 缩放/偏移
   属性 + 序列化；媒体库条目、项目持久化的数据单元）
 - `scripts/item_settings_window.gd` — ItemSettingsWindow 条目设置独立窗口
