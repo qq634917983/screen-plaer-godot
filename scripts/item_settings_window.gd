@@ -17,6 +17,11 @@ signal window_closed(path: String)
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 const WEB_VIEWPORT := Vector2(1280, 720)  # 与 PlayerSlot.WEB_VIEWPORT_SIZE 一致
 
+# 色板与 ui/theme.tres / MediaItemCard 一致
+const C_PANEL := Color(0.0941, 0.1098, 0.1373)    # 面板底（卡片/媒体库同形）
+const C_INSET := Color(0.0588, 0.0706, 0.0902)    # 内嵌深色区（ItemList 面板同色）
+const C_BORDER := Color(0.1529, 0.1765, 0.2196)   # 描边
+
 var media: MediaObject
 var cef: Node  # 全局 GdCEF 节点（main.gd 注入；无 gdcef 时预览区只显示提示）
 
@@ -71,7 +76,15 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_top", 14)
 	margin.add_theme_constant_override("margin_right", 14)
 	margin.add_theme_constant_override("margin_bottom", 14)
-	add_child(margin)
+	# 窗口底色统一为面板底（原生窗口默认是灰色，先铺一层面板底）
+	var bg := PanelContainer.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = C_PANEL
+	bg_style.set_content_margin_all(0)
+	bg.add_theme_stylebox_override("panel", bg_style)
+	bg.add_child(margin)
+	add_child(bg)
 
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
@@ -100,12 +113,17 @@ func _build_ui() -> void:
 	_section_list.item_selected.connect(_on_section_selected)
 	panes.add_child(_section_list)
 
-	# 2) 属性列表（按选中分区切换）
+	# 2) 属性列表（按选中分区切换）——内嵌深色面板，与 ItemList 面板同形
+	var content_panel := PanelContainer.new()
+	content_panel.custom_minimum_size = Vector2(320, 0)
+	content_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_panel.add_theme_stylebox_override("panel", _panel_style(C_INSET, 10))
+	panes.add_child(content_panel)
+
 	var content := VBoxContainer.new()
-	content.custom_minimum_size = Vector2(300, 0)
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 10)
-	panes.add_child(content)
+	content_panel.add_child(content)
 
 	_props_page = _build_props_page()
 	content.add_child(_props_page)
@@ -205,12 +223,17 @@ func _build_touch_page() -> Control:
 
 
 ## 分区三：实时预览画面——浏览器纹理 + 触点层，一直显示、关窗即销毁
+## （黑底 + 1px 描边 + 圆角，与卡片画面区/播放器屏幕块同形）
 func _build_preview_pane() -> Control:
 	var screen := PanelContainer.new()
 	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var screen_style := StyleBoxFlat.new()
 	screen_style.bg_color = Color.BLACK
+	screen_style.border_color = C_BORDER
+	screen_style.set_border_width_all(1)
+	screen_style.set_corner_radius_all(4)
+	screen_style.set_content_margin_all(2)
 	screen.add_theme_stylebox_override("panel", screen_style)
 
 	_web_view = TextureRect.new()
@@ -222,6 +245,17 @@ func _build_preview_pane() -> Control:
 	_dots_layer = TouchPointsLayerScript.new()
 	screen.add_child(_dots_layer)
 	return screen
+
+
+## 面板样式：bg 底 + 1px 描边 + 4px 圆角（与 ui/theme.tres 面板/内嵌面板同形）
+static func _panel_style(bg: Color, margin_all: float) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = C_BORDER
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(4)
+	s.set_content_margin_all(margin_all)
+	return s
 
 
 func _make_spin(parent: Control, label_text: String, minv: float, maxv: float,
