@@ -62,6 +62,8 @@ var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 @onready var _cast_video_view: TextureRect = %CastVideoView
 @onready var _preview_progress: HSlider = %PreviewProgress
 @onready var _output_progress: HSlider = %OutputProgress
+@onready var _preview_page_buttons: VBoxContainer = %PreviewPageButtons
+@onready var _output_page_buttons: VBoxContainer = %OutputPageButtons
 @onready var _output_mute_button: Button = %OutputMute
 @onready var _audio_output_slider: HSlider = %AudioOutputSlider
 @onready var _audio_output_value: Label = %AudioOutputValue
@@ -153,6 +155,14 @@ func _ready() -> void:
 	_output_progress.drag_ended.connect(_on_output_progress_drag_ended)
 	_output_mute_button.pressed.connect(_on_output_mute_pressed)
 	_audio_output_slider.value_changed.connect(_on_output_volume_changed)
+	# PPT 翻页按钮（画面区右侧 < >，仅 SLIDE 帧源时显示）
+	%PreviewPagePrev.pressed.connect(_preview.prev_page)
+	%PreviewPageNext.pressed.connect(_preview.next_page)
+	%OutputPagePrev.pressed.connect(_output.prev_page)
+	%OutputPageNext.pressed.connect(_output.next_page)
+	for b: Button in [%PreviewPagePrev, %PreviewPageNext, %OutputPagePrev, %OutputPageNext]:
+		b.custom_minimum_size = Vector2(30, 40)
+		b.focus_mode = Control.FOCUS_NONE
 	_setup_menus()
 	_load_initial_project()
 	_apply_settings()
@@ -866,6 +876,19 @@ func _on_output_progress_drag_ended(value_changed: bool) -> void:
 func _update_progress_ui() -> void:
 	_update_slot_progress(_preview, _preview_progress, _preview_time_label, _preview_dragging)
 	_update_slot_progress(_output, _output_progress, _output_time_label, _output_dragging)
+	_update_page_buttons(_preview, _preview_page_buttons)
+	_update_page_buttons(_output, _output_page_buttons)
+
+
+## PPT 翻页按钮：仅 SLIDE 帧源显示；首页禁用 <，末页禁用 >（页数未知时不禁用）
+func _update_page_buttons(slot: PlayerSlot, container: VBoxContainer) -> void:
+	var is_slide := slot.source_kind == PlayerSlot.SourceKind.SLIDE
+	if container.visible != is_slide:
+		container.visible = is_slide
+	if not is_slide:
+		return
+	(container.get_child(0) as Button).disabled = slot.current_page <= 0
+	(container.get_child(1) as Button).disabled = slot.page_count > 0 and slot.current_page >= slot.page_count - 1
 
 
 func _update_slot_progress(slot: PlayerSlot, slider: HSlider, time_label: Label, dragging: bool) -> void:

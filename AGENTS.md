@@ -56,7 +56,9 @@
   （"3 / 12"）；PPT 封面 = 首次预览时抓第一页帧；MediaObject 新增
   page_count 持久化。注意 gdcef 的 on_page_loaded 信号参数是
   (http_code, browser) 不带 URL。实测 test.pptx 19 页、doc/test.pptx
-  26 页，转换/翻页/推送/缓存重开全部通过
+  26 页，转换/翻页/推送/缓存重开全部通过；预览/输出画面区右侧有 < > 翻页按钮
+  （%PreviewPageButtons/%OutputPageButtons，仅 SLIDE 帧源可见，
+  首页禁 < 末页禁 >，main.gd _update_page_buttons）
 - Phase 8（浏览器内核，CEF + gdcef）：gdcef v0.20.0 源码在 doc/gdcef/
   （godot-4.x 分支，经 ghproxy 镜像克隆；build.py 已适配 CEF 151.3.24 +
   去管理员权限 + 跳过 demo 步骤，重建用 doc/gdcef/run_build.bat）；
