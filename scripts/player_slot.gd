@@ -16,6 +16,7 @@ extends Node
 
 signal state_changed  # load / play / pause / stop / seek 后发出
 signal frame_updated(texture)  # 帧源产出新画面（投屏窗口借此共享输出端纹理）
+signal touch_edit_clicked(pos_norm: Vector2, button_index: int)  # 触点编辑模式下画面被点击（归一化坐标）
 
 ## 帧源类型：NONE = 空；MPV = 视频/音频经 mpv 解码；STATIC = 静态纹理（图片等）；
 ## WEB = 网页经 CEF 离屏渲染（gdcef，浏览器视口固定参考分辨率，
@@ -50,6 +51,10 @@ var _pending_seek := -1.0  # 首帧到达后要跳转的位置（load_file 前 s
 var _seek_retries := 0  # 首帧时 demuxer 可能未就绪导致 seek 丢失，用 time_changed 校验重试
 var _view_scale := 1.0  # 画面缩放（来自媒体对象属性）
 var _view_offset := Vector2.ZERO  # 画面平移（来自媒体对象属性）
+
+var touch_edit_mode := false  # 触点编辑模式：点击画面不转发浏览器，改为上报归一化坐标
+var web_points: Array[Vector2] = []  # 当前 WEB 媒体的触点序列（归一化坐标，与 MediaObject.touch_points 共享引用）
+var web_step := -1  # 触进步数（-1 = 尚未触达任何点）
 
 
 func setup(video_view: TextureRect, placeholder: Control = null) -> void:
@@ -200,6 +205,8 @@ func _start_browser(url: String, kind: int) -> bool:
 	duration = 0.0
 	page_count = 0
 	current_page = 0
+	web_step = -1
+	web_points = []
 	_awaiting_first_frame = false
 	_pending_seek = -1.0
 	_browser = web_cef.create_browser(url, _video_view, {"frame_rate": 30})
@@ -290,6 +297,13 @@ func _web_to_browser_pos(pos: Vector2) -> Vector2i:
 func _on_view_gui_input(event: InputEvent) -> void:
 	if source_kind != SourceKind.WEB or _browser == null or not is_instance_valid(_browser):
 		return
+	# 触点编辑模式：点击不转发浏览器，左键上报加点 / 右键上报删点
+	if touch_edit_mode:
+		var mb := event as InputEventMouseButton
+		if mb != null and mb.pressed and (mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_RIGHT):
+			touch_edit_clicked.emit(Vector2(_web_to_browser_pos(mb.position)) / WEB_VIEWPORT_SIZE, mb.button_index)
+			_video_view.accept_event()
+		return
 	if event is InputEventMouseMotion:
 		var mp := _web_to_browser_pos(event.position)
 		_browser.set_mouse_moved(mp.x, mp.y)
@@ -341,6 +355,8 @@ func stop() -> void:
 	duration = 0.0
 	page_count = 0
 	current_page = 0
+	web_step = -1
+	web_points = []
 	_slide_title_poll = 0.0
 	_awaiting_first_frame = false
 	_pending_seek = -1.0
@@ -391,6 +407,21 @@ func next_page() -> void:
 
 func prev_page() -> void:
 	goto_page(current_page - 1)
+
+
+## 网页触点触进（d=+1 下一个 / -1 上一个）：像 PPT 翻页一样按顺序把
+## 触点序列模拟点击进浏览器（先移动光标到触点，再按下/抬起左键）
+func step_web(d: int) -> void:
+	if source_kind != SourceKind.WEB or web_points.is_empty():
+		return
+	if _browser == null or not is_instance_valid(_browser):
+		return
+	web_step = clampi(web_step + d, 0, web_points.size() - 1)
+	var bp := Vector2i(web_points[web_step] * WEB_VIEWPORT_SIZE)
+	_browser.set_mouse_moved(bp.x, bp.y)
+	_browser.set_mouse_left_down()
+	_browser.set_mouse_left_up()
+	state_changed.emit()
 
 
 ## 抓取当前帧画面（WEB/SLIDE 浏览器纹理），用于 PPT 封面等；不可用时返回 null

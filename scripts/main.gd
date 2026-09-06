@@ -17,6 +17,7 @@ const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
 const TitleBarScript := preload("res://scripts/title_bar.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
+const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
@@ -36,6 +37,9 @@ var _project_path := ""
 var _preview_dragging := false
 var _output_dragging := false
 var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
+var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
+var _output_dots  # 输出画面触点可视化层
+var _cast_dots  # 投屏窗口触点可视化层（跟随输出端）
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -156,7 +160,7 @@ func _ready() -> void:
 	_output_progress.drag_ended.connect(_on_output_progress_drag_ended)
 	_output_mute_button.pressed.connect(_on_output_mute_pressed)
 	_audio_output_slider.value_changed.connect(_on_output_volume_changed)
-	# PPT 翻页按钮（画面区右侧 < >，仅 SLIDE 帧源时显示）
+	# PPT 翻页按钮（画面内底部 < >，仅 SLIDE 帧源时显示）
 	%PreviewPagePrev.pressed.connect(_preview.prev_page)
 	%PreviewPageNext.pressed.connect(_preview.next_page)
 	%OutputPagePrev.pressed.connect(_output.prev_page)
@@ -164,6 +168,17 @@ func _ready() -> void:
 	for b: Button in [%PreviewPagePrev, %PreviewPageNext, %OutputPagePrev, %OutputPageNext]:
 		b.custom_minimum_size = Vector2(30, 40)
 		b.focus_mode = Control.FOCUS_NONE
+	# 网页触点：可视化层叠加在预览/输出画面与投屏窗口上（不挡鼠标）；
+	# 预览端「触点」开关进入编辑模式，点击画面加点/删点
+	_preview_dots = TouchPointsLayerScript.new()
+	%VideoView.get_parent().add_child(_preview_dots)
+	_output_dots = TouchPointsLayerScript.new()
+	%OutputVideoView.get_parent().add_child(_output_dots)
+	_cast_dots = TouchPointsLayerScript.new()
+	_cast_video_view.add_child(_cast_dots)
+	_cast_dots.set_anchors_preset(Control.PRESET_FULL_RECT)
+	%PreviewTouchEdit.toggled.connect(func(on: bool) -> void: _preview.touch_edit_mode = on)
+	_preview.touch_edit_clicked.connect(_on_touch_edit_clicked)
 	_setup_menus()
 	_load_initial_project()
 	_apply_settings()
@@ -563,6 +578,7 @@ func _load_preview(m: MediaObject) -> void:
 		_:
 			_preview.load_media(m.path)
 	_preview.set_view_transform(m.scale, m.offset())
+	_preview.web_points = m.touch_points  # 共享引用：触点编辑即时生效
 
 
 ## PPT 缓存查找：项目 X_cache 优先，回退全局 user://pptx；都没有返回 ""
@@ -698,6 +714,7 @@ func _load_output(m: MediaObject) -> void:
 			_output.load_slides(html, m.page_count, 0, m.path)
 		_:
 			_output.load_media(m.path, true, 0.0)
+	_output.web_points = m.touch_points  # 共享引用：触点编辑即时生效
 	_apply_output_media_prefs()
 	_show_cast_window()
 
@@ -785,6 +802,9 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 # ---------- 预览播放器 ----------
 
 func _on_preview_play_pressed() -> void:
+	if _preview.source_kind == PlayerSlot.SourceKind.WEB:
+		_preview.step_web(-1)  # 网页模式：播放键 = 上一触点
+		return
 	if _preview.media_path.is_empty():
 		var m := _first_playable()
 		if m != null:
@@ -794,6 +814,9 @@ func _on_preview_play_pressed() -> void:
 
 
 func _on_preview_stop_pressed() -> void:
+	if _preview.source_kind == PlayerSlot.SourceKind.WEB:
+		_preview.step_web(1)  # 网页模式：停止键 = 下一触点
+		return
 	_preview.stop()
 
 
@@ -807,10 +830,16 @@ func _refresh_preview_ui() -> void:
 # ---------- 输出播放器 ----------
 
 func _on_output_play_pressed() -> void:
+	if _output.source_kind == PlayerSlot.SourceKind.WEB:
+		_output.step_web(-1)  # 网页模式：播放键 = 上一触点
+		return
 	_output.toggle_play()
 
 
 func _on_output_stop_pressed() -> void:
+	if _output.source_kind == PlayerSlot.SourceKind.WEB:
+		_output.step_web(1)  # 网页模式：停止键 = 下一触点
+		return
 	_output.stop()
 
 
@@ -842,6 +871,8 @@ func _on_quick_switch_pressed() -> void:
 		_output.load_slides(html, _output_media.page_count, int(state.get("page", 0)), path)
 	else:
 		_output.load_media(path, bool(state["playing"]), float(state["time_pos"]))
+	if _output_media != null:
+		_output.web_points = _output_media.touch_points  # 共享引用：触点编辑即时生效
 	_apply_output_media_prefs()  # 条目级循环/静音/画面变换推送到输出端
 	_show_cast_window()
 
@@ -918,6 +949,67 @@ func _update_progress_ui() -> void:
 	_update_slot_progress(_output, _output_progress, _output_time_label, _output_dragging)
 	_update_page_buttons(_preview, _preview_page_buttons)
 	_update_page_buttons(_output, _output_page_buttons)
+	_update_web_ui()
+
+
+## 网页模式 UI：播放/停止键变成 ← →（触点步进，无触点或到边界则禁用）；
+## 预览端「触点」编辑开关仅网页媒体可见，切走时自动退出编辑模式
+func _update_web_ui() -> void:
+	_update_slot_web_ui(_preview, _preview_play_button, _preview_stop_button)
+	_update_slot_web_ui(_output, _output_play_button, _output_stop_button)
+	var can_edit := _preview.source_kind == PlayerSlot.SourceKind.WEB
+	%PreviewTouchEdit.visible = can_edit
+	if not can_edit and %PreviewTouchEdit.button_pressed:
+		%PreviewTouchEdit.set_pressed_no_signal(false)
+		_preview.touch_edit_mode = false
+	_refresh_touch_layers()
+
+
+func _update_slot_web_ui(slot: PlayerSlot, play_btn: Button, stop_btn: Button) -> void:
+	if slot.source_kind == PlayerSlot.SourceKind.WEB:
+		play_btn.text = "←"
+		stop_btn.text = "→"
+		play_btn.disabled = slot.web_points.is_empty() or slot.web_step <= 0
+		stop_btn.disabled = slot.web_points.is_empty() or slot.web_step >= slot.web_points.size() - 1
+	else:
+		play_btn.disabled = false
+		stop_btn.disabled = false
+		if stop_btn.text == "→":
+			stop_btn.text = "■"  # 播放键文本由 state_changed 刷新（▶/⏸）
+
+
+## 触点可视化层：预览端显示当前网页媒体的触点（编辑模式下空序列也显示），
+## 输出/投屏跟随输出端（无触点不显示）
+func _refresh_touch_layers() -> void:
+	_preview_dots.set_points(_preview.web_points, _preview.web_step)
+	_preview_dots.visible = _preview.source_kind == PlayerSlot.SourceKind.WEB \
+		and (not _preview.web_points.is_empty() or _preview.touch_edit_mode)
+	_output_dots.set_points(_output.web_points, _output.web_step)
+	_cast_dots.set_points(_output.web_points, _output.web_step)
+	var out_show := _output.source_kind == PlayerSlot.SourceKind.WEB and not _output.web_points.is_empty()
+	_output_dots.visible = out_show
+	_cast_dots.visible = out_show
+
+
+## 触点编辑：左键在预览画面上添加触点，右键删除最近触点；随项目持久化
+func _on_touch_edit_clicked(pos_norm: Vector2, button_index: int) -> void:
+	var m := _find_media(_preview.media_path)
+	if m == null:
+		return
+	if button_index == MOUSE_BUTTON_LEFT:
+		m.touch_points.append(pos_norm)
+	else:
+		var best := -1
+		var best_d := 0.04  # 归一化距离阈值（约 1280×720 上的 40px）
+		for i in m.touch_points.size():
+			var d: float = m.touch_points[i].distance_to(pos_norm)
+			if d < best_d:
+				best_d = d
+				best = i
+		if best >= 0:
+			m.touch_points.remove_at(best)
+	_preview.web_step = mini(_preview.web_step, m.touch_points.size() - 1)
+	_save_current_project()
 
 
 ## PPT 翻页按钮：仅 SLIDE 帧源显示；首页禁用 <，末页禁用 >（页数未知时不禁用）

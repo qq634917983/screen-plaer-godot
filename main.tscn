@@ -212,6 +212,14 @@ theme_override_colors/font_color = Color(0.4431, 0.4941, 0.5686, 1)
 theme_override_font_sizes/font_size = 12
 text = "00:00 / 00:00"
 
+[node name="PreviewTouchEdit" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=2034854903]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+tooltip_text = "触点编辑：左键在画面上添加触点，右键删除最近触点；播放时用 ← → 逐步模拟点击"
+toggle_mode = true
+text = "触点"
+
 [node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/MainHBox/MainLeft/PlayersSection" unique_id=363366299]
 unique_name_in_owner = true
 layout_mode = 2

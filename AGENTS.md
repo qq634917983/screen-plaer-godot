@@ -36,6 +36,15 @@
   手动边缘缩放（scripts/window_resizer.gd：边缘 6px 八向缩放，最小 1024×600）。
   注意：无边框窗口的 mode 切换请求偶发被系统丢弃（TitleBar 有逐帧校验重试），
   最大化还原后系统不恢复旧几何（靠持续记录的 _windowed_rect 手动写回）
+- Phase 13（网页触点）：HTML 媒体的播放/停止键在网页模式下变成 ← →，
+  按 MediaObject.touch_points（归一化坐标，随项目持久化）逐步模拟点击
+  （PlayerSlot.step_web：移光标 + 左键按下/抬起）；预览端「触点」开关进入
+  编辑模式：左键画面加点、右键删最近点（PlayerSlot.touch_edit_mode +
+  touch_edit_clicked 信号，编辑期点击不转发浏览器）；触点白点+序号由
+  scripts/touch_points_layer.gd 绘制，叠加在预览/输出画面与投屏窗口
+  （投屏层是 %CastVideoView 子节点，跟随缩放/平移），当前步红色高亮。
+  注意：网页点击转发两端均已验证有效（WEB_VIEWPORT_SIZE 1280×720 反算），
+  点击无反应先查是否有弹窗/投屏窗口遮挡主窗口
 - Phase 12（卡片重构，参照 doc/item.html）：标题栏（蓝色序号+文件名+类型徽标）
   + 16:9 画面区 + 无缝 3×2 按钮网格（播放/静音/循环/预览/设置/删除）；
   静音/循环为条目级偏好（MediaObject.loop/muted，持久化），推送输出时应用，
