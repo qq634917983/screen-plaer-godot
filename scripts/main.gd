@@ -743,6 +743,7 @@ func _on_card_settings(card: MediaItemCard) -> void:
 		return
 	var win := ItemSettingsWindow.new()
 	win.setup(card.media)
+	win.cef = _cef  # 触点编辑页签的内嵌浏览器预览用（无 gdcef 时该页只显示提示）
 	add_child(win)
 	_item_windows[card.media_path] = win
 	win.properties_changed.connect(_on_item_properties_changed)

@@ -137,7 +137,9 @@
 - `scripts/media_object.gd` — MediaObject 媒体对象模型（类型推断 + 缩放/偏移
   属性 + 序列化；媒体库条目、项目持久化的数据单元）
 - `scripts/item_settings_window.gd` — ItemSettingsWindow 条目设置独立窗口
-  （点卡片 ⚙ 创建，编辑缩放比例/水平/垂直偏移，改动即时生效并存项目）
+  （点卡片 ⚙ 创建，880×600 双页签：「属性」编辑缩放/偏移即时生效；
+  「触点编辑」仅网页媒体可见——内嵌 CEF 浏览器实时预览（静音、frame_rate 15、
+  关窗销毁），左键加点/右键删点/撤销/清空，与播放端触点层共享引用即时同步）
 - `scripts/media_item_card.gd` — MediaItemCard 媒体库卡片（参照 doc/item.html：
   标题栏蓝色序号+文件名+类型徽标，16:9 画面区，无缝 3×2 按钮网格
   播放/静音/循环/预览/设置/删除；信号 preview_requested/push_requested/
