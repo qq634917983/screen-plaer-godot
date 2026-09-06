@@ -1,11 +1,14 @@
 class_name ItemSettingsWindow
 extends Window
 ## 单个媒体条目的设置窗口：点击卡片 ⚙ 时创建（每个条目一个独立窗口）。
-## 两个模式页签：
-## - 属性：缩放比例/水平/垂直偏移，改动即时写回 MediaObject 并应用到播放端；
-## - 触点编辑（仅网页媒体）：内嵌 CEF 浏览器实时预览页面，左键点画面加触点、
-##   右键删最近触点，白点+序号叠加显示；触点归一化坐标存 MediaObject.touch_points，
-##   与预览/输出/投屏三端的触点层共享同一引用，编辑即时同步。
+## 水平三分区布局（无页签）：
+## 1) 左侧：属性分区名列表（属性 / 触点（仅网页媒体））
+## 2) 中间：选中分区对应的属性列表
+## 3) 右侧：实时预览画面（仅网页媒体）——内嵌 CEF 浏览器一直显示，
+##    相当于本窗口独享的独立播放器，不与预览/输出端同步，关窗即销毁。
+## 选中「触点」分区时：左键点右侧画面加触点、右键删最近触点，白点+序号
+## 叠加显示；触点归一化坐标存 MediaObject.touch_points，与预览/输出/投屏
+## 三端的触点层共享同一引用，编辑即时同步。
 ## 播放时按触点顺序步进用播放器的 ← → 键（见 PlayerSlot.step_web）。
 
 signal properties_changed(media: MediaObject)
@@ -15,23 +18,24 @@ const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 const WEB_VIEWPORT := Vector2(1280, 720)  # 与 PlayerSlot.WEB_VIEWPORT_SIZE 一致
 
 var media: MediaObject
-var cef: Node  # 全局 GdCEF 节点（main.gd 注入；无 gdcef 时触点页只显示提示）
+var cef: Node  # 全局 GdCEF 节点（main.gd 注入；无 gdcef 时预览区只显示提示）
 
 var _path_label: Label
 var _type_label: Label
 var _scale_spin: SpinBox
 var _offset_x_spin: SpinBox
 var _offset_y_spin: SpinBox
+var _section_list: ItemList
+var _props_page: Control
+var _touch_page: Control
 var _web_view: TextureRect
 var _dots_layer: Control
 var _points_label: Label
-var _browser: Node  # 触点页内嵌预览浏览器（本窗口独享，关窗即销毁）
+var _browser: Node  # 右侧预览浏览器（本窗口独享，关窗即销毁）
 
 
 func _init() -> void:
 	title = "条目设置"
-	size = Vector2i(880, 600)
-	min_size = Vector2i(760, 520)
 	transient = true
 
 
@@ -50,9 +54,17 @@ func setup(m: MediaObject) -> void:
 		_start_preview_browser()
 
 
+func _has_web_preview() -> bool:
+	return media != null and media.type == MediaObject.Type.HTML
+
+
 # ---------- 界面构建 ----------
 
 func _build_ui() -> void:
+	var web := _has_web_preview()
+	size = Vector2i(1120, 640) if web else Vector2i(620, 520)
+	min_size = Vector2i(980, 560) if web else Vector2i(560, 460)
+
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 14)
@@ -71,13 +83,40 @@ func _build_ui() -> void:
 	_path_label.clip_text = true
 	root.add_child(_path_label)
 
-	var tabs := TabContainer.new()
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(tabs)
+	# 三分区：分区名 | 属性列表 | 实时画面
+	var panes := HBoxContainer.new()
+	panes.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panes.add_theme_constant_override("separation", 10)
+	root.add_child(panes)
 
-	tabs.add_child(_build_props_tab())
-	if media != null and media.type == MediaObject.Type.HTML:
-		tabs.add_child(_build_touch_tab())
+	# 1) 分区名列表
+	_section_list = ItemList.new()
+	_section_list.custom_minimum_size = Vector2(92, 0)
+	_section_list.fixed_icon_size = Vector2i.ZERO
+	_section_list.add_item("属性")
+	if web:
+		_section_list.add_item("触点")
+	_section_list.select(0)
+	_section_list.item_selected.connect(_on_section_selected)
+	panes.add_child(_section_list)
+
+	# 2) 属性列表（按选中分区切换）
+	var content := VBoxContainer.new()
+	content.custom_minimum_size = Vector2(300, 0)
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 10)
+	panes.add_child(content)
+
+	_props_page = _build_props_page()
+	content.add_child(_props_page)
+	if web:
+		_touch_page = _build_touch_page()
+		_touch_page.visible = false
+		content.add_child(_touch_page)
+
+	# 3) 实时预览画面（仅网页媒体）
+	if web:
+		panes.add_child(_build_preview_pane())
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
@@ -95,22 +134,22 @@ func _build_ui() -> void:
 	buttons.add_child(close_button)
 
 
-## 页签一：属性（缩放/偏移，改动即时生效）
-func _build_props_tab() -> Control:
-	var tab := VBoxContainer.new()
-	tab.name = "属性"
-	tab.add_theme_constant_override("separation", 10)
+## 分区一：属性（缩放/偏移，改动即时生效）
+func _build_props_page() -> Control:
+	var page := VBoxContainer.new()
+	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_theme_constant_override("separation", 10)
 
 	_type_label = Label.new()
-	tab.add_child(_type_label)
+	page.add_child(_type_label)
 
-	tab.add_child(HSeparator.new())
+	page.add_child(HSeparator.new())
 
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 8)
-	tab.add_child(grid)
+	page.add_child(grid)
 
 	_scale_spin = _make_spin(grid, "缩放比例 (%)", 10, 400, 5,
 		func(value: float) -> void: media.scale = value / 100.0)
@@ -120,34 +159,59 @@ func _build_props_tab() -> Control:
 		func(value: float) -> void: media.offset_y = value)
 
 	var note := Label.new()
-	note.text = "缩放/偏移即时作用于预览/输出/投屏画面；网页条目在「触点编辑」页签管理触点。"
+	note.text = "缩放/偏移即时作用于预览/输出/投屏画面%s。" % ("；触点管理见「触点」分区" if _has_web_preview() else "")
 	note.add_theme_font_size_override("font_size", 11)
 	note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tab.add_child(note)
-	return tab
+	page.add_child(note)
+	return page
 
 
-## 页签二：触点编辑（仅网页媒体）——内嵌浏览器实时预览，左键加点/右键删点
-func _build_touch_tab() -> Control:
-	var tab := VBoxContainer.new()
-	tab.name = "触点编辑"
-	tab.add_theme_constant_override("separation", 8)
+## 分区二：触点编辑（仅网页媒体）——操作说明与触点管理，画面在右侧预览区
+func _build_touch_page() -> Control:
+	var page := VBoxContainer.new()
+	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_theme_constant_override("separation", 10)
 
 	var hint := Label.new()
-	hint.text = "左键点击画面添加触点（白点），右键删除最近触点；播放时用播放器的 ← → 键按顺序模拟点击。"
+	hint.text = "左键点击右侧画面添加触点（白点），右键删除最近触点；播放时用播放器的 ← → 键按顺序模拟点击。"
 	hint.add_theme_font_size_override("font_size", 11)
 	hint.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tab.add_child(hint)
+	page.add_child(hint)
 
-	# 预览画面：黑底面板内叠 浏览器纹理 + 触点层（PanelContainer 子节点全部铺满）
+	page.add_child(HSeparator.new())
+
+	_points_label = Label.new()
+	page.add_child(_points_label)
+
+	var undo_button := Button.new()
+	undo_button.text = "撤销上一点"
+	undo_button.pressed.connect(func() -> void:
+		if not media.touch_points.is_empty():
+			media.touch_points.remove_at(media.touch_points.size() - 1)
+			_after_points_changed()
+	)
+	page.add_child(undo_button)
+
+	var clear_button := Button.new()
+	clear_button.text = "清空触点"
+	clear_button.pressed.connect(func() -> void:
+		media.touch_points.clear()
+		_after_points_changed()
+	)
+	page.add_child(clear_button)
+	return page
+
+
+## 分区三：实时预览画面——浏览器纹理 + 触点层，一直显示、关窗即销毁
+func _build_preview_pane() -> Control:
 	var screen := PanelContainer.new()
+	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var screen_style := StyleBoxFlat.new()
 	screen_style.bg_color = Color.BLACK
 	screen.add_theme_stylebox_override("panel", screen_style)
-	tab.add_child(screen)
 
 	_web_view = TextureRect.new()
 	_web_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -157,32 +221,7 @@ func _build_touch_tab() -> Control:
 
 	_dots_layer = TouchPointsLayerScript.new()
 	screen.add_child(_dots_layer)
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	tab.add_child(row)
-
-	_points_label = Label.new()
-	_points_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_points_label)
-
-	var undo_button := Button.new()
-	undo_button.text = "撤销上一点"
-	undo_button.pressed.connect(func() -> void:
-		if not media.touch_points.is_empty():
-			media.touch_points.remove_at(media.touch_points.size() - 1)
-			_after_points_changed()
-	)
-	row.add_child(undo_button)
-
-	var clear_button := Button.new()
-	clear_button.text = "清空触点"
-	clear_button.pressed.connect(func() -> void:
-		media.touch_points.clear()
-		_after_points_changed()
-	)
-	row.add_child(clear_button)
-	return tab
+	return screen
 
 
 func _make_spin(parent: Control, label_text: String, minv: float, maxv: float,
@@ -203,28 +242,42 @@ func _make_spin(parent: Control, label_text: String, minv: float, maxv: float,
 	return spin
 
 
+func _on_section_selected(index: int) -> void:
+	_props_page.visible = index == 0
+	if _touch_page != null:
+		_touch_page.visible = index == 1
+	_refresh_dots()
+
+
+func _is_touch_section() -> bool:
+	return _touch_page != null and _touch_page.visible
+
+
 # ---------- 内嵌浏览器预览 ----------
 
 func _start_preview_browser() -> void:
 	if _browser != null or _web_view == null:
 		return
-	if cef == null or media == null or media.type != MediaObject.Type.HTML:
+	if cef == null or not _has_web_preview():
 		return
 	var url := media.path
 	if not url.contains("://") or url.begins_with("user://") or url.begins_with("res://"):
 		url = "file:///" + ProjectSettings.globalize_path(media.path).replace("\\", "/")
 	_browser = cef.create_browser(url, _web_view, {"frame_rate": 15})
 	if _browser == null:
-		push_warning("触点预览浏览器创建失败：" + cef.get_error())
+		push_warning("条目预览浏览器创建失败：" + cef.get_error())
 		return
 	_browser.set_muted(true)  # 设置窗口预览始终静音
 	_browser.resize(WEB_VIEWPORT)
 	_apply_view_transform()
 
 
-## 画面区点击 → 触点增删。显示区坐标按 KEEP_ASPECT_CENTERED 的纹理摆放
-## 矩形换算回固定视口的归一化坐标（与 PlayerSlot._web_to_browser_pos 同模型）
+## 预览画面点击 → 触点增删（仅在「触点」分区下编辑，其余时间画面只是纯预览）。
+## 显示区坐标按 KEEP_ASPECT_CENTERED 的纹理摆放矩形换算回固定视口的归一化
+## 坐标（与 PlayerSlot._web_to_browser_pos 同模型）
 func _on_web_view_gui_input(event: InputEvent) -> void:
+	if not _is_touch_section():
+		return
 	var mb := event as InputEventMouseButton
 	if mb == null or not mb.pressed:
 		return
@@ -286,7 +339,8 @@ func _refresh_dots() -> void:
 	if _dots_layer == null:
 		return
 	_dots_layer.set_points(media.touch_points, -1)
-	_points_label.text = "触点：%d 个" % media.touch_points.size()
+	if _points_label != null:
+		_points_label.text = "触点：%d 个" % media.touch_points.size()
 
 
 func _on_reset_pressed() -> void:
