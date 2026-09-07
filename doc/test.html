@@ -202,14 +202,14 @@ const tests=[
  ['HTMLAudioElement','HTMLAudioElement' in window],
  ['MediaSource','MediaSource' in window],
  ['MediaCapabilities','mediaCapabilities' in navigator],
- ['Fullscreen API','document.fullscreenEnabled'],
- ['Picture-in-Picture','document.pictureInPictureEnabled'],
- ['requestVideoFrameCallback','"requestVideoFrameCallback" in HTMLVideoElement.prototype],
- ['TextTrack API','"textTracks" in HTMLMediaElement.prototype],
- ['Media Session','"mediaSession" in navigator],
- ['WebCodecs','"VideoDecoder" in window],
- ['Web Audio','"AudioContext" in window || "webkitAudioContext" in window],
- ['Canvas','"HTMLCanvasElement" in window],
+ ['Fullscreen API',document.fullscreenEnabled],
+ ['Picture-in-Picture',document.pictureInPictureEnabled],
+ ['requestVideoFrameCallback',"requestVideoFrameCallback" in HTMLVideoElement.prototype],
+ ['TextTrack API',"textTracks" in HTMLMediaElement.prototype],
+ ['Media Session',"mediaSession" in navigator],
+ ['WebCodecs',"VideoDecoder" in window],
+ ['Web Audio',"AudioContext" in window || "webkitAudioContext" in window],
+ ['Canvas',"HTMLCanvasElement" in window],
 ];
 $('checks').innerHTML=tests.map(x=>`<div class="${x[1]?'ok':'bad'}">${x[1]?'✓':'✗'} ${x[0]}</div>`).join('');
 

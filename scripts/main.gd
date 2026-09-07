@@ -176,7 +176,9 @@ func _ready() -> void:
 	%OutputVideoView.get_parent().add_child(_output_dots)
 	_cast_dots = TouchPointsLayerScript.new()
 	_cast_video_view.add_child(_cast_dots)
-	_cast_dots.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# 必须连 offsets 一起重置：新建的层尺寸为 0，set_anchors_preset 会保留
+	# 当前尺寸（offsets 写成负值），层永远是 0×0，所有触点全叠到左上角
+	_cast_dots.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	%PreviewTouchEdit.toggled.connect(func(on: bool) -> void: _preview.touch_edit_mode = on)
 	_preview.touch_edit_clicked.connect(_on_touch_edit_clicked)
 	_setup_menus()
