@@ -11,8 +11,12 @@ extends PanelContainer
 ## 视频/音频由 mpv 播放，图片走静态纹理通路，网页走 CEF 内核，
 ## PPT 由 PptxConverter 预转成自包含 HTML 后经 CEF 播放（翻页 = 页码导航）。
 ## 项目缓存捆绑：X.splproj 同级 X_cache/ 存 pptx 转换结果与封面副本（保存时同步）。
+## 播放列表：媒体库「添加列表」创建 PlaylistObject（条目+逐项时长/列表总时长/
+## 定时自动播放，随项目持久化），卡片 ≡ 标记与媒体卡片混排；PlaylistRunner
+## 用墙钟把条目依次推输出端（复用卡片「播放」通路，投屏自动弹出）。
 
 const MediaItemCardScene := preload("res://scripts/media_item_card.gd")
+const PlaylistCardScene := preload("res://scripts/playlist_card.gd")
 const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
 const TitleBarScript := preload("res://scripts/title_bar.gd")
@@ -25,7 +29,10 @@ var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
 var _pptx_converter  # PptxConverter（同上）
 var _media_items: Array[MediaObject] = []  # 与媒体卡片一一对应
+var _playlists: Array[PlaylistObject] = []  # 播放列表（与列表卡片一一对应）
 var _item_windows := {}  # 媒体路径 -> ItemSettingsWindow（点击 ⚙ 时创建）
+var _playlist_windows := {}  # PlaylistObject -> PlaylistSettingsWindow
+var _runner: PlaylistRunner  # 播放列表执行器（推输出端顺序播放 + 定时自动播放）
 var _output_media: MediaObject  # 当前输出端播放的媒体对象（null = 空）
 var _thumb_cache := {}  # 媒体路径 -> ImageTexture
 var _project_cache_dir := ""  # 当前项目的 X_cache/ 目录（无项目时为空）
@@ -45,6 +52,7 @@ var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点
 @onready var _menu_settings: MenuButton = %MenuSettings
 @onready var _menu_help: MenuButton = %MenuHelp
 @onready var _add_file_button: Button = %AddFileButton
+@onready var _add_list_button: Button = %AddListButton
 @onready var _file_dialog: FileDialog = %FileDialog
 @onready var _project_open_dialog: FileDialog = %ProjectOpenDialog
 @onready var _project_save_dialog: FileDialog = %ProjectSaveDialog
@@ -128,6 +136,15 @@ func _ready() -> void:
 	_pptx_converter.setup(_cef)
 	_pptx_converter.convert_done.connect(_on_pptx_convert_done)
 
+	# 播放列表执行器：条目经 _runner_load_item 推输出端（复用卡片「播放」通路）
+	_runner = PlaylistRunner.new()
+	_runner.name = "PlaylistRunner"
+	add_child(_runner)
+	_runner.setup(_output, _runner_load_item, _runner_is_pending)
+	_runner.started.connect(func(_pl: PlaylistObject) -> void: _refresh_playlist_cards())
+	_runner.item_started.connect(func(_pl: PlaylistObject, _i: int) -> void: _refresh_playlist_cards())
+	_runner.stopped.connect(_on_playlist_stopped)
+
 	# 统一控制按钮图标：Segoe UI Symbol 全部为文字字形，尺寸一致
 	# （默认主题里部分图标落到 emoji 字体渲染，导致大小参差）
 	var icon_font := SystemFont.new()
@@ -139,6 +156,7 @@ func _ready() -> void:
 		b.custom_minimum_size = Vector2(34, 0)
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
+	_add_list_button.pressed.connect(_on_add_list_pressed)
 	_file_dialog.files_selected.connect(_on_files_selected)
 	_project_open_dialog.file_selected.connect(_on_project_open_file_selected)
 	_project_save_dialog.file_selected.connect(_on_project_save_file_selected)
@@ -193,6 +211,7 @@ func _process(delta: float) -> void:
 	if _status_timer >= 0.5:
 		_status_timer = 0.0
 		_update_status_bar()
+		_check_playlist_schedules()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -348,6 +367,8 @@ func _load_project_from(path: String) -> void:
 		# 旧版项目文件只有纯路径列表
 		for media_path in data["media_paths"]:
 			_add_media_item(MediaObject.create(str(media_path)))
+	for pd in data["playlists"]:
+		_add_playlist(PlaylistObject.from_dict(pd))
 	ProjectStore.set_last_project_path(path)
 	_update_title()
 
@@ -355,7 +376,7 @@ func _load_project_from(path: String) -> void:
 func _save_current_project() -> void:
 	if _project_path.is_empty():
 		return
-	var err := ProjectStore.save_project(_project_path, _project_name, _media_items)
+	var err := ProjectStore.save_project(_project_path, _project_name, _media_items, _playlists)
 	if err != OK:
 		push_error("项目保存失败（%s）：%s" % [_project_path, error_string(err)])
 		return
@@ -419,12 +440,13 @@ func _add_media_item(media: MediaObject) -> void:
 	_refresh_card_indices()
 
 
-## 卡片序号 = 媒体库顺序（标题栏蓝色数字，增删后重排）
+## 卡片序号 = 媒体库顺序（标题栏蓝色数字，增删后重排）；列表卡片不编号
 func _refresh_card_indices() -> void:
 	var i := 1
-	for card: MediaItemCard in _media_grid.get_children():
-		card.set_index(i)
-		i += 1
+	for card in _media_grid.get_children():
+		if card is MediaItemCard:
+			card.set_index(i)
+			i += 1
 
 
 ## 条目级循环开关：写回媒体对象并持久化；正在输出该条目时立即生效
@@ -456,8 +478,10 @@ func _output_muted_state() -> bool:
 ## 复查全部条目的文件存在性并刷新丢失标记（主窗口重获焦点时调用）；
 ## 文件恢复的条目补做封面（丢失时跳过过）
 func _refresh_missing_states() -> void:
-	for card: MediaItemCard in _media_grid.get_children():
-		var missing := not card.media.exists()
+	for card in _media_grid.get_children():
+		if not card is MediaItemCard:
+			continue
+		var missing: bool = not card.media.exists()
 		card.set_missing(missing)
 		if not missing:
 			_apply_card_cover(card)
@@ -537,8 +561,8 @@ func _save_cover(path: String, img: Image) -> void:
 		img.save_png(ProjectStore.GLOBAL_THUMB_DIR + "/" + path.md5_text() + ".png")
 	var tex := ImageTexture.create_from_image(img)
 	_thumb_cache[path] = tex
-	for card: MediaItemCard in _media_grid.get_children():
-		if card.media_path == path:
+	for card in _media_grid.get_children():
+		if card is MediaItemCard and card.media_path == path:
 			card.set_thumbnail(tex)
 
 
@@ -548,6 +572,13 @@ func _on_thumbnail_ready(path: String, img: Image) -> void:
 
 func _clear_media_items() -> void:
 	_media_items.clear()
+	_playlists.clear()
+	if _runner != null:
+		_runner.stop()
+	for win in _playlist_windows.values():
+		if is_instance_valid(win):
+			win.queue_free()
+	_playlist_windows.clear()
 	for win: ItemSettingsWindow in _item_windows.values():
 		win.queue_free()
 	_item_windows.clear()
@@ -595,8 +626,8 @@ func _request_ppt_conversion(m: MediaObject) -> void:
 
 
 func _find_card(path: String) -> MediaItemCard:
-	for card: MediaItemCard in _media_grid.get_children():
-		if card.media_path == path:
+	for card in _media_grid.get_children():
+		if card is MediaItemCard and card.media_path == path:
 			return card
 	return null
 
@@ -686,6 +717,7 @@ func _on_card_push(card: MediaItemCard) -> void:
 	if not card.media.is_playable():
 		return
 	# 卡片「播放」= 直接送输出端 + 投屏窗口播放，不经过预览端
+	_runner.stop()  # 手动推送接管输出端：停掉正在跑的播放列表
 	_load_output(card.media)
 
 
@@ -765,7 +797,7 @@ func _on_card_delete(card: MediaItemCard) -> void:
 		_item_windows[card.media_path].queue_free()
 	_item_windows.erase(card.media_path)
 	card.queue_free()
-	_media_desc.visible = _media_items.is_empty()
+	_media_desc.visible = _media_items.is_empty() and _playlists.is_empty()
 	_save_current_project()
 	# 删除的若是当前输出条目，刷新高亮（延迟到卡片真正释放后）
 	_update_output_highlight.call_deferred()
@@ -773,8 +805,9 @@ func _on_card_delete(card: MediaItemCard) -> void:
 
 
 func _update_output_highlight() -> void:
-	for card: MediaItemCard in _media_grid.get_children():
-		card.set_highlighted(not _output.media_path.is_empty() and card.media_path == _output.media_path)
+	for card in _media_grid.get_children():
+		if card is MediaItemCard:
+			card.set_highlighted(not _output.media_path.is_empty() and card.media_path == _output.media_path)
 
 
 func _on_add_file_pressed() -> void:
@@ -794,6 +827,108 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 				m.path = copied
 		_add_media_item(m)
 	_save_current_project()
+
+
+# ---------- 播放列表 ----------
+
+func _on_add_list_pressed() -> void:
+	var pl := PlaylistObject.new()
+	pl.name = "播放列表 %d" % (_playlists.size() + 1)
+	_add_playlist(pl)
+	_save_current_project()
+
+
+func _add_playlist(pl: PlaylistObject) -> void:
+	_playlists.append(pl)
+	var card := PlaylistCardScene.new()
+	_media_grid.add_child(card)
+	card.setup(pl)
+	card.play_requested.connect(_on_playlist_play)
+	card.settings_requested.connect(_on_playlist_settings)
+	card.delete_requested.connect(_on_playlist_delete)
+	_media_desc.visible = false
+
+
+## 列表卡片「播放」：推送输出端顺序播放整个列表（再次点击 = 停止列表）
+func _on_playlist_play(card: PlaylistCard) -> void:
+	if _runner.playlist == card.playlist:
+		_runner.stop()
+		_output.stop()
+		return
+	_runner.stop()  # 停掉正在播放的其他列表
+	if not _runner.start(card.playlist):
+		push_warning("播放列表为空或全部条目不可播放：" + card.playlist.name)
+
+
+## Runner 加载回调：条目走卡片「播放」同一通路（投屏窗口自动弹出）
+func _runner_load_item(path: String) -> bool:
+	var m := _find_media(path)
+	if m == null or not m.is_playable() or not m.exists():
+		return false
+	_load_output(m)
+	return true
+
+
+## Runner 查询：该路径正在后台做 PPT 转换（此期间不算外部干预）
+func _runner_is_pending(path: String) -> bool:
+	return _pending_ppt_output == path
+
+
+func _on_playlist_stopped(_pl: PlaylistObject, reason: String) -> void:
+	if reason == "finished":
+		_output.stop()  # 一轮播完/播满列表时长：收尾清屏
+	_refresh_playlist_cards()
+
+
+func _refresh_playlist_cards() -> void:
+	for card in _media_grid.get_children():
+		if card is PlaylistCard:
+			card.set_playing(_runner != null and _runner.playlist == card.playlist)
+
+
+func _on_playlist_settings(card: PlaylistCard) -> void:
+	if _playlist_windows.has(card.playlist) and is_instance_valid(_playlist_windows[card.playlist]):
+		_playlist_windows[card.playlist].grab_focus()
+		return
+	var win := PlaylistSettingsWindow.new()
+	add_child(win)
+	win.setup(card.playlist, _media_items)
+	_playlist_windows[card.playlist] = win
+	win.changed.connect(func(_pl: PlaylistObject) -> void:
+		card.refresh()
+		_save_current_project()
+	)
+	win.window_closed.connect(func(pl: PlaylistObject) -> void: _playlist_windows.erase(pl))
+	var main_win := get_window()
+	win.position = main_win.position + (main_win.size - win.size) / 2
+	win.show()
+
+
+func _on_playlist_delete(card: PlaylistCard) -> void:
+	if _runner.playlist == card.playlist:
+		_runner.stop()
+		_output.stop()
+	if _playlist_windows.has(card.playlist) and is_instance_valid(_playlist_windows[card.playlist]):
+		_playlist_windows[card.playlist].queue_free()
+	_playlist_windows.erase(card.playlist)
+	_playlists.erase(card.playlist)
+	card.queue_free()
+	_media_desc.visible = _media_items.is_empty() and _playlists.is_empty()
+	_save_current_project()
+
+
+## 定时自动播放：0.5s tick 检查各列表的开启/关闭时间，
+## 到开启时段且执行器空闲则起播，出时段则停止
+func _check_playlist_schedules() -> void:
+	for pl in _playlists:
+		if not pl.auto_enabled:
+			continue
+		if pl.is_in_schedule_now():
+			if _runner.playlist != pl and not _runner.is_active():
+				_runner.start(pl)
+		elif _runner.playlist == pl:
+			_runner.stop()
+			_output.stop()
 
 
 # ---------- 预览播放器 ----------
@@ -853,6 +988,7 @@ func _on_quick_switch_pressed() -> void:
 	var path := str(state["media_path"])
 	if path.is_empty():
 		return
+	_runner.stop()  # 快速切换接管输出端：停掉正在跑的播放列表
 	# 输出端与投屏窗口共享同一实例与纹理，天然完全同步；
 	# 起播时一次性 seek 到预览当前进度（首帧到达后由 PlayerSlot 执行）；
 	# 图片走静态纹理通路（无需 seek）；PPT 推送缓存 HTML + 当前页码

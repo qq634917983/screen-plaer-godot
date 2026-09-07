@@ -27,8 +27,20 @@
 
 ## 当前进度
 
-- Phase 0-9、11-12 全部完成（doc/TODO.md）；Phase 10（播放体验增强：顺序播放 /
+- Phase 0-9、11-12、14 全部完成（doc/TODO.md）；Phase 10（播放体验增强：
   网页缩放 / PPT 翻页快捷键）已立项待做
+- Phase 14（播放列表）：媒体库「添加文件」左侧「添加列表」按钮；PlaylistObject
+  （scripts/playlist_object.gd：条目{path,duration} + 列表总时长 + 定时
+  自动播放 HH:MM 跨午夜，随项目 playlist/lists 段持久化）；PlaylistRunner
+  （scripts/playlist_runner.gd：墙钟计时依次推输出端，条目时长 0=视频/音频
+  自然结束（进度到尾 0.3s 或墙钟超时长+2s 兜底）、图片/网页/PPT 默认 10s；
+  列表时长>0 时循环播满；外部干预检测输出路径不一致即让出；列表模式强制
+  关单条循环）；PlaylistCard（scripts/playlist_card.gd，≡ 标记与媒体卡片
+  混排）；PlaylistSettingsWindow（scripts/playlist_settings_window.gd：
+  名称/列表时长/定时开关/条目增删调序与逐项时长）。定时起播/停止由主窗口
+  0.5s tick 检查（main.gd _check_playlist_schedules）。注意：媒体网格混排
+  后凡遍历 %MediaGrid 的循环都必须 is MediaItemCard 判断（列表卡片是
+  PlaylistCard），序号只编媒体卡片
 - 无边框主窗口（解决拖动冻结）：Windows 拖动/缩放原生窗口会进入模态消息循环，
   冻结整个进程主循环（mpv 音频在自己线程所以声音不停）。现主窗口
   borderless + 自绘标题栏（scripts/title_bar.gd：代码逐帧移动窗口，拖动时
@@ -147,6 +159,16 @@
   标题栏蓝色序号+文件名+类型徽标，16:9 画面区，无缝 3×2 按钮网格
   播放/静音/循环/预览/设置/删除；信号 preview_requested/push_requested/
   settings_requested/delete_requested/loop_toggled/mute_toggled）
+- `scripts/playlist_object.gd` — PlaylistObject 播放列表数据模型（条目
+  {path,duration}、列表总时长、定时自动播放 HH:MM 跨午夜，随项目持久化）
+- `scripts/playlist_runner.gd` — PlaylistRunner 播放列表执行器（墙钟计时
+  依次推输出端；条目时长 0=视频/音频自然结束、其他默认 10s；列表时长>0
+  循环播满；外部干预自动让出；信号 started/item_started/stopped）
+- `scripts/playlist_card.gd` — PlaylistCard 播放列表卡片（与媒体卡片同板
+  混排：≡+名称+列表徽标、信息区、播放/设置/删除）
+- `scripts/playlist_settings_window.gd` — PlaylistSettingsWindow 列表设置
+  独立窗口（名称/列表播放时间/定时开关 HH:MM 校验 + 条目从媒体库添加/
+  调序/删除/逐项时长）
 - `scripts/thumbnailer.gd` — Thumbnailer 封面截取器（独立 MPVPlayer 后台抓帧，
   信号 thumbnail_ready/thumbnail_failed；注意 mpv 会补发残留帧，需等
   time_changed 落到目标位置再取最新纹理）
