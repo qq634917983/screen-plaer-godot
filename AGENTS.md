@@ -41,8 +41,8 @@
   （PlayerSlot.step_web：移光标 + 左键按下/抬起）；预览端「触点」开关进入
   编辑模式：左键画面加点、右键删最近点（PlayerSlot.touch_edit_mode +
   touch_edit_clicked 信号，编辑期点击不转发浏览器）；触点白点+序号由
-  scripts/touch_points_layer.gd 绘制，叠加在预览/输出画面与投屏窗口
-  （投屏层是 %CastVideoView 子节点，跟随缩放/平移），当前步红色高亮。
+  scripts/touch_points_layer.gd 绘制，只叠加在预览/输出画面（投屏窗口
+  不显示触点标记，只执行点击），当前步红色高亮。
   注意：网页点击转发两端均已验证有效（WEB_VIEWPORT_SIZE 1280×720 反算），
   点击无反应先查是否有弹窗/投屏窗口遮挡主窗口
 - Phase 12（卡片重构，参照 doc/item.html）：标题栏（蓝色序号+文件名+类型徽标）

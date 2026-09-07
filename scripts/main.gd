@@ -38,8 +38,7 @@ var _preview_dragging := false
 var _output_dragging := false
 var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
-var _output_dots  # 输出画面触点可视化层
-var _cast_dots  # 投屏窗口触点可视化层（跟随输出端）
+var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点标记）
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -168,17 +167,12 @@ func _ready() -> void:
 	for b: Button in [%PreviewPagePrev, %PreviewPageNext, %OutputPagePrev, %OutputPageNext]:
 		b.custom_minimum_size = Vector2(30, 40)
 		b.focus_mode = Control.FOCUS_NONE
-	# 网页触点：可视化层叠加在预览/输出画面与投屏窗口上（不挡鼠标）；
+	# 网页触点：可视化层叠加在预览/输出画面上（不挡鼠标，投屏窗口不叠加）；
 	# 预览端「触点」开关进入编辑模式，点击画面加点/删点
 	_preview_dots = TouchPointsLayerScript.new()
 	%VideoView.get_parent().add_child(_preview_dots)
 	_output_dots = TouchPointsLayerScript.new()
 	%OutputVideoView.get_parent().add_child(_output_dots)
-	_cast_dots = TouchPointsLayerScript.new()
-	_cast_video_view.add_child(_cast_dots)
-	# 必须连 offsets 一起重置：新建的层尺寸为 0，set_anchors_preset 会保留
-	# 当前尺寸（offsets 写成负值），层永远是 0×0，所有触点全叠到左上角
-	_cast_dots.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	%PreviewTouchEdit.toggled.connect(func(on: bool) -> void: _preview.touch_edit_mode = on)
 	_preview.touch_edit_clicked.connect(_on_touch_edit_clicked)
 	_setup_menus()
@@ -982,16 +976,14 @@ func _update_slot_web_ui(slot: PlayerSlot, play_btn: Button, stop_btn: Button) -
 
 
 ## 触点可视化层：预览端显示当前网页媒体的触点（编辑模式下空序列也显示），
-## 输出/投屏跟随输出端（无触点不显示）
+## 输出端跟随输出媒体（无触点不显示）；投屏窗口不显示触点标记（只执行点击）
 func _refresh_touch_layers() -> void:
 	_preview_dots.set_points(_preview.web_points, _preview.web_step)
 	_preview_dots.visible = _preview.source_kind == PlayerSlot.SourceKind.WEB \
 		and (not _preview.web_points.is_empty() or _preview.touch_edit_mode)
 	_output_dots.set_points(_output.web_points, _output.web_step)
-	_cast_dots.set_points(_output.web_points, _output.web_step)
-	var out_show := _output.source_kind == PlayerSlot.SourceKind.WEB and not _output.web_points.is_empty()
-	_output_dots.visible = out_show
-	_cast_dots.visible = out_show
+	_output_dots.visible = _output.source_kind == PlayerSlot.SourceKind.WEB \
+		and not _output.web_points.is_empty()
 
 
 ## 触点编辑：左键在预览画面上添加触点，右键删除最近触点；随项目持久化

@@ -7,8 +7,8 @@ extends Window
 ## 3) 右侧：实时预览画面（仅网页媒体）——内嵌 CEF 浏览器一直显示，
 ##    相当于本窗口独享的独立播放器，不与预览/输出端同步，关窗即销毁。
 ## 选中「触点」分区时：左键点右侧画面加触点、右键删最近触点，白点+序号
-## 叠加显示；触点归一化坐标存 MediaObject.touch_points，与预览/输出/投屏
-## 三端的触点层共享同一引用，编辑即时同步。
+## 叠加显示；触点归一化坐标存 MediaObject.touch_points，与预览/输出两端的
+## 触点层共享同一引用，编辑即时同步（投屏窗口不显示触点标记，只执行点击）。
 ## 播放时按触点顺序步进用播放器的 ← → 键（见 PlayerSlot.step_web）。
 
 signal properties_changed(media: MediaObject)
