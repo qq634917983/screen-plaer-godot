@@ -3,9 +3,10 @@ extends Node
 ## 播放列表执行器：把列表条目依次推送到输出端播放。
 ## 计时用墙钟（Time.get_ticks_msec），与帧源类型无关——静态/网页/PPT 没有
 ## 播放进度，视频/音频的"播完"也没有 end-file 事件可靠判定，统一墙钟最稳：
-## - 条目时长 > 0：播满该秒数切下一条
+## - 条目时长 > 0：播满该秒数（= 距下一条的间隔）
 ## - 条目时长 = 0：视频/音频等输出端拿到真实时长后按"进度到尾 或
-##   墙钟超过时长+2s 兜底"切下一条；图片/网页/PPT 按 DEFAULT_ITEM_DURATION
+##   墙钟超过时长+2s 兜底"计一次；图片/网页/PPT 按 DEFAULT_ITEM_DURATION
+## - 条目 count > 1：同一项连续重播（重新加载），播够次数才切下一条
 ## - 列表 duration > 0：播完一轮回到第一条循环，直到播满列表总时长
 ## 外部干预（手动推送/快速切换/输出停止）自动让出：输出端媒体路径与当前
 ## 条目不一致即静默停止（PPT 后台转换期间除外——经 is_pending 查询）。
@@ -23,6 +24,7 @@ var _is_pending: Callable  # func(path: String) -> bool：该路径正在后台�
 var _item_clock_started := false
 var _item_start_msec := 0
 var _list_start_msec := 0
+var _item_repeat := 0  # 当前条目已播放次数（播够 count 才切下一条）
 
 
 func setup(slot: PlayerSlot, load_item: Callable, is_pending: Callable) -> void:
@@ -53,6 +55,7 @@ func stop(reason := "manual") -> void:
 	var pl := playlist
 	playlist = null
 	item_index = -1
+	_item_repeat = 0
 	stopped.emit(pl, reason)
 
 
@@ -101,19 +104,29 @@ func _current_path() -> String:
 	return str(playlist.items[item_index]["path"])
 
 
-## 推进到下一条；depth 防止全部条目不可播时无限递归
+## 推进：当前条目播够 count 次才切下一条（重播 = 重新加载同一条目）；
+## depth 防止全部条目不可播时无限递归（一轮最多 total_plays 次加载尝试）
 func _advance(depth: int) -> void:
 	if playlist == null:
 		return
-	if depth >= playlist.items.size():
+	if depth > playlist.total_plays():
 		stop("finished")  # 全部条目都无法播放
 		return
+	if item_index >= 0:
+		_item_repeat += 1
+		if _item_repeat < PlaylistObject.item_count(playlist.items[item_index]):
+			_item_clock_started = false
+			if not _load_item.call(_current_path()):
+				_advance(depth + 1)
+			return
+		_item_repeat = 0
 	item_index += 1
 	var now := Time.get_ticks_msec()
 	if item_index >= playlist.items.size():
 		# 一轮播完：列表设了总时长且未播满则循环，否则结束
 		if playlist.duration > 0.0 and now - _list_start_msec < int(playlist.duration * 1000.0):
 			item_index = 0
+			_item_repeat = 0
 		else:
 			stop("finished")
 			return

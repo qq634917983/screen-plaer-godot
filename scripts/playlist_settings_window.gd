@@ -152,6 +152,13 @@ func _build_ui() -> void:
 	add_button.pressed.connect(_on_add_item_pressed)
 	add_row.add_child(add_button)
 
+	var items_note := Label.new()
+	items_note.text = "时长 = 播多久后切下一项（0 = 视频/音频播完，图片/网页/PPT 默认 10 秒）；次数 = 该项连续播放几遍"
+	items_note.add_theme_font_size_override("font_size", 11)
+	items_note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
+	items_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	root.add_child(items_note)
+
 	# 条目列表：内嵌深色面板（与 ItemList 面板/条目设置窗口内嵌区同色）
 	var items_panel := PanelContainer.new()
 	items_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -254,6 +261,7 @@ func _make_item_row(index: int) -> Control:
 	dur.max_value = 86400
 	dur.step = 1
 	dur.suffix = "秒"
+	dur.tooltip_text = "该项播多久后切下一项（0 = 视频/音频播完，图片/网页/PPT 默认 10 秒）"
 	dur.custom_minimum_size = Vector2(96, 0)
 	dur.set_value_no_signal(float(item["duration"]))
 	dur.value_changed.connect(func(value: float) -> void:
@@ -261,6 +269,20 @@ func _make_item_row(index: int) -> Control:
 		_emit_changed()
 	)
 	row.add_child(dur)
+
+	var cnt := SpinBox.new()
+	cnt.min_value = 1
+	cnt.max_value = 999
+	cnt.step = 1
+	cnt.suffix = "次"
+	cnt.tooltip_text = "该项连续播放几遍，播够次数才切下一项"
+	cnt.custom_minimum_size = Vector2(80, 0)
+	cnt.set_value_no_signal(PlaylistObject.item_count(item))
+	cnt.value_changed.connect(func(value: float) -> void:
+		playlist.items[index]["count"] = int(value)
+		_emit_changed()
+	)
+	row.add_child(cnt)
 
 	var up := _make_row_button(row, "↑", index > 0)
 	up.pressed.connect(func() -> void:

@@ -280,10 +280,11 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
 > 时间与每日定时自动播放（开启/关闭时间）。
 
 - [x] 14.1 数据模型 scripts/playlist_object.gd（PlaylistObject）：
-      items = { path, duration }（秒；0 = 视频/音频播到自然结束，
-      图片/网页/PPT 默认 10 秒）+ duration（列表播放时间，0=播完一轮，
-      >0=循环直到播满）+ auto_enabled/auto_start/auto_stop（"HH:MM"
-      支持跨午夜，开启==关闭=全天）；随项目 playlist/lists 段持久化
+      items = { path, duration, count }（duration 秒 = 距下一项的间隔，
+      0 = 视频/音频播到自然结束，图片/网页/PPT 默认 10 秒；count = 该项
+      连续播放次数，默认 1，播够次数才切下一项）+ duration（列表播放时间，
+      0=播完一轮，>0=循环直到播满）+ auto_enabled/auto_start/auto_stop
+      （"HH:MM" 支持跨午夜，开启==关闭=全天）；随项目 playlist/lists 段持久化
 - [x] 14.2 执行器 scripts/playlist_runner.gd（PlaylistRunner）：墙钟计时
       把条目依次推输出端（复用卡片「播放」通路 _load_output，投屏自动弹出，
       列表模式强制关闭单条循环）；视频自然结束判定 = 进度到尾 0.3s 或

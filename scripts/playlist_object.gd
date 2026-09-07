@@ -1,8 +1,10 @@
 class_name PlaylistObject
 extends RefCounted
 ## 播放列表：媒体库条目的有序组合。
-## - items：{ path, duration }，duration 秒；0 = 视频/音频播到自然结束，
-##   图片/网页/PPT 等无自然时长的媒体按 DEFAULT_ITEM_DURATION 秒计
+## - items：{ path, duration, count }，duration 秒 = 该项播多久后切下一项
+##   （0 = 视频/音频播到自然结束，图片/网页/PPT 等无自然时长的媒体按
+##   DEFAULT_ITEM_DURATION 秒计）；count = 该项连续播放次数（默认 1，
+##   播够次数才切下一项）
 ## - duration：列表整体播放时间（秒）；0 = 播完一轮即停，
 ##   >0 = 循环整个列表直到播满该时长
 ## - 定时自动播放：auto_enabled + auto_start/auto_stop（"HH:MM"，支持跨午夜；
@@ -12,15 +14,15 @@ extends RefCounted
 const DEFAULT_ITEM_DURATION := 10.0  # 无自然时长媒体的默认播放秒数
 
 var name := "播放列表"
-var items: Array[Dictionary] = []  # { "path": String, "duration": float }
+var items: Array[Dictionary] = []  # { "path": String, "duration": float, "count": int }
 var duration := 0.0
 var auto_enabled := false
 var auto_start := "08:00"
 var auto_stop := "20:00"
 
 
-func add_item(path: String, dur := 0.0) -> void:
-	items.append({"path": path, "duration": dur})
+func add_item(path: String, dur := 0.0, count := 1) -> void:
+	items.append({"path": path, "duration": dur, "count": maxi(count, 1)})
 
 
 func remove_item(index: int) -> void:
@@ -37,15 +39,28 @@ func move_item(index: int, delta: int) -> void:
 	items.insert(to, it)
 
 
-## 列表一轮的估算时长（秒）；含"播完整个媒体"项时返回 -1（时长未知）
+## 列表一轮的估算时长（秒，含各项次数）；含"播完整个媒体"项时返回 -1（时长未知）
 func estimated_round_duration() -> float:
 	var total := 0.0
 	for it in items:
 		var d := float(it["duration"])
 		if d <= 0.0:
 			return -1.0
-		total += d
+		total += d * item_count(it)
 	return total
+
+
+## 该项连续播放次数（兼容旧项目缺省 1）
+static func item_count(it: Dictionary) -> int:
+	return maxi(int(it.get("count", 1)), 1)
+
+
+## 一轮的总播放次数（用于 Runner 的递归深度保护）
+func total_plays() -> int:
+	var total := 0
+	for it in items:
+		total += item_count(it)
+	return maxi(total, 1)
 
 
 ## "HH:MM" → 当天分钟数；非法返回 -1
@@ -81,7 +96,7 @@ func is_in_schedule_now() -> bool:
 func to_dict() -> Dictionary:
 	var item_dicts: Array = []
 	for it in items:
-		item_dicts.append({"path": str(it["path"]), "duration": float(it["duration"])})
+		item_dicts.append({"path": str(it["path"]), "duration": float(it["duration"]), "count": item_count(it)})
 	return {
 		"name": name,
 		"items": item_dicts,
@@ -96,7 +111,7 @@ static func from_dict(d: Dictionary) -> PlaylistObject:
 	var pl := PlaylistObject.new()
 	pl.name = str(d.get("name", "播放列表"))
 	for it in d.get("items", []):
-		pl.add_item(str(it.get("path", "")), float(it.get("duration", 0.0)))
+		pl.add_item(str(it.get("path", "")), float(it.get("duration", 0.0)), int(it.get("count", 1)))
 	pl.duration = float(d.get("duration", 0.0))
 	pl.auto_enabled = bool(d.get("auto_enabled", false))
 	pl.auto_start = str(d.get("auto_start", "08:00"))

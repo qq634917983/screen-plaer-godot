@@ -30,7 +30,8 @@
 - Phase 0-9、11-12、14 全部完成（doc/TODO.md）；Phase 10（播放体验增强：
   网页缩放 / PPT 翻页快捷键）已立项待做
 - Phase 14（播放列表）：媒体库「添加文件」左侧「添加列表」按钮；PlaylistObject
-  （scripts/playlist_object.gd：条目{path,duration} + 列表总时长 + 定时
+  （scripts/playlist_object.gd：条目{path,duration,count}——duration=距下一项
+  间隔秒数、count=连播次数默认 1——+ 列表总时长 + 定时
   自动播放 HH:MM 跨午夜，随项目 playlist/lists 段持久化）；PlaylistRunner
   （scripts/playlist_runner.gd：墙钟计时依次推输出端，条目时长 0=视频/音频
   自然结束（进度到尾 0.3s 或墙钟超时长+2s 兜底）、图片/网页/PPT 默认 10s；
@@ -160,10 +161,12 @@
   播放/静音/循环/预览/设置/删除；信号 preview_requested/push_requested/
   settings_requested/delete_requested/loop_toggled/mute_toggled）
 - `scripts/playlist_object.gd` — PlaylistObject 播放列表数据模型（条目
-  {path,duration}、列表总时长、定时自动播放 HH:MM 跨午夜，随项目持久化）
+  {path,duration,count}：duration=距下一项间隔秒数、count=连播次数默认 1；
+  列表总时长、定时自动播放 HH:MM 跨午夜，随项目持久化）
 - `scripts/playlist_runner.gd` — PlaylistRunner 播放列表执行器（墙钟计时
-  依次推输出端；条目时长 0=视频/音频自然结束、其他默认 10s；列表时长>0
-  循环播满；外部干预自动让出；信号 started/item_started/stopped）
+  依次推输出端；条目时长 0=视频/音频自然结束、其他默认 10s；count>1 重新
+  加载同一条目连播，播够次数才切下一条；列表时长>0 循环播满；外部干预
+  自动让出；信号 started/item_started/stopped）
 - `scripts/playlist_card.gd` — PlaylistCard 播放列表卡片（与媒体卡片同板
   混排：≡+名称+列表徽标、信息区、播放/设置/删除）
 - `scripts/playlist_settings_window.gd` — PlaylistSettingsWindow 列表设置
