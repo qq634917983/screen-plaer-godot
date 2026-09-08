@@ -27,8 +27,13 @@
 
 ## 当前进度
 
-- Phase 0-9、11-12、14 全部完成（doc/TODO.md）；Phase 10（播放体验增强：
+- Phase 0-9、11-12、14-15 全部完成（doc/TODO.md）；Phase 10（播放体验增强：
   网页缩放 / PPT 翻页快捷键）已立项待做
+- Phase 15（内容区十字四分区）：左上=预览/快速切换/输出、右上=实用功能、
+  左下=媒体、右下=音频控制；scripts/quad_split_container.gd（QuadSplitContainer，
+  按子节点名对位四象限，分割条比例存储、窗口缩放按比例伸缩，竖条/横条/交叉点
+  可拖，各向最小尺寸钳制）；比例持久化 settings.cfg（ui/split_x、ui/split_y，
+  默认 0.72/0.5），main.gd 启动恢复
 - Phase 14（播放列表）：媒体库「添加文件」左侧「添加列表」按钮；PlaylistObject
   （scripts/playlist_object.gd：条目{path,duration,count}——duration=距下一项
   间隔秒数、count=连播次数默认 1——+ 列表总时长 + 定时

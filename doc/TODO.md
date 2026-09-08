@@ -303,6 +303,25 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       依次切换并播完自动停止清屏；列表时长 7s 时 2s 条目循环 4 轮后准点
       收尾；定时起播/停止按 HH:MM 生效；保存/重开项目列表完整恢复
 
+## Phase 15 —— 内容区十字四分区布局（已完成）
+
+> 内容区由「左列（播放器+媒体库）| 右列（实用功能+音频控制）」改为十字
+> 四分区：左上=预览/快速切换/输出播放器，右上=实用功能，左下=媒体，
+> 右下=音频控制；竖横分割条中心交叉，拖拽调整布局。
+
+- [x] 15.1 scripts/quad_split_container.gd（QuadSplitContainer extends Container）：
+      按子节点名对位四象限（PlayersSection/UtilityPanel/MediaPanel/AudioPanel），
+      分割位置以比例（split_x_ratio/split_y_ratio）存储，窗口缩放时按比例伸缩
+      （窗口放大各分区按历史比例放大）；拖拽竖条/横条/交叉点（两轴同调），
+      悬停显示 ↔/↕/✥ 光标，各向最小尺寸钳制（min_left/right/top/bottom），
+      拖拽结束发 ratios_changed
+- [x] 15.2 main.tscn 重构：MainHBox/MainLeft/SidePanels 三层包装删除，
+      四个分区面板直接挂 %QuadSplit
+- [x] 15.3 比例持久化：拖拽结束写 settings.cfg（ui/split_x、ui/split_y，
+      默认 0.72/0.5），启动恢复（main.gd _ready）
+- [x] 15.4 验证（game_eval 实测）：模拟拖拽（含最小尺寸钳制）比例与
+      settings.cfg 同步更新；窗口 1152×648 → 1600×900 分割条按比例跟随
+
 ## Phase 10 —— 播放体验增强（待做）
 
 - [ ] 10.1 播放列表/顺序播放：输出端当前条目播完后自动切换下一条

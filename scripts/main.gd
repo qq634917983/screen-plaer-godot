@@ -84,6 +84,7 @@ var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点
 @onready var _status_mem: Label = %StatusMem
 @onready var _status_pid: Label = %StatusPid
 @onready var _status_version: Label = %StatusVersion
+@onready var _quad_split: QuadSplitContainer = %QuadSplit
 
 
 func _ready() -> void:
@@ -177,6 +178,10 @@ func _ready() -> void:
 	_output_progress.drag_ended.connect(_on_output_progress_drag_ended)
 	_output_mute_button.pressed.connect(_on_output_mute_pressed)
 	_audio_output_slider.value_changed.connect(_on_output_volume_changed)
+	# 内容区十字四分区：恢复上次拖拽的分割比例，拖拽结束持久化
+	_quad_split.split_x_ratio = ProjectStore.get_setting("ui", "split_x", 0.72)
+	_quad_split.split_y_ratio = ProjectStore.get_setting("ui", "split_y", 0.5)
+	_quad_split.ratios_changed.connect(_on_quad_split_ratios_changed)
 	# PPT 翻页按钮（画面内底部 < >，仅 SLIDE 帧源时显示）
 	%PreviewPagePrev.pressed.connect(_preview.prev_page)
 	%PreviewPageNext.pressed.connect(_preview.next_page)
@@ -1186,6 +1191,11 @@ func _update_slot_progress(slot: PlayerSlot, slider: HSlider, time_label: Label,
 		slider.max_value = slot.duration
 		if not dragging:
 			slider.set_value_no_signal(slot.elapsed)
+
+
+func _on_quad_split_ratios_changed(x_ratio: float, y_ratio: float) -> void:
+	ProjectStore.set_setting("ui", "split_x", x_ratio)
+	ProjectStore.set_setting("ui", "split_y", y_ratio)
 
 
 func _on_output_volume_changed(value: float) -> void:
