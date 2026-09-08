@@ -5,6 +5,11 @@
 [ext_resource type="Script" uid="uid://d6k0gkntp2y6" path="res://scripts/settings_window.gd" id="3_h2yge"]
 [ext_resource type="Script" path="res://scripts/quad_split_container.gd" id="4_quadsplit"]
 
+[ext_resource type="Script" path="res://scripts/title_bar.gd" id="5_titlebar"]
+
+[sub_resource type="SystemFont" id="font_player_controls"]
+font_names = PackedStringArray("Segoe UI Symbol", "Apple Symbols", "PingFang SC")
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0xm2m"]
 bg_color = Color(0.0667, 0.0784, 0.098, 1)
 
@@ -59,6 +64,10 @@ script = ExtResource("2_0xm2m")
 [node name="RootVBox" type="VBoxContainer" parent="." unique_id=1161101272]
 layout_mode = 2
 theme_override_constants/separation = 0
+
+[node name="TitleBar" type="PanelContainer" parent="RootVBox"]
+layout_mode = 2
+script = ExtResource("5_titlebar")
 
 [node name="MenuBar" type="PanelContainer" parent="RootVBox" unique_id=814525627]
 custom_minimum_size = Vector2(0, 32)
@@ -194,11 +203,17 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="PreviewPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=15278169]
+custom_minimum_size = Vector2(34, 0)
+theme_override_fonts/font = SubResource("font_player_controls")
+theme_override_font_sizes/font_size = 14
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
 
 [node name="PreviewStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=160637239]
+custom_minimum_size = Vector2(34, 0)
+theme_override_fonts/font = SubResource("font_player_controls")
+theme_override_font_sizes/font_size = 14
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"
@@ -316,11 +331,17 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="OutputPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=80473041]
+custom_minimum_size = Vector2(34, 0)
+theme_override_fonts/font = SubResource("font_player_controls")
+theme_override_font_sizes/font_size = 14
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
 
 [node name="OutputStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=1525202474]
+custom_minimum_size = Vector2(34, 0)
+theme_override_fonts/font = SubResource("font_player_controls")
+theme_override_font_sizes/font_size = 14
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"

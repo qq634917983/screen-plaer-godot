@@ -1,3 +1,4 @@
+@tool
 ## 十字四分区容器：左上/右上/左下/右下四个面板，竖横两条分割条在中心交叉。
 ## 分割位置以比例存储，窗口缩放时按比例伸缩（放大窗口各分区按历史比例放大）；
 ## 拖拽竖条/横条/交叉点调整布局，拖拽结束发 ratios_changed 供持久化。
@@ -10,13 +11,41 @@ signal ratios_changed(x_ratio: float, y_ratio: float)
 ## 四个象限按子节点名字对位（找不到名字的子节点退回按声明顺序）
 const QUADRANT_NAMES: Array[String] = ["PlayersSection", "UtilityPanel", "MediaPanel", "AudioPanel"]
 
-@export var dragger_width: int = 10
-@export_range(0.05, 0.95) var split_x_ratio: float = 0.72
-@export_range(0.05, 0.95) var split_y_ratio: float = 0.5
-@export var min_left := 420.0
-@export var min_right := 220.0
-@export var min_top := 260.0
-@export var min_bottom := 180.0
+@export var dragger_width: int = 10:
+	set(value):
+		dragger_width = value
+		update_minimum_size()
+		queue_sort()
+@export_range(0.05, 0.95) var split_x_ratio: float = 0.72:
+	set(value):
+		split_x_ratio = value
+		update_minimum_size()
+		queue_sort()
+@export_range(0.05, 0.95) var split_y_ratio: float = 0.5:
+	set(value):
+		split_y_ratio = value
+		update_minimum_size()
+		queue_sort()
+@export var min_left := 420.0:
+	set(value):
+		min_left = value
+		update_minimum_size()
+		queue_sort()
+@export var min_right := 220.0:
+	set(value):
+		min_right = value
+		update_minimum_size()
+		queue_sort()
+@export var min_top := 260.0:
+	set(value):
+		min_top = value
+		update_minimum_size()
+		queue_sort()
+@export var min_bottom := 180.0:
+	set(value):
+		min_bottom = value
+		update_minimum_size()
+		queue_sort()
 
 var _drag_mode := 0  # 0=无 1=竖条 2=横条 3=交叉点（两轴一起）
 
@@ -96,6 +125,8 @@ func _cursor_for_zone(zone: int) -> CursorShape:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			_drag_mode = _hit_zone(event.position)

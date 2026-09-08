@@ -19,7 +19,6 @@ const MediaItemCardScene := preload("res://scripts/media_item_card.gd")
 const PlaylistCardScene := preload("res://scripts/playlist_card.gd")
 const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
-const TitleBarScript := preload("res://scripts/title_bar.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 
@@ -94,9 +93,7 @@ func _ready() -> void:
 	# 不进入 Windows 的模态移动/缩放消息循环（该循环会冻结整个进程主循环），
 	# 因此拖动主窗口时播放与投屏画面不再中断
 	get_window().borderless = true
-	_title_bar = TitleBarScript.new()
-	$RootVBox.add_child(_title_bar)
-	$RootVBox.move_child(_title_bar, 0)
+	_title_bar = $RootVBox/TitleBar
 	add_child(WindowResizerScript.new())
 
 	_preview = PlayerSlot.new()
@@ -156,16 +153,6 @@ func _ready() -> void:
 	_runner.started.connect(func(_pl: PlaylistObject) -> void: _refresh_playlist_cards())
 	_runner.item_started.connect(func(_pl: PlaylistObject, _i: int) -> void: _refresh_playlist_cards())
 	_runner.stopped.connect(_on_playlist_stopped)
-
-	# 统一控制按钮图标：Segoe UI Symbol 全部为文字字形，尺寸一致
-	# （默认主题里部分图标落到 emoji 字体渲染，导致大小参差）
-	var icon_font := SystemFont.new()
-	icon_font.font_names = PackedStringArray(["Segoe UI Symbol", "Apple Symbols", "PingFang SC"])
-	for b: Button in [_preview_play_button, _preview_stop_button, _output_play_button,
-			_output_stop_button]:
-		b.add_theme_font_override("font", icon_font)
-		b.add_theme_font_size_override("font_size", 14)
-		b.custom_minimum_size = Vector2(34, 0)
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
 	_add_list_button.pressed.connect(_on_add_list_pressed)

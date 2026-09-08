@@ -30,6 +30,12 @@
 
 ## 当前进度
 
+- 编辑器布局统一：QuadSplitContainer 为 @tool，导出属性 setter 自动重新布局；
+  TitleBar 为 @tool 并直接挂在 main.tscn 的 RootVBox/TitleBar，main.gd 只引用现有节点。
+  编辑器中标题栏只绘制，不移动/关闭窗口。播放/停止按钮静态样式放场景资源。
+  主业务脚本不能改为 @tool（避免编辑场景启动解码器/浏览器或读写项目）；
+  编辑器使用默认分区比例，运行时仍恢复用户设置。
+
 - Phase 16 macOS 开发运行适配已落地（用户指定优先于 Phase 10）：分支
   `codex/macos-support`，GPT 起点提交 `2d6ab86`；Apple M4 / Godot 4.7.2
   Metal 实测视频、图片、网页触点、26 页 PPT 转换/翻页及共享纹理投屏。
