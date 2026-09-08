@@ -22,7 +22,26 @@ var _drag_mode := 0  # 0=无 1=竖条 2=横条 3=交叉点（两轴一起）
 
 
 func _get_minimum_size() -> Vector2:
-	return Vector2(min_left + min_right + dragger_width, min_top + min_bottom + dragger_width)
+	var limits := _panel_minimums()
+	return Vector2(limits.x + limits.y + dragger_width, limits.z + limits.w + dragger_width)
+
+
+## 系统字体的字形高度不同，四象限不能小于实际控件最小尺寸。
+## 否则 macOS 回退字体下，媒体面板会盖住上方播放器控制条。
+func _panel_minimums() -> Vector4:
+	var limits := Vector4(min_left, min_right, min_top, min_bottom)
+	for child in get_children():
+		if not child is Control or not child.visible:
+			continue
+		var idx := QUADRANT_NAMES.find(child.name)
+		if idx == -1:
+			idx = mini(child.get_index(), 3)
+		var minimum: Vector2 = child.get_combined_minimum_size()
+		var col := idx % 2
+		var row := 2 + idx / 2
+		limits[col] = maxf(limits[col], minimum.x)
+		limits[row] = maxf(limits[row], minimum.y)
+	return limits
 
 
 func _notification(what: int) -> void:
@@ -31,11 +50,13 @@ func _notification(what: int) -> void:
 
 
 func _split_x_px() -> float:
-	return clampf(size.x * split_x_ratio, min_left, maxf(min_left, size.x - dragger_width - min_right))
+	var limits := _panel_minimums()
+	return clampf(size.x * split_x_ratio, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
 
 
 func _split_y_px() -> float:
-	return clampf(size.y * split_y_ratio, min_top, maxf(min_top, size.y - dragger_width - min_bottom))
+	var limits := _panel_minimums()
+	return clampf(size.y * split_y_ratio, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
 
 
 func _sort_children() -> void:
@@ -88,11 +109,12 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 	elif event is InputEventMouseMotion:
 		if _drag_mode != 0:
+			var limits := _panel_minimums()
 			if _drag_mode & 1:
-				var px := clampf(event.position.x, min_left, maxf(min_left, size.x - dragger_width - min_right))
+				var px := clampf(event.position.x, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
 				split_x_ratio = px / maxf(size.x, 1.0)
 			if _drag_mode & 2:
-				var py := clampf(event.position.y, min_top, maxf(min_top, size.y - dragger_width - min_bottom))
+				var py := clampf(event.position.y, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
 				split_y_ratio = py / maxf(size.y, 1.0)
 			queue_sort()
 			accept_event()

@@ -294,9 +294,7 @@ func _start_preview_browser() -> void:
 		return
 	if cef == null or not _has_web_preview():
 		return
-	var url := media.path
-	if not url.contains("://") or url.begins_with("user://") or url.begins_with("res://"):
-		url = "file:///" + ProjectSettings.globalize_path(media.path).replace("\\", "/")
+	var url := PlatformPaths.browser_url(media.path)
 	_browser = cef.create_browser(url, _web_view, {"frame_rate": 15})
 	if _browser == null:
 		push_warning("条目预览浏览器创建失败：" + cef.get_error())

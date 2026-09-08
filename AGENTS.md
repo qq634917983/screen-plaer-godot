@@ -13,6 +13,8 @@
 
 ## 业务逻辑（已确认，详见 doc/TODO.md）
 
+- 产品定位：Godot 原生跨平台桌面媒体播放与投屏系统；CEF 仅用于播放网页/PPT 媒体。未来可能增加简单的网页后台遥控器，作为桌面播放器的独立控制入口，当前不开发。
+
 - 单击媒体库条目 → 加载到预览播放器（预览可随意切换，不影响输出）
 - 卡片「播放」按钮 → 直接送输出端 + 投屏窗口从头播放，不经过预览端
   （main.gd _on_card_push → _load_output；PPT 无缓存时后台转换完成自动起播）
@@ -26,6 +28,20 @@
   （单进程多窗口，无边框置顶）
 
 ## 当前进度
+
+- Phase 16 macOS 开发运行适配已落地（用户指定优先于 Phase 10）：分支
+  `codex/macos-support`，GPT 起点提交 `2d6ab86`；Apple M4 / Godot 4.7.2
+  Metal 实测视频、图片、网页触点、26 页 PPT 转换/翻页及共享纹理投屏。
+  `native/mpv/` 为 Mac libmpv 软件渲染后端；`tools/build_macos.sh --with-cef`
+  固定版本构建 MPV 与 gdcef，`tools/run_macos.sh` 导入后启动。
+  CEF 的 Mac 适配必须包含 external_message_pump 与
+  `native/cef_application_mac.mm` 的 NSApplication 协议桥，否则原生事件循环崩溃；
+  framework 拷贝保留符号链接，替换 Helper 后重新 ad-hoc 签名。
+  Mac CEF 缓存/日志在 user://；浏览器路径统一走 PlatformPaths.browser_url。
+  QuadSplitContainer 最小尺寸需计入子控件实际尺寸（Mac 字体高度不同）。
+  Mac libmpv 的目标时间信号可能早于纹理，Thumbnailer 必须等两者到位再截取。
+  详情/测试命令见 doc/MACOS.md；尚未验证 Intel / Windows 真机回归、外接多屏/4K，
+  尚未制作独立签名公证 .app，Mac dylib 依赖本机 Homebrew，原生运行包不入库。
 
 - Phase 0-9、11-12、14-15 全部完成（doc/TODO.md）；Phase 10（播放体验增强：
   网页缩放 / PPT 翻页快捷键）已立项待做

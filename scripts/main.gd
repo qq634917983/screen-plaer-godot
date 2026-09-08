@@ -125,7 +125,16 @@ func _ready() -> void:
 		_cef = ClassDB.instantiate(&"GdCEF") as Node
 		_cef.name = "CEF"
 		add_child(_cef)
-		if not _cef.initialize({"locale": "zh-CN"}):
+		var cef_config := {"locale": "zh-CN"}
+		if OS.get_name() == "macOS":
+			# .app/项目目录可能只读；浏览器持久数据放用户数据目录。
+			var cache := ProjectSettings.globalize_path("user://cef_cache")
+			DirAccess.make_dir_recursive_absolute(cache)
+			cef_config["root_cache_path"] = cache
+			cef_config["cache_path"] = cache
+			cef_config["log_file"] = ProjectSettings.globalize_path("user://cef.log")
+			cef_config["remote_debugging_port"] = 0
+		if not _cef.initialize(cef_config):
 			push_error("CEF 初始化失败：" + _cef.get_error())
 			_cef.queue_free()
 			_cef = null
@@ -151,7 +160,7 @@ func _ready() -> void:
 	# 统一控制按钮图标：Segoe UI Symbol 全部为文字字形，尺寸一致
 	# （默认主题里部分图标落到 emoji 字体渲染，导致大小参差）
 	var icon_font := SystemFont.new()
-	icon_font.font_names = PackedStringArray(["Segoe UI Symbol"])
+	icon_font.font_names = PackedStringArray(["Segoe UI Symbol", "Apple Symbols", "PingFang SC"])
 	for b: Button in [_preview_play_button, _preview_stop_button, _output_play_button,
 			_output_stop_button]:
 		b.add_theme_font_override("font", icon_font)

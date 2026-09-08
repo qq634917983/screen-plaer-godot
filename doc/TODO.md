@@ -331,6 +331,28 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       宽高写死为最小尺寸、不随窗口拉伸；选择持久化 settings.cfg
       （ui/card_size，默认中）
 
+## Phase 16 —— macOS 多系统适配（开发运行版）
+
+> 用户指定优先于 Phase 10。Windows 已基本正常；2026-09-08 由 GPT 在
+> `codex/macos-support` 开始适配，起点提交 `2d6ab86`。
+
+- [x] 16.1 创建适配分支并提交 Windows 基线说明
+- [x] 16.2 macOS MPVPlayer 原生扩展：libmpv 软件 render API → ImageTexture，
+      支持 Metal，保留输出/投屏共享纹理、预览独立静音与后台封面；
+      封面截取等待目标时间与对应纹理都到位，兼容 Mac 先时间后纹理的信号顺序
+- [x] 16.3 CEF Mac 构建：固定上游版本、framework 符号链接拷贝、Helper 签名，
+      补接 NSApplication 的 CEF 协议与 external_message_pump，解决运行崩溃
+- [x] 16.4 跨平台 file URL 编码、Mac 字体回退、真实控件最小尺寸钳制，
+      入口改为资源路径；Mac CEF 数据与日志写 user://
+- [x] 16.5 提供构建/启动脚本及 doc/MACOS.md（依赖与运行限制）
+- [x] 16.6 Mac 实际图形运行验证：视频解码、暂停 seek、输出/投屏纹理一致、
+      预览独立、循环、后台封面、字体布局、图片、网页触点、
+      26 页 PPT 转换/缓存/翻页投屏；空构建目录重建脚本与启动脚本验证通过
+
+验证范围：Apple M4 + Godot 4.7.2 / Metal 开发运行；Intel、Windows 真机回归、
+外接多屏/4K 性能及独立签名公证安装包尚未验证。Mac 扩展依赖本机 Homebrew libmpv，
+运行包不入库；新机器按 doc/MACOS.md 重建。Windows 绝对媒体路径需在 Mac 重新添加。
+
 ## Phase 10 —— 播放体验增强（待做）
 
 - [ ] 10.1 播放列表/顺序播放：输出端当前条目播完后自动切换下一条

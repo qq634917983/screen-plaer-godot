@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.20)
+project(screenplayer_mpv LANGUAGES CXX)
+if(NOT APPLE)
+  message(FATAL_ERROR "This backend builds on macOS; Windows keeps its existing extension.")
+endif()
+set(GODOT_CPP_PATH "" CACHE PATH "godot-cpp source directory (4.5 stable)")
+set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/build_profile.json" CACHE PATH "" FORCE)
+set(GODOTCPP_TARGET template_release CACHE STRING "" FORCE)
+add_subdirectory("${GODOT_CPP_PATH}" godot-cpp)
+find_path(MPV_INCLUDE_DIR mpv/client.h REQUIRED)
+find_library(MPV_LIBRARY mpv REQUIRED)
+add_library(screenplayer_mpv SHARED mpv_player.cpp)
+target_compile_features(screenplayer_mpv PRIVATE cxx_std_17)
+target_include_directories(screenplayer_mpv PRIVATE "${MPV_INCLUDE_DIR}")
+target_link_libraries(screenplayer_mpv PRIVATE godot-cpp "${MPV_LIBRARY}")
+set_target_properties(screenplayer_mpv PROPERTIES
+  OUTPUT_NAME "godot_mpv.macos.${CMAKE_SYSTEM_PROCESSOR}"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../bin")
