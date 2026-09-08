@@ -1,10 +1,24 @@
 extends Node
 ## 无边框主窗口的手动边缘缩放。
-## 鼠标靠近窗口边缘 6px 显示缩放光标；按下左键后逐帧按鼠标位移调整
-## window.position / window.size。全程不进入 Windows 模态缩放循环，
-## 播放与投屏画面不冻结。边缘按下会 accept 掉事件，避免同时触发标题栏拖动。
+## 鼠标靠近窗口边缘 8px（物理像素）显示缩放光标；按下左键后逐帧按鼠标
+## 位移调整 window.position / window.size。全程不进入 Windows 模态缩放
+## 循环，播放与投屏画面不冻结。边缘按下会 accept 掉事件，避免同时触发
+## 标题栏拖动。
+##
+## 注意：
+## - 边缘判定必须用物理屏幕坐标（DisplayServer.mouse_get_position() 减
+##   win.position）：GUI 事件的 position 是视口逻辑坐标，而 win.size 是
+##   物理像素——窗口被拉伸时两者不等比（实测逻辑 1229 宽 ↔ 物理 1548），
+##   用逻辑坐标比物理宽度会让右/下边缘永远够不到、左/上边缘区变窄
+## - 悬停在按钮/滑条等交互控件上时不抢点击也不改光标（标题栏右上角
+##   最小化/最大化/关闭按钮的顶部会落进上边缘区，否则点击被吞、
+##   光标卡在缩放形状）
+## - 光标提示改的是「当前悬停控件」的 mouse_default_cursor_shape：
+##   Input.set_default_cursor_shape 在根面板铺满全窗口时永不生效
+##   （悬停控件的形状优先，CURSOR_ARROW 是显式箭头而非回落默认）；
+##   且必须每帧轮询（_input 先于视口悬停更新，事件驱动目标落后一拍）
 
-const EDGE := 6
+const EDGE := 8
 
 var _resizing := false
 var _dir := Vector2i.ZERO  # 各轴 -1/0/1：负 = 拖左/上边，正 = 拖右/下边
@@ -24,36 +38,40 @@ func _input(event: InputEvent) -> void:
 	if win.mode != Window.MODE_WINDOWED:
 		return
 	var mb := event as InputEventMouseButton
-	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:
-		if mb.pressed and not _resizing:
-			var d := _edge_dir(win, mb.position)
-			if d != Vector2i.ZERO:
-				_resizing = true
-				_dir = d
-				_start_mouse = DisplayServer.mouse_get_position()
-				_start_rect = Rect2i(win.position, win.size)
-				_set_cursor(d)
-				get_viewport().set_input_as_handled()  # 防止同一点击再触发标题栏拖动
-		elif not mb.pressed:
-			_resizing = false
+	if mb == null or mb.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if mb.pressed:
+		if _resizing or _hover_is_interactive():
+			return  # 交互控件上的点击不抢（标题栏窗口按钮顶部落在边缘区内）
+		var d := _edge_dir(win, DisplayServer.mouse_get_position())
+		if d != Vector2i.ZERO:
+			_resizing = true
+			_dir = d
+			_start_mouse = DisplayServer.mouse_get_position()
+			_start_rect = Rect2i(win.position, win.size)
+			_set_cursor(d)
+			get_viewport().set_input_as_handled()  # 防止同一点击再触发标题栏拖动
+	else:
+		_resizing = false
 
 
 func _process(_delta: float) -> void:
+	var win := get_window()
+	if win.mode != Window.MODE_WINDOWED:
+		_restore_cursor()
+		return
 	if _resizing:
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_resizing = false
 			return
 		_apply_resize()
 		return
-	# 光标提示放在每帧做而不是 motion 事件里：_input 先于视口的悬停更新执行，
-	# 事件驱动会落后一个事件，鼠标停下的最后一拍光标可能落在旧控件上
-	var win := get_window()
-	if win.mode != Window.MODE_WINDOWED:
-		return
-	_set_cursor(_edge_dir(win, Vector2(win.get_mouse_position())))
+	_set_cursor(_edge_dir(win, DisplayServer.mouse_get_position()))
 
 
-func _edge_dir(win: Window, m: Vector2) -> Vector2i:
+## 边缘判定（物理屏幕坐标，m_screen 取 DisplayServer.mouse_get_position()）
+func _edge_dir(win: Window, m_screen: Vector2i) -> Vector2i:
+	var m := Vector2(m_screen - win.position)
 	var s := Vector2(win.size)
 	var d := Vector2i.ZERO
 	if m.x < EDGE:
@@ -67,10 +85,16 @@ func _edge_dir(win: Window, m: Vector2) -> Vector2i:
 	return d
 
 
+## 悬停在交互控件（按钮/滑条）上不抢光标不抢点击
+func _hover_is_interactive() -> bool:
+	var h := get_viewport().gui_get_hovered_control()
+	return h is BaseButton or h is Range
+
+
 func _set_cursor(d: Vector2i) -> void:
-	# Input.set_default_cursor_shape 在根面板铺满全窗口时永远不会生效
-	# （悬停控件的光标形状优先，CURSOR_ARROW 是“显式箭头”而非“回落默认”），
-	# 所以直接改当前悬停控件的 mouse_default_cursor_shape，离开时还原
+	if d == Vector2i.ZERO or _hover_is_interactive():
+		_restore_cursor()
+		return
 	var shape := Control.CURSOR_ARROW
 	if d.x != 0 and d.y != 0:
 		shape = Control.CURSOR_BDIAGSIZE if d.x == d.y else Control.CURSOR_FDIAGSIZE
@@ -78,16 +102,15 @@ func _set_cursor(d: Vector2i) -> void:
 		shape = Control.CURSOR_HSIZE
 	elif d.y != 0:
 		shape = Control.CURSOR_VSIZE
-	var hovered: Control = get_viewport().gui_get_hovered_control() if d != Vector2i.ZERO else null
+	var hovered := get_viewport().gui_get_hovered_control()
+	if hovered == null:
+		_restore_cursor()
+		return
 	if hovered != _cursor_ctrl:
 		_restore_cursor()
-		if hovered != null:
-			_cursor_ctrl = hovered
-			_cursor_ctrl_orig = hovered.mouse_default_cursor_shape
-	if _cursor_ctrl != null:
-		_cursor_ctrl.mouse_default_cursor_shape = shape
-		if d == Vector2i.ZERO:
-			_cursor_ctrl = null
+		_cursor_ctrl = hovered
+		_cursor_ctrl_orig = hovered.mouse_default_cursor_shape
+	_cursor_ctrl.mouse_default_cursor_shape = shape
 
 
 func _restore_cursor() -> void:
