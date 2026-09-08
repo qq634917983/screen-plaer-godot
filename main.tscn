@@ -135,13 +135,22 @@ text = "预览播放器"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="PreviewScreen" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow" unique_id=2074223818]
+[node name="PreviewAspect" type="AspectRatioContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+ratio = 1.777778
+stretch_mode = 2
+alignment_horizontal = 1
+alignment_vertical = 1
+
+[node name="PreviewScreen" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect" unique_id=2074223818]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1bvp3")
 
-[node name="PreviewScreenLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen" unique_id=1081432917]
+[node name="PreviewScreenLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect/PreviewScreen" unique_id=1081432917]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3608, 0.4039, 0.4706, 1)
@@ -149,14 +158,14 @@ text = "未加载预览媒体"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="VideoView" type="TextureRect" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen" unique_id=939304378]
+[node name="VideoView" type="TextureRect" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect/PreviewScreen" unique_id=939304378]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PreviewPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen" unique_id=576092420]
+[node name="PreviewPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect/PreviewScreen" unique_id=576092420]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -164,13 +173,13 @@ mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="PreviewPagePrev" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen/PreviewPageButtons" unique_id=1917258095]
+[node name="PreviewPagePrev" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect/PreviewScreen/PreviewPageButtons" unique_id=1917258095]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
 text = "<"
 
-[node name="PreviewPageNext" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewScreen/PreviewPageButtons" unique_id=879368641]
+[node name="PreviewPageNext" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow/PreviewAspect/PreviewScreen/PreviewPageButtons" unique_id=879368641]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
@@ -248,13 +257,22 @@ text = "详情"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="OutputScreen" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow" unique_id=1454429609]
+[node name="OutputAspect" type="AspectRatioContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+ratio = 1.777778
+stretch_mode = 2
+alignment_horizontal = 1
+alignment_vertical = 1
+
+[node name="OutputScreen" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect" unique_id=1454429609]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_lquwl")
 
-[node name="OutputScreenLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen" unique_id=651427524]
+[node name="OutputScreenLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect/OutputScreen" unique_id=651427524]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3608, 0.4039, 0.4706, 1)
@@ -262,14 +280,14 @@ text = "未加载输出媒体"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="OutputVideoView" type="TextureRect" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen" unique_id=745118987]
+[node name="OutputVideoView" type="TextureRect" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect/OutputScreen" unique_id=745118987]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="OutputPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen" unique_id=865733452]
+[node name="OutputPageButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect/OutputScreen" unique_id=865733452]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -277,13 +295,13 @@ mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="OutputPagePrev" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen/OutputPageButtons" unique_id=1312579814]
+[node name="OutputPagePrev" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect/OutputScreen/OutputPageButtons" unique_id=1312579814]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
 text = "<"
 
-[node name="OutputPageNext" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputScreen/OutputPageButtons" unique_id=553678009]
+[node name="OutputPageNext" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow/OutputAspect/OutputScreen/OutputPageButtons" unique_id=553678009]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8

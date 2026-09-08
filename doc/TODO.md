@@ -321,6 +321,10 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       默认 0.72/0.5），启动恢复（main.gd _ready）
 - [x] 15.4 验证（game_eval 实测）：模拟拖拽（含最小尺寸钳制）比例与
       settings.cfg 同步更新；窗口 1152×648 → 1600×900 分割条按比例跟随
+- [x] 15.5 播放器画面区锁 16:9：预览/输出的黑色画面面板（PreviewScreen/
+      OutputScreen）外套 AspectRatioContainer（FIT、居中），分区拉伸时
+      画面区固定 16:9 不变形、多余空间留边；面板内 TextureRect 仍按视频
+      实际比例居中（非 16:9 片源面板内留黑边）
 
 ## Phase 10 —— 播放体验增强（待做）
 
