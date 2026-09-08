@@ -152,7 +152,11 @@
 - `scripts/title_bar.gd` — 无边框主窗口自绘标题栏（逐帧拖动避开 Windows 模态
   循环，最小化/最大化/关闭，mode 切换重试 + 窗口态几何记录）
 - `scripts/window_resizer.gd` — 无边框主窗口手动边缘缩放（边缘 6px 八向，
-  边缘点击 accept 事件避免与标题栏拖动冲突）
+  边缘点击 accept 事件避免与标题栏拖动冲突）。光标提示：每帧按真实鼠标
+  位置改「当前悬停控件」的 mouse_default_cursor_shape、离开还原——不能用
+  Input.set_default_cursor_shape（根面板铺满全窗口时永不生效，悬停控件的
+  形状优先且 CURSOR_ARROW 是显式箭头非回落默认）；也不能在 _input 的
+  motion 里做（_input 先于视口悬停更新，目标控件落后一拍）
 - `scripts/media_object.gd` — MediaObject 媒体对象模型（类型推断 + 缩放/偏移
   属性 + 序列化；媒体库条目、项目持久化的数据单元）
 - `scripts/item_settings_window.gd` — ItemSettingsWindow 条目设置独立窗口
