@@ -1,0 +1,63 @@
+# ScreenPlayer — 跨窗口同步播放器
+
+基于 **Godot 4.7.2** 的 Windows 桌面媒体播放器：单进程多窗口，预览端与输出端独立播放，
+独立投屏窗口共享输出端纹理实现零延迟画面同步。支持视频 / 音频 / 图片 / 网页 / PPT 混排播放。
+
+## 功能特性
+
+- **双端播放架构**：预览端（始终静音，随意切换不影响输出）+ 输出端，两路独立 MPVPlayer 实例；
+  「快速切换」一键把预览的路径 / 播放状态 / 当前进度推送到输出端
+- **独立投屏窗口**：无边框置顶的原生窗口，通过 `frame_updated` 信号共享输出端纹理——
+  两端显示同一块像素缓冲，画面零延迟完全一致，无任何状态同步代码
+- **多媒体混排**：
+  - 视频 / 音频 — mpv 解码（自编译 godot_mpv 完整版扩展）
+  - 图片 — 静态纹理通路
+  - 网页 — CEF 内嵌浏览器（gdcef），鼠标事件转发，可编辑「触点」逐步模拟点击
+  - PPT — PPTX 后台转自包含 HTML（PPTX2HTML）缓存播放，按页跳转，画面内 < > 翻页
+- **媒体库卡片**：缩略图后台截取、条目级静音 / 循环偏好、缩放与偏移设置、
+  丢失文件自动置灰标记、三档卡片尺寸
+- **播放列表**：条目连播次数、距下一项间隔，列表总时长循环，定时自动播放（HH:MM 跨午夜）
+- **无边框主窗口**：自绘标题栏 + 八向边缘缩放，逐帧移动窗口避开 Windows 模态消息循环，
+  拖动 / 缩放全程播放与投屏画面不冻结
+- **内容区十字四分区**：预览 / 实用功能 / 媒体 / 音频四象限可拖拽布局，比例持久化
+
+## 技术栈
+
+| 组件 | 说明 |
+|---|---|
+| Godot 4.7.2 | 主程序框架，d3d12 渲染驱动 |
+| godot_mpv（自编译） | 视频解码扩展，源码在 doc/godot_mpv-master/（不入库） |
+| gdcef v0.20.0 + CEF 151 | 内嵌浏览器，产物在 cef_artifacts/（不入库） |
+| PPTX2HTML | PPT 转换，vendor 依赖在 pptx_renderer/js/ |
+
+## 运行前准备
+
+本仓库**不含大体积运行库**（超出代码托管单文件 / 体积上限），克隆后需自行补齐：
+
+| 路径 | 说明 |
+|---|---|
+| `cef_artifacts/`（约 397MB） | gdcef.gdextension + libcef.dll 等 CEF 产物，重建方法见 `doc/TODO.md` |
+| `bin/libmpv-2.dll`（约 117MB） | mpv 主库，随 godot_mpv 构建 / 或从 mpv 官方发行版获取 |
+| `doc/godot_mpv-master/`、`doc/gdcef/` | 扩展完整源码与构建环境（VS2026 + CMake） |
+
+其余 `bin/` 下已提交的 DLL（godot_mpv 扩展、GLES 等）可直接使用。
+
+用 Godot 4.7.2 打开 `project.godot` 运行主场景即可；`*.splproj` 为项目媒体库存档。
+
+## 目录结构
+
+```
+main.tscn / scripts/main.gd   主场景与主逻辑（媒体库 + 双端调度 + 项目管理）
+scripts/player_slot.gd        播放端封装（MPV / 静态 / CEF 网页 / PPT 四类帧源）
+scripts/title_bar.gd          无边框自绘标题栏
+scripts/window_resizer.gd     边缘缩放
+scripts/media_object.gd       媒体条目数据模型
+scripts/media_item_card.gd    媒体库卡片
+scripts/playlist_*.gd         播放列表（数据 / 执行器 / 卡片 / 设置窗口）
+scripts/pptx_converter.gd     PPTX→HTML 后台转换器
+scripts/project_store.gd      项目持久化（*.splproj + settings.cfg）
+pptx_renderer/                PPT 播放器壳 + vendor 依赖
+doc/                          设计稿、任务清单（TODO.md）、测试文件
+```
+
+进度与细节真相来源：`doc/TODO.md` 与 `AGENTS.md`。
