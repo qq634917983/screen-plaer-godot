@@ -34,7 +34,8 @@
   按子节点名对位四象限，分割条比例存储、窗口缩放按比例伸缩，竖条/横条/交叉点
   可拖，各向最小尺寸钳制）；比例持久化 settings.cfg（ui/split_x、ui/split_y，
   默认 0.72/0.5），main.gd 启动恢复；预览/输出画面区外套 AspectRatioContainer
-  锁 16:9（FIT 居中），分区拉伸画面不变形
+  锁 16:9（FIT 居中），分区拉伸画面不变形；媒体库标题栏「尺寸」按钮三档
+  卡片规格（小/中/大，宽高写死不随窗口拉伸，ui/card_size 持久化）
 - Phase 14（播放列表）：媒体库「添加文件」左侧「添加列表」按钮；PlaylistObject
   （scripts/playlist_object.gd：条目{path,duration,count}——duration=距下一项
   间隔秒数、count=连播次数默认 1——+ 列表总时长 + 定时

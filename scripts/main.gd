@@ -43,6 +43,7 @@ var _project_name := ProjectStore.DEFAULT_PROJECT_NAME
 var _project_path := ""
 var _preview_dragging := false
 var _output_dragging := false
+var _card_size_idx := 1  # 媒体库卡片规格索引（小/中/大）
 var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
 var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点标记）
@@ -53,6 +54,7 @@ var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点
 @onready var _menu_help: MenuButton = %MenuHelp
 @onready var _add_file_button: Button = %AddFileButton
 @onready var _add_list_button: Button = %AddListButton
+@onready var _card_size_button: MenuButton = %CardSizeButton
 @onready var _file_dialog: FileDialog = %FileDialog
 @onready var _project_open_dialog: FileDialog = %ProjectOpenDialog
 @onready var _project_save_dialog: FileDialog = %ProjectSaveDialog
@@ -158,6 +160,12 @@ func _ready() -> void:
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
 	_add_list_button.pressed.connect(_on_add_list_pressed)
+	# 媒体库卡片规格：三档固定尺寸（小/中/大，不随窗口拉伸），选择持久化
+	var size_popup := _card_size_button.get_popup()
+	for i in MediaItemCard.CARD_WIDTHS.size():
+		size_popup.add_radio_check_item(MediaItemCard.CARD_SIZE_LABELS[i], i)
+	size_popup.id_pressed.connect(_on_card_size_selected)
+	_apply_card_size(int(ProjectStore.get_setting("ui", "card_size", 1)))
 	_file_dialog.files_selected.connect(_on_files_selected)
 	_project_open_dialog.file_selected.connect(_on_project_open_file_selected)
 	_project_save_dialog.file_selected.connect(_on_project_save_file_selected)
@@ -433,6 +441,7 @@ func _add_media_item(media: MediaObject) -> void:
 	var card := MediaItemCardScene.new()
 	_media_grid.add_child(card)
 	card.setup(media)
+	card.apply_size(MediaItemCard.CARD_WIDTHS[_card_size_idx])
 	card.preview_requested.connect(_on_card_preview)
 	card.push_requested.connect(_on_card_push)
 	card.settings_requested.connect(_on_card_settings)
@@ -452,6 +461,24 @@ func _refresh_card_indices() -> void:
 		if card is MediaItemCard:
 			card.set_index(i)
 			i += 1
+
+
+## 媒体库卡片规格切换（尺寸菜单）：三档固定宽度，媒体卡片与列表卡片一起调
+func _on_card_size_selected(id: int) -> void:
+	_apply_card_size(id)
+	ProjectStore.set_setting("ui", "card_size", id)
+
+
+func _apply_card_size(idx: int) -> void:
+	_card_size_idx = clampi(idx, 0, MediaItemCard.CARD_WIDTHS.size() - 1)
+	var w: int = MediaItemCard.CARD_WIDTHS[_card_size_idx]
+	for card in _media_grid.get_children():
+		if card is MediaItemCard or card is PlaylistCard:
+			card.apply_size(w)
+	var popup := _card_size_button.get_popup()
+	for i in MediaItemCard.CARD_WIDTHS.size():
+		popup.set_item_checked(i, i == _card_size_idx)
+	_card_size_button.text = "尺寸：" + MediaItemCard.CARD_SIZE_LABELS[_card_size_idx]
 
 
 ## 条目级循环开关：写回媒体对象并持久化；正在输出该条目时立即生效
@@ -848,6 +875,7 @@ func _add_playlist(pl: PlaylistObject) -> void:
 	var card := PlaylistCardScene.new()
 	_media_grid.add_child(card)
 	card.setup(pl)
+	card.apply_size(MediaItemCard.CARD_WIDTHS[_card_size_idx])
 	card.play_requested.connect(_on_playlist_play)
 	card.settings_requested.connect(_on_playlist_settings)
 	card.delete_requested.connect(_on_playlist_delete)

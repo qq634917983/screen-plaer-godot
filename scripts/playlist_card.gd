@@ -123,6 +123,11 @@ func setup(pl: PlaylistObject) -> void:
 	refresh()
 
 
+## 应用卡片规格：与媒体卡片同宽同高（网格混排对齐），固定尺寸不随窗口拉伸
+func apply_size(w: int) -> void:
+	custom_minimum_size = Vector2(w, MediaItemCard.height_for_width(w))
+
+
 ## 列表内容/状态变化后刷新显示
 func refresh() -> void:
 	if playlist == null:

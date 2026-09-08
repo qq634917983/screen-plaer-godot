@@ -325,6 +325,11 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       OutputScreen）外套 AspectRatioContainer（FIT、居中），分区拉伸时
       画面区固定 16:9 不变形、多余空间留边；面板内 TextureRect 仍按视频
       实际比例居中（非 16:9 片源面板内留黑边）
+- [x] 15.6 媒体库卡片三档尺寸：标题栏「尺寸」MenuButton（小 160×174 /
+      中 210×202 / 大 280×241，高按 16:9 画面区推导），媒体卡片与列表
+      卡片一起调（MediaItemCard.apply_size / PlaylistCard.apply_size），
+      宽高写死为最小尺寸、不随窗口拉伸；选择持久化 settings.cfg
+      （ui/card_size，默认中）
 
 ## Phase 10 —— 播放体验增强（待做）
 

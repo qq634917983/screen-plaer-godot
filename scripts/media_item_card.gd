@@ -17,6 +17,9 @@ signal loop_toggled(card: MediaItemCard)
 signal mute_toggled(card: MediaItemCard)
 
 const HIGHLIGHT_COLOR := Color(0.45, 0.85, 0.55)  # 当前输出条目（绿色）
+## 卡片三档固定宽度（小/中/大），不随窗口拉伸；高度按 16:9 画面区推导
+const CARD_WIDTHS: Array[int] = [160, 210, 280]
+const CARD_SIZE_LABELS: Array[String] = ["小", "中", "大"]
 # 色板与 ui/theme.tres 一致
 const ACCENT := Color(0.2314, 0.5098, 0.9657)     # 主题蓝：序号 / 开关高亮
 const C_PANEL := Color(0.0941, 0.1098, 0.1373)    # 卡片底
@@ -35,6 +38,7 @@ var media_path := ""
 var _index_label: Label
 var _name_label: Label
 var _type_label: Label
+var _display: PanelContainer
 var _thumb: TextureRect
 var _glyph: Label
 var _btn_play: Button
@@ -102,20 +106,20 @@ func _init() -> void:
 	name_row.add_child(_type_label)
 
 	# ---- 画面区：16:9 黑底 + 1px 描边（与播放器屏幕块同形） ----
-	var display := PanelContainer.new()
-	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	display.custom_minimum_size = Vector2(0, 116)  # 206 内容宽 × 9/16
+	_display = PanelContainer.new()
+	_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_display.custom_minimum_size = Vector2(0, 116)  # 206 内容宽 × 9/16
 	var display_style := StyleBoxFlat.new()
 	display_style.bg_color = Color.BLACK
 	display_style.border_color = C_BORDER
 	display_style.set_border_width_all(1)
-	display.add_theme_stylebox_override("panel", display_style)
-	vbox.add_child(display)
+	_display.add_theme_stylebox_override("panel", display_style)
+	vbox.add_child(_display)
 
 	var thumb_area := Control.new()
 	thumb_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thumb_area.clip_contents = true
-	display.add_child(thumb_area)
+	_display.add_child(thumb_area)
 
 	_glyph = Label.new()
 	_glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -163,6 +167,18 @@ func setup(m: MediaObject) -> void:
 
 func set_index(i: int) -> void:
 	_index_label.text = str(i)
+
+
+## 卡片总高 = 标题 26 + 16:9 画面区 + 按钮区 56 + 描边 4
+static func height_for_width(w: int) -> int:
+	return 86 + roundi((w - 4) * 9.0 / 16.0)
+
+
+## 应用卡片规格：宽高全部写死为最小尺寸，卡片不随窗口/分区拉伸
+func apply_size(w: int) -> void:
+	var dh := roundi((w - 4) * 9.0 / 16.0)
+	custom_minimum_size = Vector2(w, 86 + dh)
+	_display.custom_minimum_size = Vector2(0, dh)
 
 
 func set_thumbnail(texture: Texture2D) -> void:
