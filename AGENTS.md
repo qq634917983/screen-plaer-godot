@@ -13,6 +13,7 @@
 
 ## 业务逻辑（已确认，详见 doc/TODO.md）
 
+- 支持平台仅 ARM64 macOS 和 x86_64 Windows。共用业务逻辑，按平台加载 MPV/CEF 原生依赖；不扩展 Intel Mac、Windows ARM 或 Linux 支持。
 - 产品定位：Godot 原生跨平台桌面媒体播放与投屏系统；CEF 仅用于播放网页/PPT 媒体。未来可能增加简单的网页后台遥控器，作为桌面播放器的独立控制入口，当前不开发。
 
 - 单击媒体库条目 → 加载到预览播放器（预览可随意切换，不影响输出）
@@ -40,7 +41,7 @@
   Mac CEF 缓存/日志在 user://；浏览器路径统一走 PlatformPaths.browser_url。
   QuadSplitContainer 最小尺寸需计入子控件实际尺寸（Mac 字体高度不同）。
   Mac libmpv 的目标时间信号可能早于纹理，Thumbnailer 必须等两者到位再截取。
-  详情/测试命令见 doc/MACOS.md；尚未验证 Intel / Windows 真机回归、外接多屏/4K，
+  详情/测试命令见 doc/MACOS.md；尚未完成本轮 Windows 真机回归、外接多屏/4K，
   尚未制作独立签名公证 .app，Mac dylib 依赖本机 Homebrew，原生运行包不入库。
 
 - Phase 0-9、11-12、14-15 全部完成（doc/TODO.md）；Phase 10（播放体验增强：

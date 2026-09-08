@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import platform
 from pathlib import Path
 import shutil
 import subprocess
@@ -17,8 +18,8 @@ def run(*args, **kwargs):
 
 
 def main():
-    if sys.platform != "darwin":
-        raise SystemExit("macOS is required")
+    if sys.platform != "darwin" or platform.machine() != "arm64":
+        raise SystemExit("Native ARM64 macOS is required")
     cpp = Path(sys.argv[1]).resolve()
     if not (SOURCE / ".git").exists():
         run("git", "clone", "https://github.com/Lecrapouille/gdcef.git", str(SOURCE))

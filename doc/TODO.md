@@ -349,7 +349,8 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       预览独立、循环、后台封面、字体布局、图片、网页触点、
       26 页 PPT 转换/缓存/翻页投屏；空构建目录重建脚本与启动脚本验证通过
 
-验证范围：Apple M4 + Godot 4.7.2 / Metal 开发运行；Intel、Windows 真机回归、
+支持范围：仅 ARM64 macOS + x86_64 Windows，共用播放/投屏逻辑，按平台加载原生依赖。
+验证范围：Apple M4 + Godot 4.7.2 / Metal 开发运行；本轮 Windows 真机回归、
 外接多屏/4K 性能及独立签名公证安装包尚未验证。Mac 扩展依赖本机 Homebrew libmpv，
 运行包不入库；新机器按 doc/MACOS.md 重建。Windows 绝对媒体路径需在 Mac 重新添加。
 

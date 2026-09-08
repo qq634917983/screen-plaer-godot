@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if [[ "$(uname -s)" != Darwin ]]; then
-  echo "Run this script on macOS." >&2
+if [[ "$(uname -s)" != Darwin || "$(uname -m)" != arm64 ]]; then
+  echo "Run this script natively on ARM64 macOS." >&2
   exit 1
 fi
 for tool in git cmake brew python3; do

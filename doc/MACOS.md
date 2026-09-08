@@ -18,7 +18,7 @@ ScreenPlayer 是支持独立窗口投屏的媒体播放系统。Windows 版本�
 ## 从新克隆构建
 
 需要 Godot 4.7.2、完整 Xcode（CEF 的 `ibtool` 必需）、Homebrew。
-构建脚本按本机架构选择 arm64 / x86_64，不生成 universal 包。
+支持范围仅为 ARM64 macOS 与 x86_64 Windows；Mac 构建脚本只生成 arm64 产物。
 
 ```sh
 brew install mpv cmake
@@ -70,7 +70,7 @@ ffmpeg -f lavfi -i testsrc2=size=640x360:rate=30 \
 
 这是可在当前 Mac 开发运行的版本，尚未制作可脱离 Homebrew 分发的签名/公证 `.app`。
 视频 dylib 动态依赖本机 Homebrew 库；复制整个目录到另一台 Mac 后需要安装依赖并重建。
-Intel Mac 和 Windows 真机回归尚未执行，外接多显示器及 4K 性能也尚未实测。
+本轮 Windows x86_64 真机回归尚未执行，外接多显示器及 4K 性能也尚未实测。
 软件渲染会产生 CPU 像素拷贝，高分辨率性能需按实际片源验证。
 
 已有 Windows 项目中的 `D:/...` 绝对路径在 Mac 上不会自动映射，需要重新添加本机文件。
