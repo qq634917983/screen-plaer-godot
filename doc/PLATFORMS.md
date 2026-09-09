@@ -89,3 +89,5 @@ Mac 当前 Homebrew 依赖仅适合开发；正式 .app 应捆绑 dylib、修正
 暂停 seek、输出接收暂停进度、输出与投屏共享纹理、预览独立、循环、封面和图片切换。
 运行测试：`godot --path . --script tests/windows_smoke.gd -- <视频绝对路径>`。
 本次没有重测 Mac、外接屏/4K，以及网页/PPT 完整交互流程（CEF 原生加载与初始化已通过）。
+
+远程同步补充：仓库已包含 bin/win-bin.zip，可用 tools/restore_windows_mpv.ps1 恢复 MPV；run_windows.ps1 缺少 MPV 时自动恢复，随后执行完整哈希与加载检查。CEF 仍需独立补齐。

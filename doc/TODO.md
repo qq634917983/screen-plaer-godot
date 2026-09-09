@@ -424,3 +424,5 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] 定位 Error 126：缺失被忽略的 libmpv-2.dll，同时恢复 CEF 运行目录
 - [x] 增加 Windows 逐文件 SHA-256 清单、安装/原生加载检查/运行库打包脚本，启动接入检查
 - [x] Windows 图形回归：视频/暂停 seek/共享纹理投屏/循环/封面/图片切换；详见 doc/PLATFORMS.md
+
+- [x] 合并远程 bin/win-bin.zip 和缺库自动恢复流程，保留 Windows 实测结果及 Mac 脚本可执行位

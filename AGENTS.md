@@ -268,3 +268,5 @@
 - 测试视频：`D:/Download/godot_mpv-master_extract/godot_mpv-master/assets/video/AV1_Big_Buck_Bunny_720_10s.mp4`
 - 测试网页/PPT：`doc/test.html`、`doc/test.pptx`（Phase 8/9 验证用）
 - 运行时报"main loop not advancing"是游戏窗口失焦，聚焦后重试即可
+
+- 已合并远程 Windows MPV 压缩运行包 bin/win-bin.zip 与 restore_windows_mpv.ps1；启动时先恢复缺失 MPV，再做完整运行库哈希/加载检查。Mac 启动和构建脚本保留可执行位。

@@ -45,12 +45,14 @@ macOS 适配由 GPT 在 `codex/macos-support` 分支从 Windows 稳定基线开�
 
 ## Windows 运行前准备
 
-本仓库**不含大体积运行库**（超出代码托管单文件 / 体积上限），克隆后需自行补齐：
+Windows MPV 运行包已压缩放入 `bin/win-bin.zip`，关闭编辑器后执行
+`powershell -ExecutionPolicy Bypass -File tools/restore_windows_mpv.ps1` 恢复。
+CEF 仍需自行补齐：
 
 | 路径 | 说明 |
 |---|---|
 | `cef_artifacts/`（约 397MB） | gdcef.gdextension + libcef.dll 等 CEF 产物，重建方法见 `doc/TODO.md` |
-| `bin/libmpv-2.dll`（约 117MB） | mpv 主库，随 godot_mpv 构建 / 或从 mpv 官方发行版获取 |
+| `bin/libmpv-2.dll`（约 117MB） | mpv 主库，从仓库内 win-bin.zip 恢复 |
 | `doc/godot_mpv-master/`、`doc/gdcef/` | 扩展完整源码与构建环境（VS2026 + CMake） |
 
 其余 `bin/` 下已提交的 DLL（godot_mpv 扩展、GLES 等）可直接使用。
