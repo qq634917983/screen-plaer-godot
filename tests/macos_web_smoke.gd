@@ -24,6 +24,7 @@ func wait_for(predicate: Callable, seconds := 10.0) -> bool:
 
 func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
+	scene.cef_cache_path = "user://smoke/cef-%d" % OS.get_process_id()
 	root.add_child(scene)
 	await process_frame
 	check(scene._cef != null, "CEF initializes on macOS")

@@ -354,6 +354,16 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
 外接多屏/4K 性能及独立签名公证安装包尚未验证。Mac 扩展依赖本机 Homebrew libmpv，
 运行包不入库；新机器按 doc/MACOS.md 重建。Windows 绝对媒体路径需在 Mac 重新添加。
 
+## 双平台上传前整理（2026-09-09）
+
+- [x] 确认 ARM64 Mac / x86_64 Windows 扩展路由与现有二进制架构
+- [x] 补齐 Windows 导出依赖 EGL/GLES/zlib；新增 Windows 启动脚本检查主要运行库
+- [x] Mac 启动脚本检查架构与 CEF；新增 doc/PLATFORMS.md 说明克隆后依赖补齐方式
+- [x] 当前版本 ARM Mac 视频与网页/PPT 集成回归：两组 failures=0；测试使用独立 CEF 配置目录，不占用运行中的桌面实例
+- [x] 推送 codex/macos-support 到 Gitee（origin：liuhuan.com/screen-plaer-godot）
+
+Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检查写成真机验证通过。
+
 ## 编辑器布局与运行布局统一
 
 - [x] 四分区容器启用 @tool，编辑器使用同一套尺寸/比例钳制；检查器修改比例与最小尺寸时立即重新布局

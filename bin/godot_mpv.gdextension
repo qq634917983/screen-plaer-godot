@@ -12,8 +12,14 @@ windows.release.x86_64 = "res://bin/libgodot_mpv.windows.template_release.x86_64
 
 [dependencies]
 windows.debug.x86_64 = {
-    "res://bin/libmpv-2.dll" : ""
+    "res://bin/libmpv-2.dll" : "",
+    "res://bin/libEGL.dll" : "",
+    "res://bin/libGLESv2.dll" : "",
+    "res://bin/zlib1.dll" : ""
 }
 windows.release.x86_64 = {
-    "res://bin/libmpv-2.dll" : ""
+    "res://bin/libmpv-2.dll" : "",
+    "res://bin/libEGL.dll" : "",
+    "res://bin/libGLESv2.dll" : "",
+    "res://bin/zlib1.dll" : ""
 }

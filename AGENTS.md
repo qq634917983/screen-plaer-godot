@@ -30,6 +30,11 @@
 
 ## 当前进度
 
+- 双平台运行入口整理：tools/run_windows.ps1 检查 x86_64 与 Windows 运行库后导入启动；
+  tools/run_macos.sh 检查 ARM64 与 Mac CEF。Windows MPV 导出依赖显式包含
+  libmpv/EGL/GLES/zlib；大型运行包仍不入库，克隆后补齐方式见 doc/PLATFORMS.md。
+  Windows 本轮只做配置/二进制架构检查，未做真机回归。
+
 - 编辑器布局统一：QuadSplitContainer 为 @tool，导出属性 setter 自动重新布局；
   TitleBar 为 @tool 并直接挂在 main.tscn 的 RootVBox/TitleBar，main.gd 只引用现有节点。
   编辑器中标题栏只绘制，不移动/关闭窗口。播放/停止按钮静态样式放场景资源。

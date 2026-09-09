@@ -24,6 +24,7 @@ const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
+var cef_cache_path := "user://cef_cache"  # 测试可在入树前设置独立目录，避免占用正在运行的浏览器配置
 var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null）
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
 var _pptx_converter  # PptxConverter（同上）
@@ -125,7 +126,7 @@ func _ready() -> void:
 		var cef_config := {"locale": "zh-CN"}
 		if OS.get_name() == "macOS":
 			# .app/项目目录可能只读；浏览器持久数据放用户数据目录。
-			var cache := ProjectSettings.globalize_path("user://cef_cache")
+			var cache := ProjectSettings.globalize_path(cef_cache_path)
 			DirAccess.make_dir_recursive_absolute(cache)
 			cef_config["root_cache_path"] = cache
 			cef_config["cache_path"] = cache

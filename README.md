@@ -5,6 +5,8 @@
 
 主程序是 Godot 原生桌面应用。内嵌 CEF 用于网页/PPT 媒体播放；未来可另加简单网页后台遥控器，当前尚未实现。
 
+双平台依赖、启动方法与验证范围见 [doc/PLATFORMS.md](doc/PLATFORMS.md)。
+
 ## macOS 运行
 
 当前分支 `codex/macos-support` 由 GPT 从 Windows 稳定基线开始适配。
