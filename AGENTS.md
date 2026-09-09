@@ -30,6 +30,16 @@
 
 ## 当前进度
 
+- 菜单栏「设置」直接弹窗（2026-09-09，分支 zcode）：MenuSettings 由 MenuButton 改为
+  普通 Button（theme_type_variation=MenuButton 保持与相邻菜单一致的外观），
+  点击直接居中弹出 SettingsWindow，不再经过「打开设置」二级菜单；
+  tests/settings_button_smoke.gd 无头冒烟 7 项通过（headless 下 CEF 初始化失败为预期降级）。
+
+- 窗口缩放保持卡片尺寸（2026-09-09）：关闭 project.godot 的 canvas_items 全局拉伸；
+  MediaItemCard / PlaylistCard 两轴使用 SIZE_SHRINK_BEGIN，分区变化只重排卡片，
+  不拉伸 item。Windows 实窗测试 3 档尺寸 × 3 种窗口 × 2 种分区比例通过，
+  tests/card_layout_smoke.gd 可复用；三档实测 160×174 / 210×202 / 280×241。
+
 - Windows 克隆后 Error 126 已修复（2026-09-09）：从旧项目恢复 Git 忽略的 libmpv 与 CEF；
   tools/windows-runtime.lock.json 固定逐文件哈希，install/check/pack_windows_runtime.ps1
   实现安装、原生加载检查与运行库打包，run_windows.ps1 启动前检查。Windows D3D12 实测

@@ -50,7 +50,7 @@ var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
-@onready var _menu_settings: MenuButton = %MenuSettings
+@onready var _menu_settings: Button = %MenuSettings  # 普通按钮：点击直接弹设置窗口
 @onready var _menu_help: MenuButton = %MenuHelp
 @onready var _add_file_button: Button = %AddFileButton
 @onready var _add_list_button: Button = %AddListButton
@@ -257,9 +257,7 @@ func _setup_menus() -> void:
 	window_popup.add_item("显示/隐藏投屏窗口", 0)
 	window_popup.id_pressed.connect(_on_menu_window_id_pressed)
 
-	var settings_popup := _menu_settings.get_popup()
-	settings_popup.add_item("打开设置", 0)
-	settings_popup.id_pressed.connect(_on_menu_settings_id_pressed)
+	_menu_settings.pressed.connect(_on_menu_settings_pressed)
 
 	var help_popup := _menu_help.get_popup()
 	help_popup.add_item("关于 ScreenPlayer", 0)
@@ -286,7 +284,7 @@ func _on_menu_window_id_pressed(_id: int) -> void:
 	_on_hide_cast_pressed()
 
 
-func _on_menu_settings_id_pressed(_id: int) -> void:
+func _on_menu_settings_pressed() -> void:
 	if not _settings_window.visible:
 		var main_win := get_window()
 		_settings_window.position = main_win.position + (main_win.size - _settings_window.size) / 2

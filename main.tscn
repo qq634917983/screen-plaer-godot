@@ -95,9 +95,10 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "窗口"
 
-[node name="MenuSettings" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=778198550]
+[node name="MenuSettings" type="Button" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=778198550]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"MenuButton"
 text = "设置"
 
 [node name="MenuHelp" type="MenuButton" parent="RootVBox/MenuBar/MenuMargin/MenuHBox" unique_id=536627899]
