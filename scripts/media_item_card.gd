@@ -259,7 +259,7 @@ func _make_button(parent: Control, icon: String, text: String, tip: String, on_p
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Segoe UI Symbol", "Microsoft YaHei"])
+	font.font_names = PackedStringArray(["Segoe UI Symbol", "Apple Symbols", "Microsoft YaHei", "PingFang SC"])
 	b.add_theme_font_override("font", font)
 	b.add_theme_font_size_override("font_size", 11)
 	b.add_theme_stylebox_override("normal", _btn_style(C_ELEVATED))

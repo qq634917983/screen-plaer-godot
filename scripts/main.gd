@@ -19,12 +19,12 @@ const MediaItemCardScene := preload("res://scripts/media_item_card.gd")
 const PlaylistCardScene := preload("res://scripts/playlist_card.gd")
 const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
-const TitleBarScript := preload("res://scripts/title_bar.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
+var cef_cache_path := "user://cef_cache"  # 测试可在入树前设置独立目录，避免占用正在运行的浏览器配置
 var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null）
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
 var _pptx_converter  # PptxConverter（同上）
@@ -94,9 +94,7 @@ func _ready() -> void:
 	# 不进入 Windows 的模态移动/缩放消息循环（该循环会冻结整个进程主循环），
 	# 因此拖动主窗口时播放与投屏画面不再中断
 	get_window().borderless = true
-	_title_bar = TitleBarScript.new()
-	$RootVBox.add_child(_title_bar)
-	$RootVBox.move_child(_title_bar, 0)
+	_title_bar = $RootVBox/TitleBar
 	add_child(WindowResizerScript.new())
 
 	_preview = PlayerSlot.new()
@@ -125,7 +123,16 @@ func _ready() -> void:
 		_cef = ClassDB.instantiate(&"GdCEF") as Node
 		_cef.name = "CEF"
 		add_child(_cef)
-		if not _cef.initialize({"locale": "zh-CN"}):
+		var cef_config := {"locale": "zh-CN"}
+		if OS.get_name() == "macOS":
+			# .app/项目目录可能只读；浏览器持久数据放用户数据目录。
+			var cache := ProjectSettings.globalize_path(cef_cache_path)
+			DirAccess.make_dir_recursive_absolute(cache)
+			cef_config["root_cache_path"] = cache
+			cef_config["cache_path"] = cache
+			cef_config["log_file"] = ProjectSettings.globalize_path("user://cef.log")
+			cef_config["remote_debugging_port"] = 0
+		if not _cef.initialize(cef_config):
 			push_error("CEF 初始化失败：" + _cef.get_error())
 			_cef.queue_free()
 			_cef = null
@@ -147,16 +154,6 @@ func _ready() -> void:
 	_runner.started.connect(func(_pl: PlaylistObject) -> void: _refresh_playlist_cards())
 	_runner.item_started.connect(func(_pl: PlaylistObject, _i: int) -> void: _refresh_playlist_cards())
 	_runner.stopped.connect(_on_playlist_stopped)
-
-	# 统一控制按钮图标：Segoe UI Symbol 全部为文字字形，尺寸一致
-	# （默认主题里部分图标落到 emoji 字体渲染，导致大小参差）
-	var icon_font := SystemFont.new()
-	icon_font.font_names = PackedStringArray(["Segoe UI Symbol"])
-	for b: Button in [_preview_play_button, _preview_stop_button, _output_play_button,
-			_output_stop_button]:
-		b.add_theme_font_override("font", icon_font)
-		b.add_theme_font_size_override("font_size", 14)
-		b.custom_minimum_size = Vector2(34, 0)
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
 	_add_list_button.pressed.connect(_on_add_list_pressed)

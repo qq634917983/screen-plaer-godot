@@ -1,0 +1,16 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# 大型二进制/构建产物（重建方法见 doc/TODO.md 与 AGENTS.md）
+/cef_artifacts/
+/doc/gdcef/
+/doc/godot_mpv-master/
+/doc/pptx2html/
+/doc/cef_binary_*.tar.bz2
+
+# MPV 旧版备份
+/bin/*.bak
+
+# Godot DLL 临时锁定文件
+bin/~*.dll

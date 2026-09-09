@@ -4,17 +4,22 @@ entry_symbol = "godot_mpv_library_init"
 
 [libraries]
 
-linux.debug.x86_64 = "res://bin/libgodot_mpv.linux.template_debug.x86_64.so"
+macos.debug.arm64 = "res://bin/libgodot_mpv.macos.arm64.dylib"
+macos.release.arm64 = "res://bin/libgodot_mpv.macos.arm64.dylib"
+
 windows.debug.x86_64 = "res://bin/libgodot_mpv.windows.template_release.x86_64.dll"
 windows.release.x86_64 = "res://bin/libgodot_mpv.windows.template_release.x86_64.dll"
 
 [dependencies]
-linux.debug.x86_64 = {
-    "res://bin/libmpv.so" : ""
-}
 windows.debug.x86_64 = {
-    "res://bin/libmpv-2.dll" : ""
+    "res://bin/libmpv-2.dll" : "",
+    "res://bin/libEGL.dll" : "",
+    "res://bin/libGLESv2.dll" : "",
+    "res://bin/zlib1.dll" : ""
 }
 windows.release.x86_64 = {
-    "res://bin/libmpv-2.dll" : ""
+    "res://bin/libmpv-2.dll" : "",
+    "res://bin/libEGL.dll" : "",
+    "res://bin/libGLESv2.dll" : "",
+    "res://bin/zlib1.dll" : ""
 }

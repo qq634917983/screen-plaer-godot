@@ -1,0 +1,983 @@
+{
+  "version": "2026-09-09",
+  "files": [
+    {
+      "path": "bin/libgodot_mpv.windows.template_release.x86_64.dll",
+      "sha256": "17f6932095dd9b993383fba4707e03c0a6c4d731f9e53f69fd56e0f7fe4ffd05"
+    },
+    {
+      "path": "bin/libEGL.dll",
+      "sha256": "938b9715619bffc57bf98ab6ad583ace1e700489b243f54dbf2802424afe959b"
+    },
+    {
+      "path": "bin/libGLESv2.dll",
+      "sha256": "fda33f3ce92d17abfded614e7a5cdaac58b8309d9e80ca40f54056192c530a04"
+    },
+    {
+      "path": "bin/zlib1.dll",
+      "sha256": "596933232f587c1f403e757f6fcef4e537c0ec0a192c215706edef9608845a8d"
+    },
+    {
+      "path": "bin/libmpv-2.dll",
+      "sha256": "e464b9e98c2daf10ab182a5a81f021b00ffaf95a7ad2a0c3bfd5878a7f28d493"
+    },
+    {
+      "path": "cef_artifacts/gdcef.gdextension",
+      "sha256": "bceb3095e304a6abbd942a566d1c16e73f685fae535098e46265d873d2602115"
+    },
+    {
+      "path": "cef_artifacts/VERSION",
+      "sha256": "78dcc58d5dcce8406282e3c5ab7e7f4976f2b2a94162f146a8c0a19578ec4b67"
+    },
+    {
+      "path": "cef_artifacts/windows/chrome_100_percent.pak",
+      "sha256": "3d212fe1c5a583397c967bddb7720693f7fecd5c7a16d4592335adf92adfc72c"
+    },
+    {
+      "path": "cef_artifacts/windows/chrome_200_percent.pak",
+      "sha256": "a6926a16d6f76647fb38b18de9e3fe2f1cc9a062e062607de5fc1d0a65c55807"
+    },
+    {
+      "path": "cef_artifacts/windows/chrome_elf.dll",
+      "sha256": "d354a90ddc8f96bf9878b1c1349b97cf8c5bc61311c6f4c3e07fa6c83f48944e"
+    },
+    {
+      "path": "cef_artifacts/windows/d3dcompiler_47.dll",
+      "sha256": "a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb"
+    },
+    {
+      "path": "cef_artifacts/windows/dxcompiler.dll",
+      "sha256": "275b31642bf35d0576cc4aa226036fd39977090996b116f32b329ddbf58b185c"
+    },
+    {
+      "path": "cef_artifacts/windows/dxil.dll",
+      "sha256": "0850398076e9e30cd9ac28fc7d56a7d350ea755b0f3b6b2fc8f35a930888c845"
+    },
+    {
+      "path": "cef_artifacts/windows/gdCefRenderProcess.exe",
+      "sha256": "58b90d9d647a4e0b8fafb8075fe039e9215059a4076c63414152b1eff0caa0cc"
+    },
+    {
+      "path": "cef_artifacts/windows/icudtl.dat",
+      "sha256": "9f48c7f9c7c94d516a14870707e910ab94d75ae640ff6842c4af53276cd26ebe"
+    },
+    {
+      "path": "cef_artifacts/windows/libcef.dll",
+      "sha256": "5f2ffb8f622bfb50caeb565d0e3ce205a4a64af95a8e3e4d34bf71f94d2650bf"
+    },
+    {
+      "path": "cef_artifacts/windows/libEGL.dll",
+      "sha256": "f644839720ec461db74e0a0c29416d48ef7eb7721d68aa2d2c3b77f7cc640926"
+    },
+    {
+      "path": "cef_artifacts/windows/libgdcef.dll",
+      "sha256": "8301ab44b410f3f7f2dfb7e2ae679e7bfcf2fe7ed777370eb03c8d9b87b0197d"
+    },
+    {
+      "path": "cef_artifacts/windows/libGLESv2.dll",
+      "sha256": "fb5135a2f708db0aff56c6c008a2dcf8b87662cf9340ece336861d9d89b045b3"
+    },
+    {
+      "path": "cef_artifacts/windows/resources.pak",
+      "sha256": "47ed9a43b2699db18fece47fe9cac19e5490bd3d0eb62338afbdc784f78dfa74"
+    },
+    {
+      "path": "cef_artifacts/windows/v8_context_snapshot.bin",
+      "sha256": "c2b89c98ae020e1fb390316719d8fddd387ba300a289ec379c501ab995a0d0f0"
+    },
+    {
+      "path": "cef_artifacts/windows/vk_swiftshader_icd.json",
+      "sha256": "32d83ff113fef532a9f97e0d2831f8656628ab1c99e9060f0332b1532839afd9"
+    },
+    {
+      "path": "cef_artifacts/windows/vk_swiftshader.dll",
+      "sha256": "f12dad3f722d1b2d9370b053f33f55733c6fb7540592471ed0f9cd822dc593f2"
+    },
+    {
+      "path": "cef_artifacts/windows/vulkan-1.dll",
+      "sha256": "aab781ea6afe8be88a316dab6afd12c4f6483af31e0010dbb571e7f93d99ad6d"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/af_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/af_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/af_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/af.pak",
+      "sha256": "cde6718c86d08758e88b2f309759bb843b89cb78ec63012a0f4ab3ada05c999b"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/am_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/am_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/am_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/am.pak",
+      "sha256": "a100940f03b6261a5d316d7c4fb375c393577eb6e7aeeb180b43546ca0dceaa2"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ar_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ar_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ar_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ar.pak",
+      "sha256": "cb0a39ba5eb92e6c279a5f7aca39388e48444d7dc9d461a1a0f3f9360eab6e70"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bg_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bg_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bg_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bg.pak",
+      "sha256": "fa5508d5f4bbc08d548cf639f35f9bf94394c9c0464c6152a52ff7919e806537"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bn_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bn_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bn_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/bn.pak",
+      "sha256": "a37cbc1f080d34360ff98dfaa4bb74f880e675857f3fcbcd022ee99f5db5da38"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ca_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ca_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ca_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ca.pak",
+      "sha256": "ff3c11e685e5a593a630a6b996f06c5e37860ba8f65af5f96795ef8b6e3bbfff"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/cs_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/cs_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/cs_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/cs.pak",
+      "sha256": "3f57c3970d2d4ac7b95647e9878fdd102ace49f70551b458af9a6a008fb69f87"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/da_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/da_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/da_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/da.pak",
+      "sha256": "e0aa8aa0891ce704a416b519e4bed8950b4506dd5e7f8d2ce8363f5bb86d4482"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/de_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/de_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/de_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/de.pak",
+      "sha256": "5de3dbf0fc3072c34a5a3230aaf2f36a31befd08c9d6b2ed9e171ebfc09fa0e7"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/el_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/el_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/el_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/el.pak",
+      "sha256": "9374ced7394446d790491e26153db1fc72d00349b7a548b4ef3d67bf771fda41"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-GB_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-GB_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-GB_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-GB.pak",
+      "sha256": "4ac70447981c9de22eb417865e26251f96add929366c62a9c78ecfe5aa667978"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-US_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-US_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-US_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/en-US.pak",
+      "sha256": "0b2a72cc851d62f615080f3954f2c94d7009ccac31ac4248398f08359fd1c714"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es-419_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es-419_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es-419_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es-419.pak",
+      "sha256": "bd8c81c32907f3ea82dde3a6b797b54eb4157b5d61c28bd881c65d4eaad667ec"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/es.pak",
+      "sha256": "a40646324c731708af03df05e4a77732e58543fe165bd9292755f6febccb0691"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/et_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/et_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/et_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/et.pak",
+      "sha256": "bcd7eb9e306b439fb0c7d710b1e30db7ba7c0f08cd987b682f221c414800d793"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fa_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fa_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fa_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fa.pak",
+      "sha256": "3fa852708c9e5dcac4ac5d995a2f50cc698a834271b3d4485e69770623054bd6"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fi_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fi_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fi_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fi.pak",
+      "sha256": "54a4fca569f96b073088d52c977b37c445850858d976caa24e91adeedaa41fe8"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fil_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fil_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fil_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fil.pak",
+      "sha256": "468e76d5acb6b237ed162d63ccbbbc4c7e3c8ab9738040cc634b36b50e3f413f"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fr_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fr_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fr_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/fr.pak",
+      "sha256": "8508d1ec852d6f2b1cb4e588c412e01a117bcf40804f0ac65828228677ebe709"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/gu_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/gu_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/gu_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/gu.pak",
+      "sha256": "a3ef2f093c877f4a7628179571c8a12a26181e46a7aca831c8ea8f7d678b8521"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/he_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/he_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/he_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/he.pak",
+      "sha256": "9dbf86b603010105e152257056ade56560da88e843476013eaf33301523cf2c9"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hi_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hi_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hi_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hi.pak",
+      "sha256": "e5a729fda51b3dea0dda8dc561b0e8494f123890787ad76a46e7503e7228589a"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hr_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hr_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hr_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hr.pak",
+      "sha256": "8519c2276f18e50997b4c660c9660a3bc78e9067012d05932238617a6b7bd58e"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hu_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hu_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hu_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/hu.pak",
+      "sha256": "804801d0d621f0d07e165af02b260698f1daa1a28f611b8558afc0c68bf8e3c9"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/id_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/id_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/id_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/id.pak",
+      "sha256": "708338f6360dcb6acc475874264186f4623456cbe28d313f2bdbf27a3a769361"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/it_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/it_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/it_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/it.pak",
+      "sha256": "410c13db53d5f865210b5b361adc1bb8d77501f305e976381736f625ed691c54"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ja_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ja_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ja_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ja.pak",
+      "sha256": "0a7ee0b6dd5fbe53b1c60cbe211b3cb84ac4710ff9d5be183c958ebc45123dfc"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/kn_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/kn_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/kn_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/kn.pak",
+      "sha256": "73ba1233196469ed757a9c835ad155ac31252e33423d20d644357842fae6fe4f"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ko_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ko_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ko_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ko.pak",
+      "sha256": "949017cb787fc44e3c0ae12627ddcf3909c592bc39108f81835458c7484cb562"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lt_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lt_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lt_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lt.pak",
+      "sha256": "42e1b18489961014e2133eb900189e9f127732cc890c243b05503bef1bcce2ab"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lv_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lv_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lv_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/lv.pak",
+      "sha256": "0c17e2e9e6bdb7ae7def4a50f37a725827fd72ed82a7d4a6140da10646f41367"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ml_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ml_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ml_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ml.pak",
+      "sha256": "93ad9f24ce556ec7dbcbdc5322f8daf4f915f1f1b7af75dbbabd0075b6a8753c"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/mr_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/mr_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/mr_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/mr.pak",
+      "sha256": "2cec9dae87e7cbdd78622ec5453503e57eb9232931b9a200807f98c18d9ecd6d"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ms_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ms_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ms_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ms.pak",
+      "sha256": "346e03ef2aa3fbbd9dadec4cc86eeaf31805158316bdc5127083d2a2eea511ec"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nb_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nb_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nb_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nb.pak",
+      "sha256": "220deae8b7f128d136326a762941b62d0d25c472a2c7877cc7495ca6243917fa"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nl_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nl_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nl_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/nl.pak",
+      "sha256": "c8c8f4281446b6dd84faa0758797795d4789cd3c4f855c7f342c34412e243922"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pl_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pl_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pl_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pl.pak",
+      "sha256": "67b91c2c09c16c09787faa0ac210596b376c4e264fe2f75924ee56d9722383da"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-BR_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-BR_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-BR_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-BR.pak",
+      "sha256": "41b4aa4998dbaba3987a07115ea1bf6495bd4c4a7107934bb2e8fce573cfc982"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-PT_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-PT_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-PT_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/pt-PT.pak",
+      "sha256": "aac5ec9a27bb816e6db777d087aa33aa6c01fe6aef8c6ab8cf4ab732e726deea"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ro_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ro_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ro_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ro.pak",
+      "sha256": "6c3f57133d3385f233e23e1267a8f8238a9a66980b095c3bc6f0c6d18e689c95"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ru_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ru_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ru_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ru.pak",
+      "sha256": "de509de3c8b9087977743a92b9a7640c2be2c599e6055350e3cfc2be6cb9d998"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sk_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sk_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sk_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sk.pak",
+      "sha256": "9f3eea6c9c829437b2af6341ced8dc283abe10da0cd033a71f8837872a1c1ac9"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sl_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sl_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sl_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sl.pak",
+      "sha256": "47f83b126b6642936c33e42ca00ce9be8829e7cf8cc3c4ea5fa4e2fa3d03a2ac"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sr_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sr_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sr_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sr.pak",
+      "sha256": "b2a907de253b8505d5b5d77aa5219c993bb433439713c6bded6b2bf9ecd44a44"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sv_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sv_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sv_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sv.pak",
+      "sha256": "ad4a5aaf7c6eaf6a17954ef91af7556f35cf324d46f71f30bf282fb575e024d5"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sw_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sw_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sw_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/sw.pak",
+      "sha256": "a38628fc5f138977ec09449d82a0183b8ecbbbf30b2dc48cb7762b60ebd4234c"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ta_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ta_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ta_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ta.pak",
+      "sha256": "a8cf8e0aff96ea8fdf908e6a59de37ee236cae3a649db5f39d05796e3a173447"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/te_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/te_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/te_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/te.pak",
+      "sha256": "2d7b60157e228c922534294c02553a4c4f273ab387ea80551dc9cce7c4e3b5ca"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/th_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/th_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/th_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/th.pak",
+      "sha256": "4a5a2149bf3937be1387a2cab2cc17ff8d16874b0a2d4bdf0307a423fb2195c1"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/tr_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/tr_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/tr_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/tr.pak",
+      "sha256": "5923623fcdd1f86048080a996e3ad9b581e59fd81c0d81598c29906ee62b8129"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/uk_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/uk_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/uk_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/uk.pak",
+      "sha256": "562929a92c3ccfcdaed97825823396b139f2eae4aeeb5195c6fda5b96f37cdfe"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ur_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ur_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ur_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/ur.pak",
+      "sha256": "db17bd64ff80ef3814665134123358830dfbbe35fa060c65226b7491f5b13e55"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/vi_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/vi_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/vi_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/vi.pak",
+      "sha256": "19e855ce455b91327fa37ac260405486df0044b857d711496d54d228e20389cc"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-CN_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-CN_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-CN_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-CN.pak",
+      "sha256": "0b6f068cc98d0b7a0bd78a754e06387bfc44f0359c0c7202df90e428e844e4a3"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-TW_FEMININE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-TW_MASCULINE.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-TW_NEUTER.pak",
+      "sha256": "ca73097bd968b363b7145e86b64f3c595e533808b0763dc8863a27fc363cfa51"
+    },
+    {
+      "path": "cef_artifacts/windows/locales/zh-TW.pak",
+      "sha256": "28c45f7089b5a679f6b4d45647eb05b8b5d988dc38e9c3465dfdfcf14d39a541"
+    }
+  ],
+  "platform": "windows-x86_64",
+  "provenance": "Existing working Windows build; gdcef 0.20.0 / CEF 151.3.24"
+}

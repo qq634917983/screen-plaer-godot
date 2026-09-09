@@ -69,6 +69,7 @@ func setup(video_view: TextureRect, placeholder: Control = null) -> void:
 	add_child(mpv)
 	if not mpv.call("initialize"):
 		push_error("MPVPlayer 初始化失败")
+		mpv.queue_free()
 		mpv = null
 		return
 	mpv.connect("texture_updated", _on_texture_updated)
@@ -110,6 +111,7 @@ func load_media(path: String, autoplay := true, seek_pos := -1.0) -> void:
 	_seek_retries = 0
 	_close_browser()  # 切换帧源：关闭网页浏览器
 	# mpv 只认操作系统路径：user://res:// 虚拟路径需先 globalize
+	_apply_volume()  # 装载前应用静音，避免预览首段音频漏出
 	mpv.call("load_file", ProjectSettings.globalize_path(path), "", "")
 	if autoplay:
 		mpv.call("play")
@@ -160,11 +162,7 @@ func load_static(path: String) -> void:
 ## 分辨率（WEB_VIEWPORT_SIZE），窗口缩放由 TextureRect 完成——与视频同模型，
 ## 小窗口下页面等比缩小但完整可见；投屏窗口持有同一纹理引用即自动跟随。
 func load_web(path: String) -> void:
-	var url := path
-	if not url.contains("://"):
-		url = "file:///" + ProjectSettings.globalize_path(path).replace("\\", "/")
-	elif url.begins_with("user://") or url.begins_with("res://"):
-		url = "file:///" + ProjectSettings.globalize_path(path).replace("\\", "/")
+	var url := PlatformPaths.browser_url(path)
 	if not _start_browser(url, SourceKind.WEB):
 		return
 	media_path = path
@@ -178,9 +176,7 @@ func load_web(path: String) -> void:
 ## start_page 为起始页（0 基，快速切换时对齐预览端页码）；
 ## source_path 为原始 pptx 路径（媒体身份/高亮匹配用），空则用 html_path。
 func load_slides(html_path: String, p_page_count := 0, start_page := 0, source_path := "") -> void:
-	var url := html_path
-	if not url.contains("://") or url.begins_with("user://") or url.begins_with("res://"):
-		url = "file:///" + ProjectSettings.globalize_path(html_path).replace("\\", "/")
+	var url := PlatformPaths.browser_url(html_path)
 	if not _start_browser(url, SourceKind.SLIDE):
 		return
 	media_path = source_path if not source_path.is_empty() else html_path

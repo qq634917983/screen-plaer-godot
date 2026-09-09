@@ -331,6 +331,50 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       宽高写死为最小尺寸、不随窗口拉伸；选择持久化 settings.cfg
       （ui/card_size，默认中）
 
+## Phase 16 —— macOS 多系统适配（开发运行版）
+
+> 用户指定优先于 Phase 10。Windows 已基本正常；2026-09-08 由 GPT 在
+> `codex/macos-support` 开始适配，起点提交 `2d6ab86`。
+
+- [x] 16.1 创建适配分支并提交 Windows 基线说明
+- [x] 16.2 macOS MPVPlayer 原生扩展：libmpv 软件 render API → ImageTexture，
+      支持 Metal，保留输出/投屏共享纹理、预览独立静音与后台封面；
+      封面截取等待目标时间与对应纹理都到位，兼容 Mac 先时间后纹理的信号顺序
+- [x] 16.3 CEF Mac 构建：固定上游版本、framework 符号链接拷贝、Helper 签名，
+      补接 NSApplication 的 CEF 协议与 external_message_pump，解决运行崩溃
+- [x] 16.4 跨平台 file URL 编码、Mac 字体回退、真实控件最小尺寸钳制，
+      入口改为资源路径；Mac CEF 数据与日志写 user://
+- [x] 16.5 提供构建/启动脚本及 doc/MACOS.md（依赖与运行限制）
+- [x] 16.6 Mac 实际图形运行验证：视频解码、暂停 seek、输出/投屏纹理一致、
+      预览独立、循环、后台封面、字体布局、图片、网页触点、
+      26 页 PPT 转换/缓存/翻页投屏；空构建目录重建脚本与启动脚本验证通过
+
+支持范围：仅 ARM64 macOS + x86_64 Windows，共用播放/投屏逻辑，按平台加载原生依赖。
+验证范围：Apple M4 + Godot 4.7.2 / Metal 开发运行；本轮 Windows 真机回归、
+外接多屏/4K 性能及独立签名公证安装包尚未验证。Mac 扩展依赖本机 Homebrew libmpv，
+运行包不入库；新机器按 doc/MACOS.md 重建。Windows 绝对媒体路径需在 Mac 重新添加。
+
+## 双平台上传前整理（2026-09-09）
+
+- [x] 确认 ARM64 Mac / x86_64 Windows 扩展路由与现有二进制架构
+- [x] 补齐 Windows 导出依赖 EGL/GLES/zlib；新增 Windows 启动脚本检查主要运行库
+- [x] Mac 启动脚本检查架构与 CEF；新增 doc/PLATFORMS.md 说明克隆后依赖补齐方式
+- [x] 当前版本 ARM Mac 视频与网页/PPT 集成回归：两组 failures=0；测试使用独立 CEF 配置目录，不占用运行中的桌面实例
+- [x] 推送 codex/macos-support 到 Gitee（origin：liuhuan.com/screen-plaer-godot）
+- [x] 将双平台适配合并到 master，保留独立合并提交与适配分支历史
+
+Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检查写成真机验证通过。
+
+## 编辑器布局与运行布局统一
+
+- [x] 四分区容器启用 @tool，编辑器使用同一套尺寸/比例钳制；检查器修改比例与最小尺寸时立即重新布局
+- [x] 自绘标题栏放进 main.tscn，编辑器与运行时共用；编辑器禁用窗口移动、模式切换与关闭操作
+- [x] 四个播放/停止按钮的字体、字号与最小尺寸从运行时代码移入场景资源
+- [x] 编辑器/运行模式使用同尺寸视口验证四象限与标题栏布局，以及修改比例后重新排版
+
+编辑器展示场景默认布局；运行时媒体条目、播放状态与用户保存的分区比例仍按原逻辑恢复。
+主业务脚本保持非 @tool，编辑场景不会启动 MPV/CEF 或读写用户项目。
+
 ## Phase 10 —— 播放体验增强（待做）
 
 - [ ] 10.1 播放列表/顺序播放：输出端当前条目播完后自动切换下一条
@@ -374,3 +418,9 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
       （快速切换 Q、切换条目 1/2/3，点击按钮捕获按键）；
       窗口设置 = 投屏窗口大小/位置/画面缩放/平移，
       全部持久化到 settings.cfg 并即时生效
+
+## Windows 克隆后原生依赖修复（2026-09-09，用户指定优先）
+
+- [x] 定位 Error 126：缺失被忽略的 libmpv-2.dll，同时恢复 CEF 运行目录
+- [x] 增加 Windows 逐文件 SHA-256 清单、安装/原生加载检查/运行库打包脚本，启动接入检查
+- [x] Windows 图形回归：视频/暂停 seek/共享纹理投屏/循环/封面/图片切换；详见 doc/PLATFORMS.md

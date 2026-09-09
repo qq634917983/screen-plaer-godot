@@ -1,0 +1,5 @@
+scons==4.11.1
+packaging==26.3
+progressbar==2.5
+urllib3==2.7.0
+ninja==1.13.2
