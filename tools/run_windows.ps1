@@ -14,6 +14,12 @@ $command = Get-Command $Godot -ErrorAction SilentlyContinue
 if (-not $command) {
     throw 'Set GODOT_BIN or pass -Godot with the path to Godot 4.7.2 x86_64.'
 }
+$mpvDlls = @('libgodot_mpv.windows.template_release.x86_64.dll',
+    'libmpv-2.dll', 'libEGL.dll', 'libGLESv2.dll', 'zlib1.dll')
+$missingMpv = @($mpvDlls | Where-Object { -not (Test-Path -LiteralPath "bin/$_" -PathType Leaf) })
+if ($missingMpv.Count -and (Test-Path -LiteralPath 'bin/win-bin.zip' -PathType Leaf)) {
+    & (Join-Path $PSScriptRoot 'restore_windows_mpv.ps1')
+}
 $required = @(
     'bin/godot_mpv.gdextension',
     'bin/libgodot_mpv.windows.template_release.x86_64.dll',

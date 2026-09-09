@@ -30,6 +30,10 @@
 
 ## 当前进度
 
+- Windows Error 126 修复：旧 win-bin.zip 中四个小 DLL 与 Git 一致，libmpv-2.dll
+  原先未入库；压缩包现随库提供，restore_windows_mpv.ps1 仅恢复五个 DLL，
+  run_windows.ps1 缺库时自动恢复，不覆盖双平台扩展配置。仍待 Windows 真机复测。
+
 - 双平台适配已合并到 `master`：共用桌面业务逻辑，按平台加载 ARM64 macOS /
   x86_64 Windows 原生依赖；保留 `codex/macos-support` 和 GPT 起点历史。
 
