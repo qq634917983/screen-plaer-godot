@@ -49,6 +49,8 @@ var _missing := false
 
 
 func _init() -> void:
+	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	# 固定宽度 210：内容宽 206，16:9 画面区高 116，标题栏 26，按钮区 ~56
 	# （宽高全部写死为最小尺寸，避免 AspectRatioContainer 在流式布局里协商失败被压扁）
 	custom_minimum_size = Vector2(210, 202)

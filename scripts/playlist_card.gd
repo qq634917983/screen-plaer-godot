@@ -30,6 +30,8 @@ var _btn_play: Button
 
 
 func _init() -> void:
+	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	custom_minimum_size = Vector2(210, 202)
 	var style := StyleBoxFlat.new()
 	style.bg_color = C_PANEL
