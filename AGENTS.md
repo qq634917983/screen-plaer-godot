@@ -30,6 +30,11 @@
 
 ## 当前进度
 
+- 独立投屏窗口空闲时固定显示纯黑背景；无视频、停止视频或仅播放音频时不会露出
+  透明/系统底色。设置窗口采用草稿式编辑：顶部「设置」仍直接弹窗，「应用」统一
+  保存并立即生效但不关闭，「确定」保存、生效并关闭；关闭窗口放弃尚未应用的改动。
+  tests/settings_button_smoke.gd 已验证黑屏、未应用不落盘、应用不关闭及确定关闭。
+
 - 菜单栏「设置」直接弹窗（2026-09-09，分支 zcode）：MenuSettings 由 MenuButton 改为
   普通 Button（theme_type_variation=MenuButton 保持与相邻菜单一致的外观），
   点击直接居中弹出 SettingsWindow，不再经过「打开设置」二级菜单；
@@ -251,7 +256,8 @@
   pptx 转换结果 + 封面副本，保存时同步、打开时优先查找；ConfigFile.save
   需先建目录）
 - `scripts/settings_window.gd` — SettingsWindow 设置窗口（声音开关/快捷键/
-  投屏窗口几何，代码建 UI）
+  投屏窗口几何，代码建 UI；修改先作为窗口草稿，「应用」保存生效不关闭，
+  「确定」保存生效并关闭）
 - `ui/theme.tres` — 全局深色主题（SystemFont: 微软雅黑 + Segoe UI Emoji 回退）
 - `bin/godot_mpv.gdextension` — MPV 扩展入口（debug 条目指向 release 库）
 - `doc/godot_mpv-master/` — 扩展完整源码 + 构建环境（godot-cpp/导入库/glad，

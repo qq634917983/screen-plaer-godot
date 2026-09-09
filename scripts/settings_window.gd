@@ -1,7 +1,7 @@
 class_name SettingsWindow
 extends Window
 ## 设置窗口：基础设置（声音开关、快捷键）+ 投屏窗口设置（大小/位置/缩放/平移）。
-## 所有改动立即写入 ProjectStore 并发出 settings_changed，由主窗口统一应用。
+## 控件修改先留在窗口中；“应用”保存并生效，“确定”保存、生效并关闭。
 
 signal settings_changed
 
@@ -21,6 +21,12 @@ var _pos_x_spin: SpinBox
 var _pos_y_spin: SpinBox
 var _width_spin: SpinBox
 var _height_spin: SpinBox
+var _audio_output_check: CheckBox
+var _cover_spin: SpinBox
+var _copy_media_check: CheckBox
+var _pending_hotkeys := {}
+var _apply_button: Button
+var _ok_button: Button
 
 
 func _ready() -> void:
@@ -33,8 +39,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode != KEY_ESCAPE:
-			ProjectStore.set_setting("hotkeys", _capturing_action, event.keycode)
-			settings_changed.emit()
+			_pending_hotkeys[_capturing_action] = event.keycode
 		_capturing_action = ""
 		_refresh_hotkey_buttons()
 		get_viewport().set_input_as_handled()
@@ -61,10 +66,22 @@ func _build_ui() -> void:
 	tabs.add_child(_build_basic_tab())
 	tabs.add_child(_build_window_tab())
 
-	var close_button := Button.new()
-	close_button.text = "关闭"
-	close_button.pressed.connect(hide)
-	root.add_child(close_button)
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_END
+	actions.add_theme_constant_override("separation", 8)
+	root.add_child(actions)
+	_apply_button = Button.new()
+	_apply_button.name = "ApplyButton"
+	_apply_button.text = "应用"
+	_apply_button.custom_minimum_size.x = 88
+	_apply_button.pressed.connect(_apply_changes)
+	actions.add_child(_apply_button)
+	_ok_button = Button.new()
+	_ok_button.name = "OkButton"
+	_ok_button.text = "确定"
+	_ok_button.custom_minimum_size.x = 88
+	_ok_button.pressed.connect(_confirm_changes)
+	actions.add_child(_ok_button)
 
 
 func _build_basic_tab() -> Control:
@@ -73,7 +90,8 @@ func _build_basic_tab() -> Control:
 	tab.add_theme_constant_override("separation", 8)
 
 	tab.add_child(_make_header("声音输出"))
-	tab.add_child(_make_audio_check("输出/投屏声音", "output", true))
+	_audio_output_check = _make_audio_check("输出/投屏声音", "output", true)
+	tab.add_child(_audio_output_check)
 	var audio_note := Label.new()
 	audio_note.text = "注：预览播放器始终静音（仅作预览用）；输出播放器与投屏窗口共享同一解码实例，声音只有一路。音量在主窗口右侧「音频控制」面板调节；输出端静音由此处勾选框控制。"
 	audio_note.add_theme_font_size_override("font_size", 11)
@@ -88,16 +106,11 @@ func _build_basic_tab() -> Control:
 	cover_label.text = "封面截取位置（秒）"
 	cover_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cover_row.add_child(cover_label)
-	var cover_spin := SpinBox.new()
-	cover_spin.min_value = 0.0
-	cover_spin.max_value = 120.0
-	cover_spin.step = 0.5
-	cover_spin.value = float(ProjectStore.get_setting("thumbs", "position", 1.0))
-	cover_spin.value_changed.connect(func(value: float) -> void:
-		ProjectStore.set_setting("thumbs", "position", value)
-		settings_changed.emit()
-	)
-	cover_row.add_child(cover_spin)
+	_cover_spin = SpinBox.new()
+	_cover_spin.min_value = 0.0
+	_cover_spin.max_value = 120.0
+	_cover_spin.step = 0.5
+	cover_row.add_child(_cover_spin)
 	tab.add_child(cover_row)
 	var cover_note := Label.new()
 	cover_note.text = "添加到媒体库时自动在视频的该时间点截图作为封面；已生成的封面不会重截。"
@@ -108,14 +121,9 @@ func _build_basic_tab() -> Control:
 
 	tab.add_child(HSeparator.new())
 	tab.add_child(_make_header("媒体库"))
-	var copy_check := CheckBox.new()
-	copy_check.text = "添加文件时复制到项目目录"
-	copy_check.button_pressed = ProjectStore.get_setting("media", "copy_to_project", false)
-	copy_check.toggled.connect(func(pressed: bool) -> void:
-		ProjectStore.set_setting("media", "copy_to_project", pressed)
-		settings_changed.emit()
-	)
-	tab.add_child(copy_check)
+	_copy_media_check = CheckBox.new()
+	_copy_media_check.text = "添加文件时复制到项目目录"
+	tab.add_child(_copy_media_check)
 	var copy_note := Label.new()
 	copy_note.text = "开启后，添加的媒体文件会被真实复制到项目缓存目录（X_cache/media/），条目引用副本——源文件之后被移动或删除也不影响播放。仅对已保存的项目生效；复制在添加时进行，大文件会花费数秒。"
 	copy_note.add_theme_font_size_override("font_size", 11)
@@ -175,10 +183,6 @@ func _make_audio_check(text: String, key: String, default: bool) -> CheckBox:
 	var check := CheckBox.new()
 	check.text = text
 	check.button_pressed = ProjectStore.get_setting("audio", key, default)
-	check.toggled.connect(func(pressed: bool) -> void:
-		ProjectStore.set_setting("audio", key, pressed)
-		settings_changed.emit()
-	)
 	return check
 
 
@@ -208,10 +212,6 @@ func _make_spin(parent: Control, label_text: String, minv: float, maxv: float, s
 	spin.max_value = maxv
 	spin.step = step
 	spin.value = default
-	spin.value_changed.connect(func(value: float) -> void:
-		_save_window_settings()
-		settings_changed.emit()
-	)
 	parent.add_child(spin)
 	return spin
 
@@ -226,11 +226,29 @@ func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "pan_y", int(_pan_y_spin.value))
 
 
+func _apply_changes() -> void:
+	ProjectStore.set_setting("audio", "output", _audio_output_check.button_pressed)
+	ProjectStore.set_setting("thumbs", "position", _cover_spin.value)
+	ProjectStore.set_setting("media", "copy_to_project", _copy_media_check.button_pressed)
+	for entry in HOTKEY_ACTIONS:
+		var action: String = entry[0]
+		ProjectStore.set_setting("hotkeys", action,
+			int(_pending_hotkeys.get(action, _default_hotkey(action))))
+	_save_window_settings()
+	settings_changed.emit()
+
+
+func _confirm_changes() -> void:
+	_apply_changes()
+	hide()
+
+
 # ---------- 与主窗口交互 ----------
 
 func open() -> void:
-	_refresh_hotkey_buttons()
+	_load_basic_settings()
 	_load_window_settings()
+	_refresh_hotkey_buttons()
 	show()
 	grab_focus()
 
@@ -242,8 +260,18 @@ func _refresh_hotkey_buttons() -> void:
 		if action == _capturing_action:
 			button.text = "按下新按键…"
 		else:
-			var keycode := int(ProjectStore.get_setting("hotkeys", action, _default_hotkey(action)))
+			var keycode := int(_pending_hotkeys.get(action, _default_hotkey(action)))
 			button.text = OS.get_keycode_string(keycode)
+
+
+func _load_basic_settings() -> void:
+	_audio_output_check.set_pressed_no_signal(bool(ProjectStore.get_setting("audio", "output", true)))
+	_cover_spin.set_value_no_signal(float(ProjectStore.get_setting("thumbs", "position", 1.0)))
+	_copy_media_check.set_pressed_no_signal(bool(ProjectStore.get_setting("media", "copy_to_project", false)))
+	_pending_hotkeys.clear()
+	for entry in HOTKEY_ACTIONS:
+		var action: String = entry[0]
+		_pending_hotkeys[action] = int(ProjectStore.get_setting("hotkeys", action, _default_hotkey(action)))
 
 
 func _load_window_settings() -> void:

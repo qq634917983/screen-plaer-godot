@@ -28,7 +28,7 @@ func run() -> void:
 		quit(1)
 		return
 	var scene = packed.instantiate()
-	scene.cef_cache_path = "user://smoke/cef-settings-button"
+	scene.cef_cache_path = "user://smoke/cef-settings-button-%d" % OS.get_process_id()
 	root.add_child(scene)
 	await process_frame
 
@@ -42,6 +42,30 @@ func run() -> void:
 	button.pressed.emit()
 	await process_frame
 	check(scene._settings_window.visible, "SettingsWindow visible right after click")
+	var cast_background: ColorRect = scene.get_node("%CastWindow/CastBackground")
+	check(cast_background.color == Color.BLACK, "Cast window has an opaque black idle background")
+
+	var apply_button: Button = scene._settings_window.find_child("ApplyButton", true, false)
+	var ok_button: Button = scene._settings_window.find_child("OkButton", true, false)
+	check(apply_button != null and ok_button != null, "Settings window has Apply and OK buttons")
+	var old_width := int(ProjectStore.get_setting("cast_window", "width", 960))
+	var draft_width := 970 if old_width != 970 else 980
+	scene._settings_window._width_spin.value = draft_width
+	check(int(ProjectStore.get_setting("cast_window", "width", 960)) == old_width,
+		"Editing a setting does not save before Apply or OK")
+	apply_button.pressed.emit()
+	await process_frame
+	check(scene._settings_window.visible, "Apply keeps SettingsWindow open")
+	check(int(ProjectStore.get_setting("cast_window", "width", 960)) == draft_width,
+		"Apply saves settings")
+	var confirmed_width := draft_width + 10
+	scene._settings_window._width_spin.value = confirmed_width
+	ok_button.pressed.emit()
+	await process_frame
+	check(not scene._settings_window.visible, "OK closes SettingsWindow")
+	check(int(ProjectStore.get_setting("cast_window", "width", 960)) == confirmed_width,
+		"OK saves settings before closing")
+	ProjectStore.set_setting("cast_window", "width", old_width)
 
 	# 再次点击：窗口已可见时只 grab_focus，不报错不重复居中
 	button.pressed.emit()
