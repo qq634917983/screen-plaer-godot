@@ -1,3 +1,4 @@
+@tool
 extends PanelContainer
 ## 无边框主窗口的自绘标题栏。
 ## 拖动由代码逐帧设置 window.position 实现，不进入 Windows 拖动窗口时的
@@ -53,7 +54,9 @@ func _ready() -> void:
 	hbox.add_child(_max_button)
 
 	var close_button := _make_button("✕", Color(0.75, 0.2, 0.2))
-	close_button.pressed.connect(func() -> void: get_tree().quit())
+	close_button.pressed.connect(func() -> void:
+		if not Engine.is_editor_hint():
+			get_tree().quit())
 	hbox.add_child(close_button)
 
 	gui_input.connect(_on_gui_input)
@@ -91,6 +94,8 @@ func _toggle_maximize() -> void:
 
 ## mode 切换请求在无边框窗口上偶发被系统丢弃，记录期望值逐帧校验并重试
 func _request_mode(m: int) -> void:
+	if Engine.is_editor_hint():
+		return
 	get_window().mode = m as Window.Mode
 	_want_mode = m
 	_want_mode_frames = 0
@@ -110,6 +115,8 @@ func _restore_windowed_rect() -> void:
 
 
 func _on_gui_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	var mb := event as InputEventMouseButton
 	if mb == null or mb.button_index != MOUSE_BUTTON_LEFT:
 		return
@@ -139,6 +146,8 @@ func _on_gui_input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	var win := get_window()
 	# mode 切换请求偶发被系统丢弃：逐帧校验，5 帧未落地就重试
 	if _want_mode != -1:

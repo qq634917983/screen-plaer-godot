@@ -19,6 +19,7 @@ var _state := 0  # 0 空闲 / 1 等待当前文件起播 / 2 已 seek，等时�
 var _timer := 0.0
 var _target := 1.0
 var _latest_tex: Texture2D
+var _capture_ready := false
 var _seek_retries := 0
 
 
@@ -30,6 +31,7 @@ func _ready() -> void:
 	add_child(_mpv)
 	if not _mpv.call("initialize"):
 		push_warning("封面截取器 MPV 初始化失败")
+		_mpv.queue_free()
 		_mpv = null
 		return
 	_mpv.call("set_volume", "0")  # 抓帧不出声
@@ -51,6 +53,7 @@ func _kick() -> void:
 	_state = 1
 	_timer = 0.0
 	_latest_tex = null
+	_capture_ready = false
 	_seek_retries = 0
 	_mpv.call("load_file", ProjectSettings.globalize_path(_current), "", "")  # mpv 只认操作系统路径
 	_mpv.call("pause")
@@ -59,10 +62,15 @@ func _kick() -> void:
 func _process(delta: float) -> void:
 	if _state == 0:
 		return
+	# libmpv 在 macOS 上会先报告目标时间，再交付对应纹理。
+	# 等到下一帧同时具备时间与纹理，不能在 time_changed 内提前判失败。
+	if _capture_ready and _latest_tex != null:
+		_finish(true, _latest_tex)
+		return
 	_timer += delta
 	if _timer > PER_FILE_TIMEOUT:
 		# 超时兜底：已 seek 过且有帧就用当前帧，否则放弃该文件
-		_finish(_state == 2 and _latest_tex != null, _latest_tex)
+		_finish(_capture_ready and _latest_tex != null, _latest_tex)
 
 
 func _do_seek() -> void:
@@ -82,8 +90,7 @@ func _on_time_changed(time_pos: float) -> void:
 		_do_seek()
 	elif _state == 2:
 		if absf(time_pos - _target) <= 0.5:
-			# 时间到位，此刻的最新纹理才是当前文件目标位置的帧
-			_finish(_latest_tex != null, _latest_tex)
+			_capture_ready = true
 		elif _seek_retries < 3:
 			# 首帧时 demuxer 可能未就绪导致 seek 丢失，重试
 			_seek_retries += 1

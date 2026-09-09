@@ -1,3 +1,4 @@
+@tool
 ## 十字四分区容器：左上/右上/左下/右下四个面板，竖横两条分割条在中心交叉。
 ## 分割位置以比例存储，窗口缩放时按比例伸缩（放大窗口各分区按历史比例放大）；
 ## 拖拽竖条/横条/交叉点调整布局，拖拽结束发 ratios_changed 供持久化。
@@ -10,19 +11,66 @@ signal ratios_changed(x_ratio: float, y_ratio: float)
 ## 四个象限按子节点名字对位（找不到名字的子节点退回按声明顺序）
 const QUADRANT_NAMES: Array[String] = ["PlayersSection", "UtilityPanel", "MediaPanel", "AudioPanel"]
 
-@export var dragger_width: int = 10
-@export_range(0.05, 0.95) var split_x_ratio: float = 0.72
-@export_range(0.05, 0.95) var split_y_ratio: float = 0.5
-@export var min_left := 420.0
-@export var min_right := 220.0
-@export var min_top := 260.0
-@export var min_bottom := 180.0
+@export var dragger_width: int = 10:
+	set(value):
+		dragger_width = value
+		update_minimum_size()
+		queue_sort()
+@export_range(0.05, 0.95) var split_x_ratio: float = 0.72:
+	set(value):
+		split_x_ratio = value
+		update_minimum_size()
+		queue_sort()
+@export_range(0.05, 0.95) var split_y_ratio: float = 0.5:
+	set(value):
+		split_y_ratio = value
+		update_minimum_size()
+		queue_sort()
+@export var min_left := 420.0:
+	set(value):
+		min_left = value
+		update_minimum_size()
+		queue_sort()
+@export var min_right := 220.0:
+	set(value):
+		min_right = value
+		update_minimum_size()
+		queue_sort()
+@export var min_top := 260.0:
+	set(value):
+		min_top = value
+		update_minimum_size()
+		queue_sort()
+@export var min_bottom := 180.0:
+	set(value):
+		min_bottom = value
+		update_minimum_size()
+		queue_sort()
 
 var _drag_mode := 0  # 0=无 1=竖条 2=横条 3=交叉点（两轴一起）
 
 
 func _get_minimum_size() -> Vector2:
-	return Vector2(min_left + min_right + dragger_width, min_top + min_bottom + dragger_width)
+	var limits := _panel_minimums()
+	return Vector2(limits.x + limits.y + dragger_width, limits.z + limits.w + dragger_width)
+
+
+## 系统字体的字形高度不同，四象限不能小于实际控件最小尺寸。
+## 否则 macOS 回退字体下，媒体面板会盖住上方播放器控制条。
+func _panel_minimums() -> Vector4:
+	var limits := Vector4(min_left, min_right, min_top, min_bottom)
+	for child in get_children():
+		if not child is Control or not child.visible:
+			continue
+		var idx := QUADRANT_NAMES.find(child.name)
+		if idx == -1:
+			idx = mini(child.get_index(), 3)
+		var minimum: Vector2 = child.get_combined_minimum_size()
+		var col := idx % 2
+		var row := 2 + idx / 2
+		limits[col] = maxf(limits[col], minimum.x)
+		limits[row] = maxf(limits[row], minimum.y)
+	return limits
 
 
 func _notification(what: int) -> void:
@@ -31,11 +79,13 @@ func _notification(what: int) -> void:
 
 
 func _split_x_px() -> float:
-	return clampf(size.x * split_x_ratio, min_left, maxf(min_left, size.x - dragger_width - min_right))
+	var limits := _panel_minimums()
+	return clampf(size.x * split_x_ratio, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
 
 
 func _split_y_px() -> float:
-	return clampf(size.y * split_y_ratio, min_top, maxf(min_top, size.y - dragger_width - min_bottom))
+	var limits := _panel_minimums()
+	return clampf(size.y * split_y_ratio, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
 
 
 func _sort_children() -> void:
@@ -75,6 +125,8 @@ func _cursor_for_zone(zone: int) -> CursorShape:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			_drag_mode = _hit_zone(event.position)
@@ -88,11 +140,12 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 	elif event is InputEventMouseMotion:
 		if _drag_mode != 0:
+			var limits := _panel_minimums()
 			if _drag_mode & 1:
-				var px := clampf(event.position.x, min_left, maxf(min_left, size.x - dragger_width - min_right))
+				var px := clampf(event.position.x, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
 				split_x_ratio = px / maxf(size.x, 1.0)
 			if _drag_mode & 2:
-				var py := clampf(event.position.y, min_top, maxf(min_top, size.y - dragger_width - min_bottom))
+				var py := clampf(event.position.y, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
 				split_y_ratio = py / maxf(size.y, 1.0)
 			queue_sort()
 			accept_event()

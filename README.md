@@ -1,7 +1,20 @@
 # ScreenPlayer — 跨窗口同步播放器
 
-基于 **Godot 4.7.2** 的 Windows 桌面媒体播放器：单进程多窗口，预览端与输出端独立播放，
+基于 **Godot 4.7.2** 的 Windows x86_64 / macOS ARM64 桌面媒体播放器：单进程多窗口，预览端与输出端独立播放，
 独立投屏窗口共享输出端纹理实现零延迟画面同步。支持视频 / 音频 / 图片 / 网页 / PPT 混排播放。
+
+主程序是 Godot 原生桌面应用。内嵌 CEF 用于网页/PPT 媒体播放；未来可另加简单网页后台遥控器，当前尚未实现。
+
+双平台依赖、启动方法与验证范围见 [doc/PLATFORMS.md](doc/PLATFORMS.md)。
+
+## macOS 运行
+
+`master` 已合并 ARM64 macOS 与 x86_64 Windows 的双平台适配，共用业务逻辑，按平台加载原生依赖。
+macOS 适配由 GPT 在 `codex/macos-support` 分支从 Windows 稳定基线开始，保留完整提交历史。
+本机已构建依赖，可执行 `./tools/run_macos.sh`；新克隆先执行
+`brew install mpv cmake`、`./tools/build_macos.sh --with-cef`（需要完整 Xcode）。
+已验证 Apple M4 / Godot 4.7.2 的视频、图片、网页、PPT 与独立窗口投屏。
+构建、测试及分发限制见 [doc/MACOS.md](doc/MACOS.md)。
 
 ## 功能特性
 
@@ -25,12 +38,12 @@
 
 | 组件 | 说明 |
 |---|---|
-| Godot 4.7.2 | 主程序框架，d3d12 渲染驱动 |
+| Godot 4.7.2 | 主程序框架，Windows D3D12 / macOS Metal |
 | godot_mpv（自编译） | 视频解码扩展，源码在 doc/godot_mpv-master/（不入库） |
 | gdcef v0.20.0 + CEF 151 | 内嵌浏览器，产物在 cef_artifacts/（不入库） |
 | PPTX2HTML | PPT 转换，vendor 依赖在 pptx_renderer/js/ |
 
-## 运行前准备
+## Windows 运行前准备
 
 本仓库**不含大体积运行库**（超出代码托管单文件 / 体积上限），克隆后需自行补齐：
 

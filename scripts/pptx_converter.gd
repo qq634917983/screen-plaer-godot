@@ -23,8 +23,7 @@ const CONVERT_TIMEOUT := 30.0  # 转换整体超时（秒）
 static func player_page_url() -> String:
 	if not FileAccess.file_exists(PLAYER_PAGE_USER_DIR + "/player.html"):
 		_copy_dir("res://pptx_renderer", PLAYER_PAGE_USER_DIR)
-	return "file:///" + ProjectSettings.globalize_path(
-		PLAYER_PAGE_USER_DIR + "/player.html").replace("\\", "/")
+	return PlatformPaths.browser_url(PLAYER_PAGE_USER_DIR + "/player.html")
 
 
 static func _copy_dir(src: String, dst: String) -> void:
