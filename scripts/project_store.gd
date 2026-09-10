@@ -86,6 +86,15 @@ static func set_setting(section: String, key: String, value: Variant) -> void:
 	cfg.save(SETTINGS_PATH)
 
 
+## 一次写入同一分区的多个设置，避免窗口连续保存宽高时重复读写配置文件。
+static func set_settings(section: String, values: Dictionary) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)  # 保留其它设置项
+	for key in values:
+		cfg.set_value(section, str(key), values[key])
+	cfg.save(SETTINGS_PATH)
+
+
 # ---------- 项目缓存目录（X_cache） ----------
 
 ## 项目文件 X.splproj → 同级缓存目录 X_cache/

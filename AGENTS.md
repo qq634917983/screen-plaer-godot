@@ -30,6 +30,11 @@
 
 ## 当前进度
 
+- 媒体拖放与主窗口尺寸持久化（2026-09-10）：主窗口接收操作系统 files_dropped，
+  支持的视频/音频/图片/网页/PPT 复用“添加文件”的复制入库、去重、封面和项目保存流程；
+  目录及未知扩展名忽略。窗口态宽高在缩放停止 0.35s 后写入 settings.cfg，关闭前补写，
+  启动时按当前屏幕可用范围恢复。drop_window_persistence_smoke 全部通过。
+
 - Windows x86_64 Release 发行构建（2026-09-10）：export_presets 使用 Godot 4.7.2
   `windows_release_x86_64` 正式模板，脚本编译为 GDScript bytecode，嵌入 PCK；导出时
   排除 tests/doc/tools/Godot AI 调试组件和 CEF 缓存。CEF 运行文件从锁定清单复制到

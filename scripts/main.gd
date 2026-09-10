@@ -48,6 +48,9 @@ var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
 var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点标记）
 var _is_quitting := false
+var _main_window_save_timer: Timer
+var _pending_main_window_size := Vector2i.ZERO
+var _restoring_main_window_size := false
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -94,10 +97,19 @@ func _ready() -> void:
 	# 无边框主窗口 + 自绘标题栏 + 手动边缘缩放：窗口拖动/缩放由代码逐帧完成，
 	# 不进入 Windows 的模态移动/缩放消息循环（该循环会冻结整个进程主循环），
 	# 因此拖动主窗口时播放与投屏画面不再中断
-	get_window().borderless = true
+	var main_window := get_window()
+	main_window.borderless = true
 	_title_bar = $RootVBox/TitleBar
 	_title_bar.close_requested.connect(_request_app_quit)
 	add_child(WindowResizerScript.new())
+	_restore_main_window_size()
+	_main_window_save_timer = Timer.new()
+	_main_window_save_timer.one_shot = true
+	_main_window_save_timer.wait_time = 0.35
+	add_child(_main_window_save_timer)
+	_main_window_save_timer.timeout.connect(_save_main_window_size)
+	main_window.size_changed.connect(_queue_main_window_size_save)
+	main_window.files_dropped.connect(_on_files_dropped)
 
 	_preview = PlayerSlot.new()
 	_preview.name = "PreviewSlot"
@@ -844,6 +856,27 @@ func _on_add_file_pressed() -> void:
 
 
 func _on_files_selected(paths: PackedStringArray) -> void:
+	_import_media_paths(paths)
+
+
+## 从系统文件管理器拖到主窗口的文件快速加入媒体库。目录和不支持的扩展名忽略，
+## 其余行为复用“添加文件”（复制入库、去重、封面和项目自动保存）。
+func _on_files_dropped(paths: PackedStringArray) -> void:
+	var media_paths := PackedStringArray()
+	for raw_path in paths:
+		var path := str(raw_path)
+		if DirAccess.dir_exists_absolute(path):
+			continue
+		if MediaObject.detect_type(path) == MediaObject.Type.OTHER:
+			continue
+		media_paths.append(path)
+	if media_paths.is_empty():
+		push_warning("拖入的文件中没有支持的媒体")
+		return
+	_import_media_paths(media_paths)
+
+
+func _import_media_paths(paths: PackedStringArray) -> void:
 	# 「复制到项目目录」开关（设置窗口）：开启时把源文件真实复制进
 	# X_cache/media/，条目指向副本，源文件被删除也不影响播放
 	var copy := bool(ProjectStore.get_setting("media", "copy_to_project", false))
@@ -856,6 +889,47 @@ func _on_files_selected(paths: PackedStringArray) -> void:
 				m.path = copied
 		_add_media_item(m)
 	_save_current_project()
+
+
+# ---------- 主窗口尺寸持久化 ----------
+
+## 启动时恢复上次窗口态的宽高，并按当前显示器可用区域钳制。
+func _restore_main_window_size() -> void:
+	var win := get_window()
+	var fallback := win.size
+	var saved := Vector2i(
+		int(ProjectStore.get_setting("main_window", "width", fallback.x)),
+		int(ProjectStore.get_setting("main_window", "height", fallback.y))
+	)
+	var minimum := Vector2i(1024, 600)
+	var usable := DisplayServer.screen_get_usable_rect(win.current_screen)
+	var maximum := usable.size if usable.size.x > 0 and usable.size.y > 0 else saved
+	maximum.x = maxi(maximum.x, minimum.x)
+	maximum.y = maxi(maximum.y, minimum.y)
+	saved.x = clampi(saved.x, minimum.x, maximum.x)
+	saved.y = clampi(saved.y, minimum.y, maximum.y)
+	_restoring_main_window_size = true
+	win.size = saved
+	_pending_main_window_size = saved
+	_restoring_main_window_size = false
+
+
+## 拖动边缘时 size_changed 会逐帧触发；延迟到停止变化后再落盘。
+func _queue_main_window_size_save() -> void:
+	var win := get_window()
+	if _restoring_main_window_size or win.mode != Window.MODE_WINDOWED:
+		return
+	_pending_main_window_size = win.size
+	_main_window_save_timer.start()
+
+
+func _save_main_window_size() -> void:
+	if _pending_main_window_size.x <= 0 or _pending_main_window_size.y <= 0:
+		return
+	ProjectStore.set_settings("main_window", {
+		"width": _pending_main_window_size.x,
+		"height": _pending_main_window_size.y,
+	})
 
 
 # ---------- 播放列表 ----------
@@ -1084,6 +1158,10 @@ func _request_app_quit() -> void:
 	if _is_quitting:
 		return
 	_is_quitting = true
+	# 最后一次缩放可能尚在 0.35s 防抖期，最小化前强制保存当前窗口态尺寸。
+	if get_window().mode == Window.MODE_WINDOWED:
+		_pending_main_window_size = get_window().size
+		_save_main_window_size()
 	set_process(false)
 	# Godot 不允许隐藏主原生窗口；最小化能立即给出“窗口已关闭”的视觉反馈，
 	# 随后的安全清理只在后台持续很短时间。

@@ -404,7 +404,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
 theme_override_font_sizes/font_size = 12
-text = "选择一个 MP4/H.264 文件开始验证同步播放。"
+text = "点击“添加文件”，或从文件管理器拖入视频、音频、图片、网页和 PPT。"
 autowrap_mode = 2
 
 [node name="MediaScroll" type="ScrollContainer" parent="RootVBox/MainContent/QuadSplit/MediaPanel/MediaVBox" unique_id=2004433061]
