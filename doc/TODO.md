@@ -462,3 +462,4 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] 修复 MPV/CEF 同名 ANGLE DLL 覆盖：MPV 侧改用隔离名称，CEF 保留原名
 - [x] app-local 部署官方 VC++ x64 Redist；压缩前实际加载 MPV/CEF 扩展
 - [x] 发行目录 35 文件约 574MB，ZIP 约 244MB；隐藏启动验证退出码 0
+- [x] README 补充 Windows Release 手动编译、依赖检查、产物分发与 GUI 导出限制

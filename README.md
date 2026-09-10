@@ -59,20 +59,68 @@ CEF 仍需自行补齐：
 
 用 Godot 4.7.2 打开 `project.godot` 运行主场景即可；`*.splproj` 为项目媒体库存档。
 
-## Windows Release 构建
+## 手动编译 Windows Release 发行版
 
-使用正式 Release 模板构建并生成完整运行目录和 ZIP：
+以下流程生成正式 Release，不是 Debug。需要准备：
+
+- Windows x86_64 与 Godot 4.7.2 x86_64 console 版；
+- Godot 4.7.2 Export Templates 压缩包 `Godot_v4.7.2-stable_export_templates.tpz`；
+- Visual Studio 的“使用 C++ 的桌面开发”组件，用于取得官方 VC++ x64 Redist；
+- 完整的 `bin/` MPV 依赖和 `cef_artifacts/windows/` CEF 运行文件。
+
+打开 PowerShell，进入项目根目录：
 
 ```powershell
-powershell -File tools/build_windows_release.ps1 `
-  -Godot 'D:\app\godot\Godot_v4.7.2-stable_win64_console.exe' `
-  -TemplateArchive 'D:\Download\Godot_v4.7.2-stable_export_templates.tpz'
+cd D:\code\godot\screen-plaer-godot
 ```
 
-产物位于 `dist/ScreenPlayer-Windows-x86_64/` 和同名 ZIP。构建会排除测试、文档、
-编辑器调试助手和 CEF 缓存，并把 MPV、CEF 和官方 VC++ x64 运行库部署到 exe 旁。
-MPV 与 CEF 的两套 ANGLE DLL 使用隔离名称，避免同名 `libEGL.dll` / `libGLESv2.dll`
-互相覆盖；压缩前会从发行目录实际加载 MPV 与 CEF 扩展，加载失败即中止构建。
+首次克隆项目时，先恢复仓库内压缩保存的 MPV 文件并检查全部 Windows 依赖：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\restore_windows_mpv.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\check_windows_runtime.ps1
+```
+
+执行正式发行构建，路径按本机实际安装位置修改：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\build_windows_release.ps1 `
+  -Godot "D:\app\godot\Godot_v4.7.2-stable_win64_console.exe" `
+  -TemplateArchive "D:\Download\Godot_v4.7.2-stable_export_templates.tpz"
+```
+
+模板第一次使用后会缓存在 `.build/export_templates/`，以后可以省略
+`-TemplateArchive`：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\build_windows_release.ps1 `
+  -Godot "D:\app\godot\Godot_v4.7.2-stable_win64_console.exe"
+```
+
+脚本使用 `windows_release_x86_64.exe` 模板和 Godot 的 `--export-release` 参数，
+GDScript 会编译为字节码并嵌入 PCK；Godot AI 调试助手、测试、文档、工具和 CEF
+缓存不会进入发行包。构建日志出现下面两行，说明发行目录中的 MPV 与 CEF 已经实际
+通过 Windows 加载检查：
+
+```text
+PASS release native load: libgodot_mpv.windows.template_release.x86_64.dll
+PASS release native load: libgdcef.dll
+```
+
+构建产物：
+
+| 位置 | 用途 |
+|---|---|
+| `dist/ScreenPlayer-Windows-x86_64/` | 解压后的完整运行目录，可在本机测试 |
+| `dist/ScreenPlayer-Windows-x86_64.zip` | 发给其他 Windows x86_64 机器的发行包 |
+
+必须分发完整 ZIP，不能只复制 `ScreenPlayer.exe`。脚本会把 MPV、CEF 和官方 VC++
+x64 运行库部署到 exe 旁，并将 MPV 的 ANGLE 库隔离为 `mpvEGL.dll`、
+`mpvGLES2.dll`，避免被 CEF 的同名 DLL 覆盖。
+
+也可以在 Godot 中打开“项目 → 导出 → Windows Desktop”，取消 **Export With
+Debug** 后导出，但编辑器只完成 Godot 导出，不执行本项目的 ANGLE 隔离、VC++
+运行库部署和 DLL 加载检查。因此对外发布必须使用上述 PowerShell 构建脚本生成的 ZIP。
 
 ## 目录结构
 

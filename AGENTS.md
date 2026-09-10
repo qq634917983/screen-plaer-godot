@@ -37,7 +37,8 @@
   打包时将 MPV 一侧隔离为 mpvEGL.dll/mpvGLES2.dll，并部署官方 VC++ x64 Redist。
   tools/build_windows_release.ps1 自动校验运行库、提取模板、导出、检查文件、从发行目录
   实际加载 MPV/CEF 扩展并生成 ZIP。当前产物 35 文件/约 574MB，ZIP 约 244MB；
-  Release 隐藏启动验证退出码 0。产物在 dist/，不入 Git。
+  Release 隐藏启动验证退出码 0。README 已记录从依赖恢复到 ZIP 分发的手动构建步骤；
+  产物在 dist/，不入 Git。
 
 - 关闭交互优化（2026-09-10）：自绘标题栏关闭按钮点击后立即禁用并显示“…”、
   执行 0.14s 缩放回弹，标题变为“正在关闭”；随后主窗口立即最小化，预先停止
