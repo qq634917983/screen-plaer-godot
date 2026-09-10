@@ -459,4 +459,6 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] Release 排除测试、文档、工具、Godot AI 调试组件及 CEF 浏览缓存
 - [x] 从锁定清单部署完整 CEF 运行文件，仅保留 zh-CN/en-US 语言包
 - [x] 新增可重复构建脚本，自动校验依赖、提取模板、导出、检查和压缩
-- [x] 发行目录 23 文件约 566MB，ZIP 约 242MB；隐藏启动验证退出码 0
+- [x] 修复 MPV/CEF 同名 ANGLE DLL 覆盖：MPV 侧改用隔离名称，CEF 保留原名
+- [x] app-local 部署官方 VC++ x64 Redist；压缩前实际加载 MPV/CEF 扩展
+- [x] 发行目录 35 文件约 574MB，ZIP 约 244MB；隐藏启动验证退出码 0

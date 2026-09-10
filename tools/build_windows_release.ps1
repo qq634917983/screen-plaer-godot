@@ -1,7 +1,8 @@
 param(
     [string]$Godot = $env:GODOT_BIN,
     [string]$TemplateArchive = $env:GODOT_EXPORT_TEMPLATES,
-    [string]$OutputDirectory = 'dist/ScreenPlayer-Windows-x86_64'
+    [string]$OutputDirectory = 'dist/ScreenPlayer-Windows-x86_64',
+    [string]$VCRuntimeDirectory
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -58,11 +59,84 @@ foreach ($file in $manifest.files) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $file.path) -Destination $target -Force
 }
 
+# MPV 与 CEF 各自携带不同版本的 ANGLE，但 DLL 原名相同。Godot 导出会把两套
+# 原生库放到 exe 目录；这里给 MPV 的导入项改成独立名称，防止 CEF 版本覆盖它。
+function Copy-WithImportRename([string]$Source, [string]$Target, [hashtable]$Renames) {
+    $bytes = [IO.File]::ReadAllBytes($Source)
+    foreach ($oldName in $Renames.Keys) {
+        $oldBytes = [Text.Encoding]::ASCII.GetBytes($oldName)
+        $newBytes = [Text.Encoding]::ASCII.GetBytes([string]$Renames[$oldName])
+        if ($newBytes.Length -gt $oldBytes.Length) { throw "Import rename is too long: $oldName" }
+        $matches = 0
+        for ($i = 0; $i -le $bytes.Length - $oldBytes.Length; $i++) {
+            $same = $true
+            for ($j = 0; $j -lt $oldBytes.Length; $j++) {
+                if ($bytes[$i + $j] -ne $oldBytes[$j]) { $same = $false; break }
+            }
+            if (-not $same) { continue }
+            for ($j = 0; $j -lt $oldBytes.Length; $j++) { $bytes[$i + $j] = 0 }
+            for ($j = 0; $j -lt $newBytes.Length; $j++) { $bytes[$i + $j] = $newBytes[$j] }
+            $matches++
+            $i += $oldBytes.Length - 1
+        }
+        if ($matches -ne 1) { throw "Expected one '$oldName' import in $Source, found $matches." }
+    }
+    [IO.File]::WriteAllBytes($Target, $bytes)
+}
+Copy-WithImportRename (Join-Path $projectRoot 'bin/libgodot_mpv.windows.template_release.x86_64.dll') `
+    (Join-Path $outputPath 'libgodot_mpv.windows.template_release.x86_64.dll') `
+    @{ 'libEGL.dll' = 'mpvEGL.dll' }
+Copy-WithImportRename (Join-Path $projectRoot 'bin/libEGL.dll') `
+    (Join-Path $outputPath 'mpvEGL.dll') @{ 'libGLESv2.dll' = 'mpvGLES2.dll' }
+Copy-Item -LiteralPath (Join-Path $projectRoot 'bin/libGLESv2.dll') `
+    -Destination (Join-Path $outputPath 'mpvGLES2.dll') -Force
+
+# 使用 Visual Studio 官方 Redist 目录做 app-local 部署，新机器无需另装 VC++ 运行库。
+if (-not $VCRuntimeDirectory) {
+    $redistCandidates = @(Get-ChildItem 'C:/Program Files/Microsoft Visual Studio' -Directory `
+        -Filter 'Microsoft.VC*.CRT' -Recurse -ErrorAction SilentlyContinue | `
+        Where-Object { $_.FullName -match '\\x64\\Microsoft\.VC[^\\]+\.CRT$' } | `
+        Sort-Object FullName -Descending)
+    if ($redistCandidates.Count) { $VCRuntimeDirectory = $redistCandidates[0].FullName }
+}
+if (-not $VCRuntimeDirectory -or -not (Test-Path -LiteralPath $VCRuntimeDirectory -PathType Container)) {
+    throw 'Microsoft VC++ x64 Redist directory not found. Pass -VCRuntimeDirectory from Visual Studio VC/Redist.'
+}
+Get-ChildItem -LiteralPath $VCRuntimeDirectory -Filter '*.dll' -File | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination $outputPath -Force
+}
+
 $required = @('ScreenPlayer.exe', 'libgodot_mpv.windows.template_release.x86_64.dll',
-    'libmpv-2.dll', 'libEGL.dll', 'libGLESv2.dll', 'zlib1.dll', 'libgdcef.dll',
-    'libcef.dll', 'gdCefRenderProcess.exe', 'icudtl.dat', 'resources.pak', 'locales/zh-CN.pak')
+    'libmpv-2.dll', 'mpvEGL.dll', 'mpvGLES2.dll', 'zlib1.dll',
+    'libEGL.dll', 'libGLESv2.dll', 'libgdcef.dll', 'libcef.dll',
+    'gdCefRenderProcess.exe', 'icudtl.dat', 'resources.pak', 'locales/zh-CN.pak',
+    'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')
 $missing = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $outputPath $_) -PathType Leaf) })
 if ($missing.Count) { throw "Release is missing files:`n$($missing -join "`n")" }
+
+# 在生成 ZIP 前从发行目录实际加载两套扩展，捕获缺少间接依赖、架构错误和
+# ANGLE 同名覆盖等“文件存在但 Error 126”的问题。
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class ScreenPlayerReleaseNativeCheck {
+    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr LoadLibraryEx(string path, IntPtr file, uint flags);
+    [DllImport("kernel32", SetLastError = true)]
+    public static extern bool FreeLibrary(IntPtr module);
+}
+'@
+foreach ($nativeName in @('libgodot_mpv.windows.template_release.x86_64.dll', 'libgdcef.dll')) {
+    $nativePath = Join-Path $outputPath $nativeName
+    # LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+    $handle = [ScreenPlayerReleaseNativeCheck]::LoadLibraryEx($nativePath, [IntPtr]::Zero, 0x1100)
+    if ($handle -eq [IntPtr]::Zero) {
+        $win32Error = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+        throw "Release native load failed: $nativeName (Win32 error $win32Error)"
+    }
+    [ScreenPlayerReleaseNativeCheck]::FreeLibrary($handle) | Out-Null
+    Write-Host "PASS release native load: $nativeName"
+}
 
 $zipPath = "$outputPath.zip"
 if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force }

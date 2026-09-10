@@ -70,7 +70,9 @@ powershell -File tools/build_windows_release.ps1 `
 ```
 
 产物位于 `dist/ScreenPlayer-Windows-x86_64/` 和同名 ZIP。构建会排除测试、文档、
-编辑器调试助手和 CEF 缓存，并将网页/PPT 所需的 CEF 原生文件部署到 exe 旁。
+编辑器调试助手和 CEF 缓存，并把 MPV、CEF 和官方 VC++ x64 运行库部署到 exe 旁。
+MPV 与 CEF 的两套 ANGLE DLL 使用隔离名称，避免同名 `libEGL.dll` / `libGLESv2.dll`
+互相覆盖；压缩前会从发行目录实际加载 MPV 与 CEF 扩展，加载失败即中止构建。
 
 ## 目录结构
 

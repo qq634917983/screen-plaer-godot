@@ -22,7 +22,9 @@ powershell -File tools/run_windows.ps1 -Godot 'C:\Godot\Godot_v4.7.2-stable_win6
 ```
 
 启动脚本检查目标架构和主要运行库，完成 Godot 导入后启动主场景。
-Windows 导出依赖已列入 mpv、EGL、GLES 和 zlib；CEF 仍须按完整运行包部署。
+Windows 发行脚本部署 mpv、CEF、EGL/GLES、zlib 及官方 VC++ x64 Redist。
+MPV 和 CEF 使用不同版本但原名相同的 ANGLE DLL；发行包把 MPV 一侧改为
+`mpvEGL.dll` / `mpvGLES2.dll`，CEF 保留原名，不能再直接覆盖合并这两套文件。
 
 ## Mac
 
@@ -44,9 +46,10 @@ brew install mpv cmake
 ## 验证范围
 
 ARM Mac 已实际验证视频进度、静音、暂停跳转、循环、封面、图片、网页触点、
-PPT 转换/翻页及输出与投屏共享纹理。Windows 沿用此前正常运行的播放 DLL，
-此次检查平台选择和启动/导出依赖；当前机器无法执行 Windows 真机测试，
-不能据此承诺 Windows 本轮实测通过。
+PPT 转换/翻页及输出与投屏共享纹理。Windows 已在 x86_64 真机完成 MPV 初始化、
+视频解码与纹理、暂停跳转、循环、缩略图以及输出/投屏共享纹理测试；发行目录的
+MPV/CEF 扩展均通过 LoadLibraryEx 加载，发行程序隐藏启动后正常退出。新机器仍需做
+一次完整界面回归。
 
 Windows 上更新后应验证：视频预览→快速切换→暂停跳转、卡片直接播放、
 图片/网页/PPT 切换、投屏显隐、窗口拖动缩放，以及退出后重新打开项目。
@@ -78,6 +81,14 @@ powershell -File tools/pack_windows_runtime.ps1
 推荐的发布流程：业务源代码共用；按操作系统/CPU 分别构建原生依赖；固定版本与哈希；
 把完整运行库作为 Release 附件或制品仓库内容；CI 在 Windows x64 / Mac ARM64
 分别做实际加载与播放测试；最终面向用户发布自包含安装包。
+
+### 发行包同名依赖修复（2026-09-10）
+
+旧发行脚本先复制 MPV 依赖、再把 CEF 文件复制到 exe 目录。两边都有不同版本的
+`libEGL.dll` 和 `libGLESv2.dll`，所以 CEF 文件覆盖了 MPV 文件；主程序能启动，
+首次创建 MPV 播放器时才会加载失败。修复后构建脚本隔离 MPV 的导入名，并在包内
+附带 Visual Studio 官方 x64 CRT DLL。生成 ZIP 前会实际加载 `libgodot_mpv` 与
+`libgdcef`，因此间接依赖缺失或再次发生 DLL 冲突会让构建直接失败。
 本轮已落实 Windows 清单、安装、校验和本地打包，尚未搭建远程制品托管或 CI。
 Mac 当前 Homebrew 依赖仅适合开发；正式 .app 应捆绑 dylib、修正加载路径并签名公证。
 
