@@ -10,7 +10,7 @@
 ## macOS 运行
 
 `master` 已合并 ARM64 macOS 与 x86_64 Windows 的双平台适配，共用业务逻辑，按平台加载原生依赖。
-macOS 适配由 GPT 在 `codex/macos-support` 分支从 Windows 稳定基线开始，保留完整提交历史。
+macOS 适配由 GPT 从 Windows 稳定基线开始，完整提交历史已合入 `master`；仓库只维护主分支。
 本机已构建依赖，可执行 `./tools/run_macos.sh`；新克隆先执行
 `brew install mpv cmake`、`./tools/build_macos.sh --with-cef`（需要完整 Xcode）。
 已验证 Apple M4 / Godot 4.7.2 的视频、图片、网页、PPT 与独立窗口投屏。

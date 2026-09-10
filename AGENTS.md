@@ -41,7 +41,7 @@
   保存并立即生效但不关闭，「确定」保存、生效并关闭；关闭窗口放弃尚未应用的改动。
   tests/settings_button_smoke.gd 已验证黑屏、未应用不落盘、应用不关闭及确定关闭。
 
-- 菜单栏「设置」直接弹窗（2026-09-09，分支 zcode）：MenuSettings 由 MenuButton 改为
+- 菜单栏「设置」直接弹窗（2026-09-09）：MenuSettings 由 MenuButton 改为
   普通 Button（theme_type_variation=MenuButton 保持与相邻菜单一致的外观），
   点击直接居中弹出 SettingsWindow，不再经过「打开设置」二级菜单；
   tests/settings_button_smoke.gd 无头冒烟 7 项通过（headless 下 CEF 初始化失败为预期降级）。
@@ -58,7 +58,7 @@
   新机器需同时获得运行包，流程见 doc/PLATFORMS.md。未重测 Mac 和网页/PPT 完整交互。
 
 - 双平台适配已合并到 `master`：共用桌面业务逻辑，按平台加载 ARM64 macOS /
-  x86_64 Windows 原生依赖；保留 `codex/macos-support` 和 GPT 起点历史。
+  x86_64 Windows 原生依赖；历史保留在 master 提交图中，仓库只维护 master 分支。
 
 - 双平台运行入口整理：tools/run_windows.ps1 检查 x86_64 与 Windows 运行库后导入启动；
   tools/run_macos.sh 检查 ARM64 与 Mac CEF。Windows MPV 导出依赖显式包含
@@ -71,8 +71,8 @@
   主业务脚本不能改为 @tool（避免编辑场景启动解码器/浏览器或读写项目）；
   编辑器使用默认分区比例，运行时仍恢复用户设置。
 
-- Phase 16 macOS 开发运行适配已落地（用户指定优先于 Phase 10）：分支
-  `codex/macos-support`，GPT 起点提交 `2d6ab86`；Apple M4 / Godot 4.7.2
+- Phase 16 macOS 开发运行适配已落地（用户指定优先于 Phase 10）：GPT 起点提交
+  `2d6ab86` 已合入 master；Apple M4 / Godot 4.7.2
   Metal 实测视频、图片、网页触点、26 页 PPT 转换/翻页及共享纹理投屏。
   `native/mpv/` 为 Mac libmpv 软件渲染后端；`tools/build_macos.sh --with-cef`
   固定版本构建 MPV 与 gdcef，`tools/run_macos.sh` 导入后启动。

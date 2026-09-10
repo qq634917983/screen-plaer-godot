@@ -1,7 +1,7 @@
 # macOS 开发运行说明
 
 ScreenPlayer 是支持独立窗口投屏的媒体播放系统。Windows 版本已基本正常；
-`codex/macos-support` 从 `2d6ab86` 开始由 GPT 进行多系统适配。
+多系统适配从提交 `2d6ab86` 开始，现已完整合入 `master`。
 
 ## 本机运行
 

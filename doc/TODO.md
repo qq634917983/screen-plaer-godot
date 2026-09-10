@@ -334,7 +334,7 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
 ## Phase 16 —— macOS 多系统适配（开发运行版）
 
 > 用户指定优先于 Phase 10。Windows 已基本正常；2026-09-08 由 GPT 在
-> `codex/macos-support` 开始适配，起点提交 `2d6ab86`。
+> 从提交 `2d6ab86` 开始适配，现已完整合入 `master`。
 
 - [x] 16.1 创建适配分支并提交 Windows 基线说明
 - [x] 16.2 macOS MPVPlayer 原生扩展：libmpv 软件 render API → ImageTexture，
@@ -360,8 +360,7 @@ ImageTexture（同进程资源共享），因此两端显示的是同一块像�
 - [x] 补齐 Windows 导出依赖 EGL/GLES/zlib；新增 Windows 启动脚本检查主要运行库
 - [x] Mac 启动脚本检查架构与 CEF；新增 doc/PLATFORMS.md 说明克隆后依赖补齐方式
 - [x] 当前版本 ARM Mac 视频与网页/PPT 集成回归：两组 failures=0；测试使用独立 CEF 配置目录，不占用运行中的桌面实例
-- [x] 推送 codex/macos-support 到 Gitee（origin：liuhuan.com/screen-plaer-godot）
-- [x] 将双平台适配合并到 master，保留独立合并提交与适配分支历史
+- [x] 将双平台适配提交历史完整合并到 master
 
 Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检查写成真机验证通过。
 
@@ -447,3 +446,9 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] 退出前主动停止 MPV/封面任务/播放列表并关闭 CEF 页面，减少 shutdown 等待
 - [x] 动画后立即最小化主窗口；完整主场景实测清理到退出约 1.15s
 - [x] `tests/close_feedback_smoke.gd` 6 项通过，`tests/shutdown_smoke.gd` 正常退出
+
+## 仓库整理（2026-09-10）
+
+- [ ] 删除无引用的多窗口教程副本、旧 Windows 项目副本和下载模板脚本（大范围删除待明确确认）
+- [x] 忽略 Godot 热重载产生的 `bin/~*.dll*` 临时文件
+- [x] 将功能提交快进合并到 master，删除本地及 Gitee 的其他分支，只维护 master
