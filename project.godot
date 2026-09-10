@@ -18,7 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+_mcp_game_helper="*res://scripts/dev_game_helper.gd"
 
 [display]
 

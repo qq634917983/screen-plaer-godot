@@ -452,3 +452,11 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [ ] 删除无引用的多窗口教程副本、旧 Windows 项目副本和下载模板脚本（大范围删除待明确确认）
 - [x] 忽略 Godot 热重载产生的 `bin/~*.dll*` 临时文件
 - [x] 将功能提交快进合并到 master，删除本地及 Gitee 的其他分支，只维护 master
+
+## Windows Release 发行构建（2026-09-10）
+
+- [x] 使用 Godot 4.7.2 Windows x86_64 Release 模板和 `--export-release`
+- [x] Release 排除测试、文档、工具、Godot AI 调试组件及 CEF 浏览缓存
+- [x] 从锁定清单部署完整 CEF 运行文件，仅保留 zh-CN/en-US 语言包
+- [x] 新增可重复构建脚本，自动校验依赖、提取模板、导出、检查和压缩
+- [x] 发行目录 23 文件约 566MB，ZIP 约 242MB；隐藏启动验证退出码 0

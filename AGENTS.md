@@ -30,6 +30,13 @@
 
 ## 当前进度
 
+- Windows x86_64 Release 发行构建（2026-09-10）：export_presets 使用 Godot 4.7.2
+  `windows_release_x86_64` 正式模板，脚本编译为 GDScript bytecode，嵌入 PCK；导出时
+  排除 tests/doc/tools/Godot AI 调试组件和 CEF 缓存。CEF 运行文件从锁定清单复制到
+  exe 同目录，仅保留 zh-CN/en-US 两个 locale。tools/build_windows_release.ps1 自动
+  校验运行库、提取模板、导出、检查文件并生成 ZIP。当前产物 23 文件/约 566MB，
+  ZIP 约 242MB；Release 隐藏启动验证退出码 0。产物在 dist/，不入 Git。
+
 - 关闭交互优化（2026-09-10）：自绘标题栏关闭按钮点击后立即禁用并显示“…”、
   执行 0.14s 缩放回弹，标题变为“正在关闭”；随后主窗口立即最小化，预先停止
   预览/输出/封面 MPV、播放列表和 PPT/网页浏览器，再进入全局 CEF shutdown。

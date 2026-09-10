@@ -59,6 +59,19 @@ CEF 仍需自行补齐：
 
 用 Godot 4.7.2 打开 `project.godot` 运行主场景即可；`*.splproj` 为项目媒体库存档。
 
+## Windows Release 构建
+
+使用正式 Release 模板构建并生成完整运行目录和 ZIP：
+
+```powershell
+powershell -File tools/build_windows_release.ps1 `
+  -Godot 'D:\app\godot\Godot_v4.7.2-stable_win64_console.exe' `
+  -TemplateArchive 'D:\Download\Godot_v4.7.2-stable_export_templates.tpz'
+```
+
+产物位于 `dist/ScreenPlayer-Windows-x86_64/` 和同名 ZIP。构建会排除测试、文档、
+编辑器调试助手和 CEF 缓存，并将网页/PPT 所需的 CEF 原生文件部署到 exe 旁。
+
 ## 目录结构
 
 ```
