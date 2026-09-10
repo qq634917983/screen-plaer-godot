@@ -47,6 +47,7 @@ var _card_size_idx := 1  # 媒体库卡片规格索引（小/中/大）
 var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
 var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点标记）
+var _is_quitting := false
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -95,6 +96,7 @@ func _ready() -> void:
 	# 因此拖动主窗口时播放与投屏画面不再中断
 	get_window().borderless = true
 	_title_bar = $RootVBox/TitleBar
+	_title_bar.close_requested.connect(_request_app_quit)
 	add_child(WindowResizerScript.new())
 
 	_preview = PlayerSlot.new()
@@ -269,7 +271,7 @@ func _on_menu_file_id_pressed(id: int) -> void:
 		0:
 			_on_add_file_pressed()
 		1:
-			get_tree().quit()
+			_request_app_quit()
 		10:
 			_new_project()
 		11:
@@ -1073,6 +1075,39 @@ func _on_cast_window_close_requested() -> void:
 
 func _on_restart_pressed() -> void:
 	OS.set_restart_on_exit(true)
+	_request_app_quit()
+
+
+## 关闭按钮动画结束后先隐藏主窗口，再主动停止后台解码/浏览器。
+## 用户立即看到窗口消失；活动页面提前关闭也能缩短随后 CEF shutdown 的等待。
+func _request_app_quit() -> void:
+	if _is_quitting:
+		return
+	_is_quitting = true
+	set_process(false)
+	# Godot 不允许隐藏主原生窗口；最小化能立即给出“窗口已关闭”的视觉反馈，
+	# 随后的安全清理只在后台持续很短时间。
+	get_window().mode = Window.MODE_MINIMIZED
+	_cast_window.hide()
+	_settings_window.hide()
+	if _runner != null:
+		_runner.stop("manual")
+	for win in _item_windows.values():
+		if is_instance_valid(win):
+			win.hide()
+	for win in _playlist_windows.values():
+		if is_instance_valid(win):
+			win.hide()
+	if _preview != null:
+		_preview.prepare_shutdown()
+	if _output != null:
+		_output.prepare_shutdown()
+	if _thumbnailer != null and _thumbnailer.has_method("prepare_shutdown"):
+		_thumbnailer.prepare_shutdown()
+	if _pptx_converter != null and _pptx_converter.has_method("prepare_shutdown"):
+		_pptx_converter.prepare_shutdown()
+	# 给 queue_free 的浏览器一个消息循环周期，再进入全局 CEF shutdown。
+	await get_tree().process_frame
 	get_tree().quit()
 
 

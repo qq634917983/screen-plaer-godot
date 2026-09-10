@@ -60,6 +60,20 @@ func setup(cef: Node) -> void:
 	_cef = cef
 
 
+func prepare_shutdown() -> void:
+	set_process(false)
+	_queue.clear()
+	_out_paths.clear()
+	if _browser != null and is_instance_valid(_browser):
+		_browser.close()
+		_browser.queue_free()
+	_browser = null
+	if _view != null and is_instance_valid(_view):
+		_view.free()
+	_view = null
+	_state = 0
+
+
 static func global_cache_dir() -> String:
 	return "user://pptx"
 

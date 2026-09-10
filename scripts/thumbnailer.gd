@@ -46,6 +46,14 @@ func enqueue(paths: Array) -> void:
 	_kick()
 
 
+func prepare_shutdown() -> void:
+	set_process(false)
+	_queue.clear()
+	_state = 0
+	if _mpv != null and is_instance_valid(_mpv):
+		_mpv.call("stop")
+
+
 func _kick() -> void:
 	if _state != 0 or _queue.is_empty() or _mpv == null:
 		return

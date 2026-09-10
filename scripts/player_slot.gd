@@ -268,6 +268,15 @@ func _close_browser() -> void:
 	_browser = null
 
 
+## 退出前主动停解码并关闭浏览器，让全局 CEF shutdown 不必再等待活动页面。
+func prepare_shutdown() -> void:
+	set_process(false)
+	_slide_title_poll = 0.0
+	if mpv != null and is_instance_valid(mpv):
+		mpv.call("stop")
+	_close_browser()
+
+
 func _on_browser_paint(browser: Node) -> void:
 	if browser != _browser or (source_kind != SourceKind.WEB and source_kind != SourceKind.SLIDE):
 		return

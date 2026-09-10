@@ -7,8 +7,12 @@ extends PanelContainer
 
 const RESIZE_MARGIN := 6.0
 
+signal close_requested
+
 var _title_label: Label
 var _max_button: Button
+var _close_button: Button
+var _closing := false
 var _dragging := false
 var _drag_offset := Vector2i.ZERO
 var _windowed_rect := Rect2i()  # 最近的窗口态几何（最大化还原时手动恢复）
@@ -53,11 +57,10 @@ func _ready() -> void:
 	_max_button.pressed.connect(_toggle_maximize)
 	hbox.add_child(_max_button)
 
-	var close_button := _make_button("✕", Color(0.75, 0.2, 0.2))
-	close_button.pressed.connect(func() -> void:
-		if not Engine.is_editor_hint():
-			get_tree().quit())
-	hbox.add_child(close_button)
+	_close_button = _make_button("✕", Color(0.75, 0.2, 0.2))
+	_close_button.name = "CloseButton"
+	_close_button.pressed.connect(_begin_close)
+	hbox.add_child(_close_button)
 
 	gui_input.connect(_on_gui_input)
 
@@ -81,6 +84,26 @@ func _make_button(text: String, hover_color: Color) -> Button:
 	pressed.bg_color = hover_color.darkened(0.2)
 	b.add_theme_stylebox_override("pressed", pressed)
 	return b
+
+
+## 先给出明确的按压/关闭反馈，再让主场景执行资源清理和退出。
+## 约 0.14 秒的动画足够被看见，不会明显增加等待感。
+func _begin_close() -> void:
+	if Engine.is_editor_hint() or _closing:
+		return
+	_closing = true
+	_dragging = false
+	_close_button.disabled = true
+	_close_button.text = "…"
+	_close_button.pivot_offset = _close_button.size * 0.5
+	_title_label.text = "ScreenPlayer · 正在关闭…"
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(_close_button, "scale", Vector2(0.78, 0.78), 0.055)
+	tween.tween_property(_close_button, "scale", Vector2.ONE, 0.085)
+	await tween.finished
+	close_requested.emit()
 
 
 func _toggle_maximize() -> void:
