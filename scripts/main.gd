@@ -323,15 +323,11 @@ func _apply_settings() -> void:
 	_output.set_volume(int(ProjectStore.get_setting("audio", "output_volume", 100)))
 	_thumbnailer.capture_pos = float(ProjectStore.get_setting("thumbs", "position", 1.0))
 	_refresh_audio_ui()
-	# 主界面四分区拖拽范围（最大值 0 = 自动/不限制）
-	_quad_split.min_left = float(ProjectStore.get_setting("ui", "min_left", 420))
-	_quad_split.max_left = float(ProjectStore.get_setting("ui", "max_left", 0))
-	_quad_split.min_right = float(ProjectStore.get_setting("ui", "min_right", 220))
-	_quad_split.max_right = float(ProjectStore.get_setting("ui", "max_right", 0))
-	_quad_split.min_top = float(ProjectStore.get_setting("ui", "min_top", 260))
-	_quad_split.max_top = float(ProjectStore.get_setting("ui", "max_top", 0))
-	_quad_split.min_bottom = float(ProjectStore.get_setting("ui", "min_bottom", 180))
-	_quad_split.max_bottom = float(ProjectStore.get_setting("ui", "max_bottom", 0))
+	# 主界面四分区拖拽范围：第一列宽度和第一排高度按当前容器百分比约束。
+	_quad_split.min_x_percent = float(ProjectStore.get_setting("ui", "min_x_percent", 35))
+	_quad_split.max_x_percent = float(ProjectStore.get_setting("ui", "max_x_percent", 85))
+	_quad_split.min_y_percent = float(ProjectStore.get_setting("ui", "min_y_percent", 35))
+	_quad_split.max_y_percent = float(ProjectStore.get_setting("ui", "max_y_percent", 75))
 	# 投屏窗口几何
 	var w := int(ProjectStore.get_setting("cast_window", "width", 960))
 	var h := int(ProjectStore.get_setting("cast_window", "height", 540))

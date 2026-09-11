@@ -94,6 +94,13 @@ content_margin_right = 0.0
 content_margin_bottom = 0.0
 bg_color = Color(0.0353, 0.0431, 0.0549, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_content"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.0941, 0.1098, 0.1373, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_button"]
 content_margin_left = 7.0
 content_margin_top = 5.0
@@ -566,30 +573,45 @@ theme_override_constants/v_separation = 10
 
 [node name="UtilityPanel" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit" unique_id=849937805]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
 
 [node name="UtilityVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel" unique_id=889557225]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 0
 
-[node name="UtilityTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox" unique_id=1859056847]
+[node name="UtilityHeaderCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
+
+[node name="UtilityTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityHeaderCard" unique_id=1859056847]
 layout_mode = 2
 text = "实用功能"
 
-[node name="UtilityButtons" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox" unique_id=267442567]
+[node name="UtilityContentCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_content")
+
+[node name="UtilityContent" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UtilityButtons" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard/UtilityContent" unique_id=267442567]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="HideCastButton" type="Button" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityButtons" unique_id=1584931370]
+[node name="HideCastButton" type="Button" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard/UtilityContent/UtilityButtons" unique_id=1584931370]
 unique_name_in_owner = true
 layout_mode = 2
 text = "隐藏投屏"
 
-[node name="RestartButton" type="Button" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityButtons" unique_id=1659045481]
+[node name="RestartButton" type="Button" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard/UtilityContent/UtilityButtons" unique_id=1659045481]
 unique_name_in_owner = true
 layout_mode = 2
 text = "重启软件"
 
-[node name="UtilityDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox" unique_id=277299369]
+[node name="UtilityDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard/UtilityContent" unique_id=277299369]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
 theme_override_font_sizes/font_size = 11
@@ -599,41 +621,56 @@ autowrap_mode = 2
 [node name="AudioPanel" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit" unique_id=1132858405]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
 
 [node name="AudioVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel" unique_id=594224731]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 0
 
-[node name="AudioTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox" unique_id=1653412239]
+[node name="AudioHeaderCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
+
+[node name="AudioTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioHeaderCard" unique_id=1653412239]
 layout_mode = 2
 text = "音频控制"
 
-[node name="AudioDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox" unique_id=1031981160]
+[node name="AudioContentCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_content")
+
+[node name="AudioContent" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AudioDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent" unique_id=1031981160]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
 theme_override_font_sizes/font_size = 11
 text = "各端音量独立调节；静音开关在设置窗口。"
 autowrap_mode = 2
 
-[node name="AudioSliders" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox" unique_id=1300776366]
+[node name="AudioSliders" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent" unique_id=1300776366]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="AudioOutputRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioSliders" unique_id=1568876912]
+[node name="AudioOutputRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders" unique_id=1568876912]
 layout_mode = 2
 
-[node name="AudioOutputLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=33346520]
+[node name="AudioOutputLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=33346520]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 text = "输出"
 
-[node name="AudioOutputSlider" type="HSlider" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=688258318]
+[node name="AudioOutputSlider" type="HSlider" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=688258318]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 value = 100.0
 
-[node name="AudioOutputValue" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioSliders/AudioOutputRow" unique_id=986122294]
+[node name="AudioOutputValue" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=986122294]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2

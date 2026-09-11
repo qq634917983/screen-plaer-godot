@@ -121,31 +121,53 @@ func run() -> void:
 
 	var split: QuadSplitContainer = scene.get_node("%QuadSplit")
 	var players: Control = scene.find_child("PlayersSection", true, false)
-	split.max_left = 700
+	split.max_x_percent = 50
 	split.split_x_ratio = 0.9
 	await settle()
-	check(players.size.x <= 701.0, "Left column maximum width is enforced")
-	split.max_left = 0
-	split.max_right = 300
+	var split_available_x := split.size.x - split.dragger_width
+	check(players.size.x <= split_available_x * 0.5 + 1.0, "First column maximum percentage is enforced")
+	root.size = Vector2i(1200, 800)
+	await settle()
+	split_available_x = split.size.x - split.dragger_width
+	check(players.size.x <= split_available_x * 0.5 + 1.0,
+		"Percentage limit is recalculated after window resize")
+	root.size = Vector2i(1440, 900)
+	await settle()
+	split_available_x = split.size.x - split.dragger_width
+	split.max_x_percent = 85
+	split.min_x_percent = 60
 	split.split_x_ratio = 0.05
 	await settle()
-	var utility: Control = scene.find_child("UtilityPanel", true, false)
-	check(utility.size.x <= 301.0, "Right column maximum width is enforced")
-	split.max_right = 0
-	split.max_top = 420
+	check(players.size.x >= split_available_x * 0.6 - 1.0, "First column minimum percentage is enforced")
+	split.min_x_percent = 35
+	split.max_y_percent = 55
 	split.split_y_ratio = 0.9
 	await settle()
-	check(players.size.y <= 421.0, "Top row maximum height is enforced")
-	split.max_top = 0
-	split.max_bottom = 320
+	var split_available_y := split.size.y - split.dragger_width
+	check(players.size.y <= split_available_y * 0.55 + 1.0, "First row maximum percentage is enforced")
+	split.max_y_percent = 75
+	split.min_y_percent = 45
 	split.split_y_ratio = 0.05
 	await settle()
-	var media: Control = scene.find_child("MediaPanel", true, false)
-	check(media.size.y <= 321.0, "Bottom row maximum height is enforced")
-	split.max_bottom = 0
+	check(players.size.y >= split_available_y * 0.45 - 1.0, "First row minimum percentage is enforced")
+	split.min_y_percent = 35
 	split.split_x_ratio = 0.72
 	split.split_y_ratio = 0.5
 	await settle()
+	var utility_panel := scene.find_child("UtilityPanel", true, false) as PanelContainer
+	var utility_header := scene.find_child("UtilityHeaderCard", true, false) as PanelContainer
+	var utility_content := scene.find_child("UtilityContentCard", true, false) as PanelContainer
+	check(utility_panel != null and utility_header != null and utility_content != null
+		and utility_header.get_parent() == utility_content.get_parent()
+		and utility_header.get_parent().get_theme_constant("separation") == 0,
+		"Utility title and content form one bordered card")
+	var audio_panel := scene.find_child("AudioPanel", true, false) as PanelContainer
+	var audio_header := scene.find_child("AudioHeaderCard", true, false) as PanelContainer
+	var audio_content := scene.find_child("AudioContentCard", true, false) as PanelContainer
+	check(audio_panel != null and audio_header != null and audio_content != null
+		and audio_header.get_parent() == audio_content.get_parent()
+		and audio_header.get_parent().get_theme_constant("separation") == 0,
+		"Audio title and content form one bordered card")
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var image := root.get_texture().get_image()

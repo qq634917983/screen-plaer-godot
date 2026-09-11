@@ -26,42 +26,27 @@ const QUADRANT_NAMES: Array[String] = ["PlayersSection", "UtilityPanel", "MediaP
 		split_y_ratio = value
 		update_minimum_size()
 		queue_sort()
-@export var min_left := 420.0:
+## 第一列宽度、第一排高度的百分比约束；第二侧自动占用剩余空间。
+## 控件实际最小尺寸仍具有更高优先级，防止标题和按钮被遮盖。
+@export_range(5.0, 95.0, 1.0) var min_x_percent := 35.0:
 	set(value):
-		min_left = value
+		min_x_percent = clampf(value, 5.0, 95.0)
 		update_minimum_size()
 		queue_sort()
-@export var min_right := 220.0:
+@export_range(5.0, 95.0, 1.0) var max_x_percent := 85.0:
 	set(value):
-		min_right = value
+		max_x_percent = clampf(value, 5.0, 95.0)
 		update_minimum_size()
 		queue_sort()
-@export var min_top := 260.0:
+@export_range(5.0, 95.0, 1.0) var min_y_percent := 35.0:
 	set(value):
-		min_top = value
+		min_y_percent = clampf(value, 5.0, 95.0)
 		update_minimum_size()
 		queue_sort()
-@export var min_bottom := 180.0:
+@export_range(5.0, 95.0, 1.0) var max_y_percent := 75.0:
 	set(value):
-		min_bottom = value
+		max_y_percent = clampf(value, 5.0, 95.0)
 		update_minimum_size()
-		queue_sort()
-## 最大值为 0 表示不限制；当窗口小到最小/最大约束互相冲突时优先保证最小值。
-@export var max_left := 0.0:
-	set(value):
-		max_left = value
-		queue_sort()
-@export var max_right := 0.0:
-	set(value):
-		max_right = value
-		queue_sort()
-@export var max_top := 0.0:
-	set(value):
-		max_top = value
-		queue_sort()
-@export var max_bottom := 0.0:
-	set(value):
-		max_bottom = value
 		queue_sort()
 
 var _drag_mode := 0  # 0=无 1=竖条 2=横条 3=交叉点（两轴一起）
@@ -75,7 +60,7 @@ func _get_minimum_size() -> Vector2:
 ## 系统字体的字形高度不同，四象限不能小于实际控件最小尺寸。
 ## 否则 macOS 回退字体下，媒体面板会盖住上方播放器控制条。
 func _panel_minimums() -> Vector4:
-	var limits := Vector4(min_left, min_right, min_top, min_bottom)
+	var limits := Vector4.ZERO
 	for child in get_children():
 		if not child is Control or not child.visible:
 			continue
@@ -97,28 +82,24 @@ func _notification(what: int) -> void:
 
 func _split_x_px() -> float:
 	var limits := _panel_minimums()
-	var bounds := _axis_bounds(size.x, limits.x, limits.y, max_left, max_right)
+	var bounds := _axis_bounds(size.x, limits.x, limits.y, min_x_percent, max_x_percent)
 	return clampf(size.x * split_x_ratio, bounds.x, bounds.y)
 
 
 func _split_y_px() -> float:
 	var limits := _panel_minimums()
-	var bounds := _axis_bounds(size.y, limits.z, limits.w, max_top, max_bottom)
+	var bounds := _axis_bounds(size.y, limits.z, limits.w, min_y_percent, max_y_percent)
 	return clampf(size.y * split_y_ratio, bounds.x, bounds.y)
 
 
-## 返回前一列/行允许的像素范围。后一列/行的最大值会转换成前一侧的下限。
-## 如果屏幕尺寸使两个最大值无法同时满足，则放宽最大值并继续保证两侧最小值。
-func _axis_bounds(total: float, min_a: float, min_b: float, max_a: float, max_b: float) -> Vector2:
+## 把第一列/排的百分比范围换算为当前容器像素范围。
+## 百分比与控件最小尺寸冲突时，优先保证两侧控件实际最小尺寸。
+func _axis_bounds(total: float, min_a: float, min_b: float, min_percent: float, max_percent: float) -> Vector2:
 	var available := maxf(0.0, total - dragger_width)
 	var base_low := min_a
 	var base_high := maxf(base_low, available - min_b)
-	var low := base_low
-	var high := base_high
-	if max_b > 0.0:
-		low = maxf(low, available - maxf(max_b, min_b))
-	if max_a > 0.0:
-		high = minf(high, maxf(max_a, min_a))
+	var low := maxf(base_low, available * min_percent / 100.0)
+	var high := minf(base_high, available * max_percent / 100.0)
 	if low > high:
 		return Vector2(base_low, base_high)
 	return Vector2(low, high)
@@ -178,11 +159,11 @@ func _gui_input(event: InputEvent) -> void:
 		if _drag_mode != 0:
 			var limits := _panel_minimums()
 			if _drag_mode & 1:
-				var x_bounds := _axis_bounds(size.x, limits.x, limits.y, max_left, max_right)
+				var x_bounds := _axis_bounds(size.x, limits.x, limits.y, min_x_percent, max_x_percent)
 				var px := clampf(event.position.x, x_bounds.x, x_bounds.y)
 				split_x_ratio = px / maxf(size.x, 1.0)
 			if _drag_mode & 2:
-				var y_bounds := _axis_bounds(size.y, limits.z, limits.w, max_top, max_bottom)
+				var y_bounds := _axis_bounds(size.y, limits.z, limits.w, min_y_percent, max_y_percent)
 				var py := clampf(event.position.y, y_bounds.x, y_bounds.y)
 				split_y_ratio = py / maxf(size.y, 1.0)
 			queue_sort()
