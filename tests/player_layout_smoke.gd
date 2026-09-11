@@ -195,8 +195,10 @@ func run() -> void:
 		and scene.find_child("UtilityDesc", true, false) == null,
 		"Main UI has no inline media or utility description labels")
 	var media_panel := scene.find_child("MediaPanel", true, false) as PanelContainer
+	var media_header := scene.find_child("MediaHeader", true, false) as PanelContainer
 	var media_scroll := scene.find_child("MediaScroll", true, false) as ScrollContainer
 	var media_panel_style := media_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	var media_header_style := media_header.get_theme_stylebox("panel") as StyleBoxFlat
 	var media_scroll_style := media_scroll.get_theme_stylebox("panel") as StyleBoxFlat
 	check(media_panel_style != null and media_scroll_style != null
 		and media_panel_style.corner_radius_top_left == 0
@@ -208,6 +210,31 @@ func run() -> void:
 		and media_scroll_style.corner_radius_bottom_left == 0
 		and media_scroll_style.corner_radius_bottom_right == 0,
 		"Media library panel and scroll area use square corners")
+	var player_outer_style := (scene.find_child("PreviewPlayer", true, false) as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	var player_header_style := (scene.find_child("PreviewHeader", true, false) as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	var player_content_style := (scene.find_child("PreviewScreenRow", true, false) as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	var utility_outer_style := utility_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	var utility_header_style := utility_header.get_theme_stylebox("panel") as StyleBoxFlat
+	var utility_content_style := utility_content.get_theme_stylebox("panel") as StyleBoxFlat
+	var audio_outer_style := audio_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	var audio_header_style := audio_header.get_theme_stylebox("panel") as StyleBoxFlat
+	var audio_content_style := audio_content.get_theme_stylebox("panel") as StyleBoxFlat
+	check(media_panel_style.bg_color == player_outer_style.bg_color
+		and utility_outer_style.bg_color == player_outer_style.bg_color
+		and audio_outer_style.bg_color == player_outer_style.bg_color,
+		"Media, utility and audio outer cards use the player card color")
+	check(media_header_style.bg_color == player_header_style.bg_color
+		and utility_header_style.bg_color == player_header_style.bg_color
+		and audio_header_style.bg_color == player_header_style.bg_color,
+		"All workspace title bars use the player header color")
+	check(media_scroll_style.bg_color == player_content_style.bg_color
+		and utility_content_style.bg_color == player_content_style.bg_color
+		and audio_content_style.bg_color == player_content_style.bg_color,
+		"All workspace content areas use the player content color")
+	check(media_panel_style.border_width_left == 1 and media_panel_style.border_width_top == 1
+		and utility_outer_style.border_width_left == 1 and utility_outer_style.border_width_top == 1
+		and audio_outer_style.border_width_left == 1 and audio_outer_style.border_width_top == 1,
+		"Media, utility and audio cards have a visible outer border")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var root_texture := root.get_texture()
 	if DisplayServer.get_name() != "headless" and root_texture != null:

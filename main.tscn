@@ -34,22 +34,17 @@ corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_272bh"]
-content_margin_left = 6.0
-content_margin_top = 6.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
-bg_color = Color(0.0588, 0.0706, 0.0902, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.1529, 0.1765, 0.2196, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_media_panel"]
 content_margin_left = 10.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
+bg_color = Color(0.0353, 0.0431, 0.0549, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_media_panel"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
 bg_color = Color(0.0941, 0.1098, 0.1373, 1)
 border_width_left = 1
 border_width_top = 1
@@ -108,7 +103,7 @@ content_margin_left = 10.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
-bg_color = Color(0.0941, 0.1098, 0.1373, 1)
+bg_color = Color(0.0353, 0.0431, 0.0549, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_audio_channel"]
 content_margin_left = 8.0
@@ -609,33 +604,39 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_media_panel")
 
 [node name="MediaVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel" unique_id=1869273203]
 layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="MediaHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox" unique_id=1190766219]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
+
+[node name="MediaHeaderRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MediaHeader" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox" unique_id=1190766219]
-layout_mode = 2
-
-[node name="MediaTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader" unique_id=271535463]
+[node name="MediaTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader/MediaHeaderRow" unique_id=271535463]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "媒体"
 
-[node name="OrderEditButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader"]
+[node name="OrderEditButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader/MediaHeaderRow"]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "编辑顺序"
 
-[node name="CardSizeButton" type="MenuButton" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader" unique_id=1987654321]
+[node name="CardSizeButton" type="MenuButton" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader/MediaHeaderRow" unique_id=1987654321]
 unique_name_in_owner = true
 layout_mode = 2
 text = "尺寸：中"
 
-[node name="AddListButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader" unique_id=771234561]
+[node name="AddListButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader/MediaHeaderRow" unique_id=771234561]
 unique_name_in_owner = true
 layout_mode = 2
 text = "添加列表"
 
-[node name="AddFileButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader" unique_id=503021764]
+[node name="AddFileButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox/MediaHeader/MediaHeaderRow" unique_id=503021764]
 unique_name_in_owner = true
 layout_mode = 2
 text = "添加文件"
