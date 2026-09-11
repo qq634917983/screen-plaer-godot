@@ -175,6 +175,9 @@ func run() -> void:
 		and audio_master_item.is_ancestor_of(audio_master_slider)
 		and audio_master_item.is_ancestor_of(audio_master_mute),
 		"Audio mixer master item has a vertical volume slider and mute control")
+	check(absf(audio_master_slider.get_global_rect().get_center().x
+		- audio_master_item.get_global_rect().get_center().x) <= 1.0,
+		"Master volume slider is horizontally centered in its item")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var image := root.get_texture().get_image()
 	var screenshot := ProjectSettings.globalize_path("res://.build/player_layout.png")

@@ -711,8 +711,9 @@ horizontal_alignment = 1
 
 [node name="AudioMasterSlider" type="VSlider" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem/AudioMasterColumn" unique_id=688258318]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 130)
+custom_minimum_size = Vector2(24, 130)
 layout_mode = 2
+size_flags_horizontal = 4
 size_flags_vertical = 3
 step = 1.0
 value = 100.0

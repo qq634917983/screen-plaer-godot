@@ -1545,7 +1545,8 @@ func _add_audio_channel(media: MediaObject) -> void:
 	column.add_child(value_label)
 
 	var slider := VSlider.new()
-	slider.custom_minimum_size = Vector2(0, 130)
+	slider.custom_minimum_size = Vector2(24, 130)
+	slider.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	slider.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	slider.min_value = 0
 	slider.max_value = 100

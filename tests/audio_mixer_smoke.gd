@@ -60,6 +60,10 @@ func run() -> void:
 		var controls: Dictionary = scene._audio_item_controls[media]
 		check(controls["slider"] is VSlider and controls["mute"] is Button,
 			media.display_name() + " uses vertical volume and mute controls")
+		var slider := controls["slider"] as VSlider
+		var item := slider.get_parent().get_parent() as PanelContainer
+		check(absf(slider.get_global_rect().get_center().x - item.get_global_rect().get_center().x) <= 1.0,
+			media.display_name() + " volume slider is horizontally centered")
 
 	var video_slider := scene._audio_item_controls[video]["slider"] as VSlider
 	video_slider.value = 37

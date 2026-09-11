@@ -32,7 +32,7 @@
 
 - 媒体 item 纵向调音台（2026-09-11）：音频控制区改为横向排列、可滚动的纵向
   通道条；第一列为输出/投屏共享的主音量，媒体库中每个视频和音频 item 自动生成
-  独立通道，包含名称、数值、VSlider 和静音按钮。MediaObject.volume 随项目保存，
+  独立通道，包含名称、数值、水平居中的 VSlider 和静音按钮。MediaObject.volume 随项目保存，
   播放时以“主音量 × item 音量”送入共享输出实例；卡片静音与调音台静音双向刷新。
   audio_mixer_smoke 与 player_layout_smoke 通过，Windows 视频链路回归通过。
 
