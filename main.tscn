@@ -101,6 +101,22 @@ content_margin_right = 10.0
 content_margin_bottom = 10.0
 bg_color = Color(0.0941, 0.1098, 0.1373, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_audio_channel"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.0667, 0.0784, 0.098, 1)
+border_width_left = 1
+border_width_top = 2
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_button"]
 content_margin_left = 7.0
 content_margin_top = 5.0
@@ -649,32 +665,70 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
 theme_override_font_sizes/font_size = 11
-text = "各端音量独立调节；静音开关在设置窗口。"
+text = "每路音频使用独立纵向控制条；输出播放器与投屏窗口共享一路声音。"
 autowrap_mode = 2
 
-[node name="AudioSliders" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent" unique_id=1300776366]
+[node name="AudioChannelScroll" type="ScrollContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent"]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
 
-[node name="AudioOutputRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders" unique_id=1568876912]
-layout_mode = 2
-
-[node name="AudioOutputLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=33346520]
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-text = "输出"
-
-[node name="AudioOutputSlider" type="HSlider" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=688258318]
+[node name="AudioChannels" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll" unique_id=1300776366]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="AudioMasterItem" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels" unique_id=1568876912]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(92, 230)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_audio_channel")
+
+[node name="AudioMasterColumn" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="AudioMasterLabel" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem/AudioMasterColumn" unique_id=33346520]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8196, 0.851, 0.902, 1)
+theme_override_font_sizes/font_size = 12
+text = "主音量"
+horizontal_alignment = 1
+
+[node name="AudioMasterValue" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem/AudioMasterColumn" unique_id=986122294]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7569, 0.7922, 0.851, 1)
+theme_override_font_sizes/font_size = 11
+text = "100"
+horizontal_alignment = 1
+
+[node name="AudioMasterSlider" type="VSlider" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem/AudioMasterColumn" unique_id=688258318]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 130)
+layout_mode = 2
+size_flags_vertical = 3
+step = 1.0
 value = 100.0
 
-[node name="AudioOutputValue" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioSliders/AudioOutputRow" unique_id=986122294]
+[node name="AudioMasterMute" type="Button" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll/AudioChannels/AudioMasterItem/AudioMasterColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(30, 0)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-text = "100"
+tooltip_text = "全部输出声音静音"
+toggle_mode = true
+theme_override_fonts/font = SubResource("font_player_controls")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+text = "🔊"
 
 [node name="StatusBar" type="PanelContainer" parent="RootVBox" unique_id=1906594481]
 custom_minimum_size = Vector2(0, 24)

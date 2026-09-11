@@ -53,6 +53,7 @@ var _is_quitting := false
 var _main_window_save_timer: Timer
 var _pending_main_window_size := Vector2i.ZERO
 var _restoring_main_window_size := false
+var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体库音频调音台
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -86,8 +87,11 @@ var _restoring_main_window_size := false
 @onready var _preview_page_buttons: HBoxContainer = %PreviewPageButtons
 @onready var _output_page_buttons: HBoxContainer = %OutputPageButtons
 @onready var _output_mute_button: Button = %OutputMute
-@onready var _audio_output_slider: HSlider = %AudioOutputSlider
-@onready var _audio_output_value: Label = %AudioOutputValue
+@onready var _audio_channels: HBoxContainer = %AudioChannels
+@onready var _audio_master_item: PanelContainer = %AudioMasterItem
+@onready var _audio_master_slider: VSlider = %AudioMasterSlider
+@onready var _audio_master_value: Label = %AudioMasterValue
+@onready var _audio_master_mute_button: Button = %AudioMasterMute
 @onready var _status_cpu: Label = %StatusCpu
 @onready var _status_gpu: Label = %StatusGpu
 @onready var _status_mem: Label = %StatusMem
@@ -200,7 +204,8 @@ func _ready() -> void:
 	_output_progress.drag_started.connect(func() -> void: _output_dragging = true)
 	_output_progress.drag_ended.connect(_on_output_progress_drag_ended)
 	_output_mute_button.pressed.connect(_on_output_mute_pressed)
-	_audio_output_slider.value_changed.connect(_on_output_volume_changed)
+	_audio_master_mute_button.pressed.connect(_on_output_mute_pressed)
+	_audio_master_slider.value_changed.connect(_on_output_volume_changed)
 	# 内容区十字四分区：恢复上次拖拽的分割比例，拖拽结束持久化
 	_quad_split.split_x_ratio = ProjectStore.get_setting("ui", "split_x", 0.72)
 	_quad_split.split_y_ratio = ProjectStore.get_setting("ui", "split_y", 0.5)
@@ -320,7 +325,7 @@ func _on_menu_help_id_pressed(_id: int) -> void:
 func _apply_settings() -> void:
 	# 声音开关（set_volume 实生效）；输出端音频同时是投屏窗口的音频（共享实例）
 	_output.set_muted(_output_muted_state())
-	_output.set_volume(int(ProjectStore.get_setting("audio", "output_volume", 100)))
+	_apply_output_volume()
 	_thumbnailer.capture_pos = float(ProjectStore.get_setting("thumbs", "position", 1.0))
 	_refresh_audio_ui()
 	# 主界面四分区拖拽范围：第一列宽度和第一排高度按当前容器百分比约束。
@@ -474,6 +479,7 @@ func _add_media_item(media: MediaObject) -> void:
 	_apply_card_cover(card)
 	_refresh_card_indices()
 	_refresh_order_controls()
+	_rebuild_audio_channels()
 
 
 func _on_order_edit_toggled(on: bool) -> void:
@@ -517,6 +523,7 @@ func _sync_library_arrays_from_grid() -> void:
 			_media_items.append(card.media)
 		elif card is PlaylistCard:
 			_playlists.append(card.playlist)
+	_rebuild_audio_channels()
 
 
 func _library_order_data() -> Array:
@@ -605,7 +612,7 @@ func _on_card_mute_toggled(card: MediaItemCard) -> void:
 	card.refresh_toggles()
 	if _output_media == card.media:
 		_output.set_muted(_output_muted_state())
-		_refresh_audio_ui()
+	_refresh_audio_ui()
 	_save_current_project()
 
 
@@ -726,6 +733,7 @@ func _clear_media_items() -> void:
 		_media_grid.remove_child(card)
 		card.queue_free()
 	_media_desc.visible = true
+	_rebuild_audio_channels()
 
 
 ## 按类型把条目加载到预览端：视频/音频走 mpv，图片走静态纹理通路，网页走 CEF，
@@ -894,6 +902,7 @@ func _apply_output_media_prefs() -> void:
 	if _output_media == null:
 		return
 	_output.set_looping(_output_media.loop)
+	_apply_output_volume()
 	_output.set_muted(_output_muted_state())
 	_refresh_audio_ui()
 	_output.set_view_transform(_output_media.scale, _output_media.offset())
@@ -934,6 +943,7 @@ func _on_item_properties_changed(media: MediaObject) -> void:
 
 func _on_card_delete(card: MediaItemCard) -> void:
 	_media_items.erase(card.media)
+	_rebuild_audio_channels()
 	if _item_windows.has(card.media_path) and is_instance_valid(_item_windows[card.media_path]):
 		_item_windows[card.media_path].queue_free()
 	_item_windows.erase(card.media_path)
@@ -1449,20 +1459,126 @@ func _on_quad_split_ratios_changed(x_ratio: float, y_ratio: float) -> void:
 
 
 func _on_output_volume_changed(value: float) -> void:
-	# 输出端音量同时是投屏窗口的音量（共享实例），持久化到 settings.cfg
-	_output.set_volume(int(value))
+	# 主音量与当前媒体条目音量相乘，结果应用到输出/投屏共享实例。
 	ProjectStore.set_setting("audio", "output_volume", int(value))
+	_apply_output_volume()
 	_refresh_audio_ui()
 
 
 func _refresh_audio_ui() -> void:
-	_audio_output_slider.set_value_no_signal(_output.volume)
-	_audio_output_value.text = str(_output.volume)
+	var master_volume := int(ProjectStore.get_setting("audio", "output_volume", 100))
+	var global_muted := not bool(ProjectStore.get_setting("audio", "output", true))
+	_audio_master_slider.set_value_no_signal(master_volume)
+	_audio_master_value.text = str(master_volume)
 	_output_mute_button.text = "🔇" if _output.muted else "🔊"
+	_audio_master_mute_button.text = "🔇" if global_muted else "🔊"
+	_audio_master_mute_button.button_pressed = global_muted
+	for media: MediaObject in _audio_item_controls:
+		var controls: Dictionary = _audio_item_controls[media]
+		var slider := controls["slider"] as VSlider
+		var value_label := controls["value"] as Label
+		var mute_button := controls["mute"] as Button
+		slider.set_value_no_signal(media.volume)
+		value_label.text = str(media.volume)
+		mute_button.text = "🔇" if media.muted else "🔊"
+		mute_button.button_pressed = media.muted
 
 
 func _on_output_mute_pressed() -> void:
-	# 输出端静音同时是投屏窗口的静音（共享实例），持久化到 settings.cfg
-	_output.set_muted(not _output.muted)
-	ProjectStore.set_setting("audio", "output", not _output.muted)
+	# 主静音控制 settings.cfg 中的输出声音总开关；条目静音仍独立保留。
+	var enabled := bool(ProjectStore.get_setting("audio", "output", true))
+	ProjectStore.set_setting("audio", "output", not enabled)
+	_output.set_muted(_output_muted_state())
 	_refresh_audio_ui()
+
+
+func _apply_output_volume() -> void:
+	var master_volume := int(ProjectStore.get_setting("audio", "output_volume", 100))
+	var item_volume := _output_media.volume if _output_media != null else 100
+	_output.set_volume(roundi(master_volume * item_volume / 100.0))
+
+
+func _is_audio_controllable_media(media: MediaObject) -> bool:
+	# 图片无声音；网页/PPT 使用 CEF 原生音频，目前只支持静音、不支持连续音量。
+	return media.type == MediaObject.Type.VIDEO or media.type == MediaObject.Type.AUDIO
+
+
+func _rebuild_audio_channels() -> void:
+	if not is_instance_valid(_audio_channels) or not is_instance_valid(_audio_master_item):
+		return
+	for child in _audio_channels.get_children():
+		if child != _audio_master_item:
+			_audio_channels.remove_child(child)
+			child.queue_free()
+	_audio_item_controls.clear()
+	for media in _media_items:
+		if not _is_audio_controllable_media(media):
+			continue
+		_add_audio_channel(media)
+	_refresh_audio_ui()
+
+
+func _add_audio_channel(media: MediaObject) -> void:
+	var item := PanelContainer.new()
+	item.name = "AudioItem_" + media.path.md5_text().left(8)
+	item.custom_minimum_size = Vector2(92, 230)
+	item.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	item.add_theme_stylebox_override("panel", _audio_master_item.get_theme_stylebox("panel").duplicate())
+	_audio_channels.add_child(item)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	item.add_child(column)
+
+	var title := Label.new()
+	title.custom_minimum_size = Vector2(74, 0)
+	title.text = media.display_name().get_basename()
+	title.tooltip_text = media.display_name()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(title)
+
+	var value_label := Label.new()
+	value_label.text = str(media.volume)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(value_label)
+
+	var slider := VSlider.new()
+	slider.custom_minimum_size = Vector2(0, 130)
+	slider.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 1
+	slider.value = media.volume
+	column.add_child(slider)
+
+	var mute_button := Button.new()
+	mute_button.custom_minimum_size = Vector2(0, 30)
+	mute_button.toggle_mode = true
+	mute_button.tooltip_text = "静音：" + media.display_name()
+	mute_button.text = "🔇" if media.muted else "🔊"
+	column.add_child(mute_button)
+
+	_audio_item_controls[media] = {"slider": slider, "value": value_label, "mute": mute_button}
+	slider.value_changed.connect(_on_media_volume_changed.bind(media))
+	mute_button.pressed.connect(_on_media_mixer_mute_pressed.bind(media))
+
+
+func _on_media_volume_changed(value: float, media: MediaObject) -> void:
+	media.volume = clampi(roundi(value), 0, 100)
+	if _output_media == media:
+		_apply_output_volume()
+	_refresh_audio_ui()
+	_save_current_project()
+
+
+func _on_media_mixer_mute_pressed(media: MediaObject) -> void:
+	media.muted = not media.muted
+	var card := _find_card(media.path)
+	if card != null:
+		card.refresh_toggles()
+	if _output_media == media:
+		_output.set_muted(_output_muted_state())
+	_refresh_audio_ui()
+	_save_current_project()

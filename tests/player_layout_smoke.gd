@@ -168,7 +168,13 @@ func run() -> void:
 		and audio_header.get_parent() == audio_content.get_parent()
 		and audio_header.get_parent().get_theme_constant("separation") == 0,
 		"Audio title and content form one bordered card")
-
+	var audio_master_item := scene.find_child("AudioMasterItem", true, false) as PanelContainer
+	var audio_master_slider := scene.find_child("AudioMasterSlider", true, false) as VSlider
+	var audio_master_mute := scene.find_child("AudioMasterMute", true, false) as Button
+	check(audio_master_item != null and audio_master_slider != null and audio_master_mute != null
+		and audio_master_item.is_ancestor_of(audio_master_slider)
+		and audio_master_item.is_ancestor_of(audio_master_mute),
+		"Audio mixer master item has a vertical volume slider and mute control")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var image := root.get_texture().get_image()
 	var screenshot := ProjectSettings.globalize_path("res://.build/player_layout.png")

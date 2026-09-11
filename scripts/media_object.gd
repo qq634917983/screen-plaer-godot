@@ -24,6 +24,7 @@ var page_count := 0  # PPT 页数（0 = 未知，仅 Type.PPT 有意义）
 var origin_path := ""  # 「复制到项目目录」导入时的原始路径（空 = 未复制）
 var loop := false  # 条目级循环（推送到输出端时生效）
 var muted := false  # 条目级静音（推送到输出端时生效，与全局声音开关为或关系）
+var volume := 100  # 条目级音量（0-100，与主音量相乘后应用到输出端）
 var touch_points: Array[Vector2] = []  # 网页触点序列（归一化 0-1 坐标，相对 1280×720 视口；输出端 ← → 逐步模拟点击）
 
 
@@ -108,6 +109,7 @@ func to_dict() -> Dictionary:
 		"origin_path": origin_path,
 		"loop": loop,
 		"muted": muted,
+		"volume": volume,
 		"touch_points": pts,
 	}
 
@@ -121,6 +123,7 @@ static func from_dict(d: Dictionary) -> MediaObject:
 	m.origin_path = str(d.get("origin_path", ""))  # 旧格式无此字段
 	m.loop = bool(d.get("loop", false))  # 旧格式无此字段
 	m.muted = bool(d.get("muted", false))  # 旧格式无此字段
+	m.volume = clampi(int(d.get("volume", 100)), 0, 100)  # 旧格式默认满音量
 	for p in d.get("touch_points", []):  # 旧格式无此字段
 		if p is Array and p.size() >= 2:
 			m.touch_points.append(Vector2(float(p[0]), float(p[1])))
