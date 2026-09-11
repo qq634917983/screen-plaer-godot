@@ -178,6 +178,22 @@ func run() -> void:
 	check(absf(audio_master_slider.get_global_rect().get_center().x
 		- audio_master_item.get_global_rect().get_center().x) <= 1.0,
 		"Master volume slider is horizontally centered in its item")
+	check(scene.find_child("AudioDesc", true, false) == null,
+		"Audio mixer has no redundant description label")
+	var media_panel := scene.find_child("MediaPanel", true, false) as PanelContainer
+	var media_scroll := scene.find_child("MediaScroll", true, false) as ScrollContainer
+	var media_panel_style := media_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	var media_scroll_style := media_scroll.get_theme_stylebox("panel") as StyleBoxFlat
+	check(media_panel_style != null and media_scroll_style != null
+		and media_panel_style.corner_radius_top_left == 0
+		and media_panel_style.corner_radius_top_right == 0
+		and media_panel_style.corner_radius_bottom_left == 0
+		and media_panel_style.corner_radius_bottom_right == 0
+		and media_scroll_style.corner_radius_top_left == 0
+		and media_scroll_style.corner_radius_top_right == 0
+		and media_scroll_style.corner_radius_bottom_left == 0
+		and media_scroll_style.corner_radius_bottom_right == 0,
+		"Media library panel and scroll area use square corners")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var image := root.get_texture().get_image()
 	var screenshot := ProjectSettings.globalize_path("res://.build/player_layout.png")

@@ -43,10 +43,18 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.1529, 0.1765, 0.2196, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_media_panel"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.0941, 0.1098, 0.1373, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
 bg_color = Color(0.0667, 0.0784, 0.098, 1)
@@ -529,6 +537,7 @@ text = "00:00 / 00:00"
 [node name="MediaPanel" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit" unique_id=1645081064]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_media_panel")
 
 [node name="MediaVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/MediaPanel" unique_id=1869273203]
 layout_mode = 2
@@ -661,17 +670,10 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_section_content")
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="AudioDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent" unique_id=1031981160]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
-theme_override_font_sizes/font_size = 11
-text = "每路音频使用独立纵向控制条；输出播放器与投屏窗口共享一路声音。"
-autowrap_mode = 2
-
 [node name="AudioChannelScroll" type="ScrollContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent"]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 2
+horizontal_scroll_mode = 1
 vertical_scroll_mode = 0
 
 [node name="AudioChannels" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/AudioPanel/AudioVBox/AudioContentCard/AudioContent/AudioChannelScroll" unique_id=1300776366]
