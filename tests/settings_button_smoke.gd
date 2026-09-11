@@ -51,6 +51,18 @@ func run() -> void:
 	check(apply_button != null and ok_button != null, "Settings window has Apply and OK buttons")
 	check(scene._settings_window.find_child("界面布局", true, false) != null,
 		"Settings window has custom layout tab")
+	var help_tab: Node = scene._settings_window.find_child("帮助", true, false)
+	var help_content: Node = scene._settings_window.find_child("HelpContent", true, false)
+	check(help_tab != null and help_content != null,
+		"Settings window centralizes main UI guidance in Help tab")
+	var settings_tabs := scene._settings_window.find_child("SettingsTabs", true, false) as TabContainer
+	settings_tabs.current_tab = settings_tabs.get_tab_count() - 1
+	await process_frame
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
+	var help_screenshot := ProjectSettings.globalize_path("res://.build/settings_help.png")
+	check(scene._settings_window.get_texture().get_image().save_png(help_screenshot) == OK,
+		"Settings Help screenshot saved")
+	print("HELP_SCREENSHOT=", help_screenshot)
 	var old_width := int(ProjectStore.get_setting("cast_window", "width", 960))
 	var old_min_x := int(ProjectStore.get_setting("ui", "min_x_percent", 35))
 	var old_max_x := int(ProjectStore.get_setting("ui", "max_x_percent", 85))

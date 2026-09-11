@@ -180,6 +180,9 @@ func run() -> void:
 		"Master volume slider is horizontally centered in its item")
 	check(scene.find_child("AudioDesc", true, false) == null,
 		"Audio mixer has no redundant description label")
+	check(scene.find_child("MediaDesc", true, false) == null
+		and scene.find_child("UtilityDesc", true, false) == null,
+		"Main UI has no inline media or utility description labels")
 	var media_panel := scene.find_child("MediaPanel", true, false) as PanelContainer
 	var media_scroll := scene.find_child("MediaScroll", true, false) as ScrollContainer
 	var media_panel_style := media_panel.get_theme_stylebox("panel") as StyleBoxFlat

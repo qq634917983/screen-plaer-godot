@@ -572,14 +572,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "添加文件"
 
-[node name="MediaDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/MediaPanel/MediaVBox" unique_id=532759839]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
-theme_override_font_sizes/font_size = 12
-text = "点击“添加文件”，或从文件管理器拖入视频、音频、图片、网页和 PPT。"
-autowrap_mode = 2
-
 [node name="MediaScroll" type="ScrollContainer" parent="RootVBox/MainContent/QuadSplit/MediaPanel/MediaVBox" unique_id=2004433061]
 unique_name_in_owner = true
 layout_mode = 2
@@ -635,13 +627,6 @@ text = "隐藏投屏"
 unique_name_in_owner = true
 layout_mode = 2
 text = "重启软件"
-
-[node name="UtilityDesc" type="Label" parent="RootVBox/MainContent/QuadSplit/UtilityPanel/UtilityVBox/UtilityContentCard/UtilityContent" unique_id=277299369]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5569, 0.6, 0.6588, 1)
-theme_override_font_sizes/font_size = 11
-text = "主窗口输出播放器与投屏窗口共享同一解码实例与纹理，画面和声音完全一致。"
-autowrap_mode = 2
 
 [node name="AudioPanel" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit" unique_id=1132858405]
 layout_mode = 2

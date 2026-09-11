@@ -67,7 +67,6 @@ var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体�
 @onready var _project_open_dialog: FileDialog = %ProjectOpenDialog
 @onready var _project_save_dialog: FileDialog = %ProjectSaveDialog
 @onready var _media_grid: HFlowContainer = %MediaGrid
-@onready var _media_desc: Label = %MediaDesc
 @onready var _about_dialog: AcceptDialog = %AboutDialog
 @onready var _settings_window: SettingsWindow = %SettingsWindow
 @onready var _preview_label: Label = %PreviewScreenLabel
@@ -475,7 +474,6 @@ func _add_media_item(media: MediaObject) -> void:
 	card.mute_toggled.connect(_on_card_mute_toggled)
 	card.move_requested.connect(_move_library_card)
 	card.set_missing(not media.exists())
-	_media_desc.visible = false
 	_apply_card_cover(card)
 	_refresh_card_indices()
 	_refresh_order_controls()
@@ -732,7 +730,6 @@ func _clear_media_items() -> void:
 	for card in _media_grid.get_children():
 		_media_grid.remove_child(card)
 		card.queue_free()
-	_media_desc.visible = true
 	_rebuild_audio_channels()
 
 
@@ -948,7 +945,6 @@ func _on_card_delete(card: MediaItemCard) -> void:
 		_item_windows[card.media_path].queue_free()
 	_item_windows.erase(card.media_path)
 	card.queue_free()
-	_media_desc.visible = _media_items.is_empty() and _playlists.is_empty()
 	_save_current_project()
 	# 删除的若是当前输出条目，刷新高亮（延迟到卡片真正释放后）
 	_update_output_highlight.call_deferred()
@@ -1063,7 +1059,6 @@ func _add_playlist(pl: PlaylistObject) -> void:
 	card.settings_requested.connect(_on_playlist_settings)
 	card.delete_requested.connect(_on_playlist_delete)
 	card.move_requested.connect(_move_library_card)
-	_media_desc.visible = false
 	_refresh_order_controls()
 
 
@@ -1140,7 +1135,6 @@ func _on_playlist_delete(card: PlaylistCard) -> void:
 	_playlist_windows.erase(card.playlist)
 	_playlists.erase(card.playlist)
 	card.queue_free()
-	_media_desc.visible = _media_items.is_empty() and _playlists.is_empty()
 	_save_current_project()
 	_refresh_order_controls.call_deferred()
 

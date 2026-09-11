@@ -510,3 +510,10 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 
 - [x] 媒体库外框与内部滚动内容区全部取消圆角，统一使用直角边框
 - [x] `player_layout_smoke` 验证音频说明节点已移除及媒体库两层容器圆角均为 0
+
+## 主界面提示集中到设置帮助（2026-09-11）
+
+- [x] 删除主界面的 `MediaDesc`、`UtilityDesc`，`AudioDesc` 保持移除
+- [x] 清理主逻辑对 `MediaDesc` 显隐状态的全部引用
+- [x] 设置窗口新增“帮助”页，集中放置播放器、媒体库、音频、实用功能和投屏说明
+- [x] `player_layout_smoke` 验证主界面说明节点不存在，`settings_button_smoke` 验证帮助页存在

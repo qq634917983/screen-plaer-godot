@@ -1,6 +1,6 @@
 class_name SettingsWindow
 extends Window
-## 设置窗口：基础设置 + 投屏窗口设置 + 主界面四分区尺寸约束。
+## 设置窗口：基础设置 + 投屏窗口设置 + 主界面四分区尺寸约束 + 集中帮助。
 ## 控件修改先留在窗口中；“应用”保存并生效，“确定”保存、生效并关闭。
 
 signal settings_changed
@@ -71,6 +71,7 @@ func _build_ui() -> void:
 	tabs.add_child(_build_basic_tab())
 	tabs.add_child(_build_window_tab())
 	tabs.add_child(_build_layout_tab())
+	tabs.add_child(_build_help_tab())
 
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_END
@@ -210,6 +211,47 @@ func _build_layout_tab() -> Control:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tab.add_child(note)
 	return tab
+
+
+func _build_help_tab() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.name = "帮助"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+
+	var content := VBoxContainer.new()
+	content.name = "HelpContent"
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 12)
+	scroll.add_child(content)
+
+	_add_help_section(content, "播放器",
+		"单击媒体卡片会加载到预览播放器，不影响正在输出的内容。卡片“播放”会从头直接送到输出和投屏；“快速切换”会把预览端当前媒体、进度和播放状态推送到输出端。")
+	_add_help_section(content, "媒体库",
+		"点击“添加文件”或从文件管理器拖入视频、音频、图片、网页和 PPT。“编辑顺序”可调整媒体与播放列表的位置，“尺寸”可切换卡片大小。")
+	_add_help_section(content, "音频控制",
+		"主音量作用于所有输出；每个视频和音频 item 有独立纵向音量条与静音按钮。最终音量为主音量乘以 item 音量。预览端始终静音，输出播放器与投屏窗口共享一路声音。")
+	_add_help_section(content, "实用功能",
+		"“隐藏投屏”切换独立投屏窗口的显示状态；“重启软件”会先清理播放器和浏览器资源，再重新启动程序。")
+	_add_help_section(content, "投屏窗口",
+		"输出播放器与投屏窗口共享同一解码实例和画面纹理，因此画面与声音保持一致。投屏窗口的大小、位置、缩放和平移可在“窗口设置”页调整。")
+	return scroll
+
+
+func _add_help_section(parent: VBoxContainer, title_text: String, body_text: String) -> void:
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 4)
+	parent.add_child(section)
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(0.82, 0.85, 0.9))
+	section.add_child(title)
+	var body := Label.new()
+	body.text = body_text
+	body.add_theme_font_size_override("font_size", 11)
+	body.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	section.add_child(body)
 
 
 func _make_header(text: String) -> Label:
