@@ -219,6 +219,9 @@ func run() -> void:
 	var audio_outer_style := audio_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	var audio_header_style := audio_header.get_theme_stylebox("panel") as StyleBoxFlat
 	var audio_content_style := audio_content.get_theme_stylebox("panel") as StyleBoxFlat
+	check(player_outer_style.border_width_left == 0 and player_outer_style.border_width_top == 0
+		and player_outer_style.border_width_right == 0 and player_outer_style.border_width_bottom == 0,
+		"Preview and output player shells are borderless")
 	check(media_panel_style.bg_color == player_outer_style.bg_color
 		and utility_outer_style.bg_color == player_outer_style.bg_color
 		and audio_outer_style.bg_color == player_outer_style.bg_color,
@@ -227,14 +230,25 @@ func run() -> void:
 		and utility_header_style.bg_color == player_header_style.bg_color
 		and audio_header_style.bg_color == player_header_style.bg_color,
 		"All workspace title bars use the player header color")
+	var transition_header := scene.find_child("TransitionHeader", true, false) as PanelContainer
+	check(absf(media_header.size.y - 40.0) <= 1.0
+		and absf(utility_header.size.y - 40.0) <= 1.0
+		and absf(audio_header.size.y - 40.0) <= 1.0
+		and transition_header != null and absf(transition_header.size.y - 40.0) <= 1.0
+		and absf((scene.find_child("PreviewHeader", true, false) as Control).size.y - 40.0) <= 1.0
+		and absf((scene.find_child("OutputHeader", true, false) as Control).size.y - 40.0) <= 1.0,
+		"All six workspace title bars share the same height")
 	check(media_scroll_style.bg_color == player_content_style.bg_color
 		and utility_content_style.bg_color == player_content_style.bg_color
 		and audio_content_style.bg_color == player_content_style.bg_color,
 		"All workspace content areas use the player content color")
-	check(media_panel_style.border_width_left == 1 and media_panel_style.border_width_top == 1
-		and utility_outer_style.border_width_left == 1 and utility_outer_style.border_width_top == 1
-		and audio_outer_style.border_width_left == 1 and audio_outer_style.border_width_top == 1,
-		"Media, utility and audio cards have a visible outer border")
+	var transition_outer_style := (scene.find_child("TransitionPanel", true, false) as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+	check(transition_outer_style.border_width_left == 2 and transition_outer_style.border_width_top == 2
+		and transition_outer_style.border_width_right == 2 and transition_outer_style.border_width_bottom == 2
+		and media_panel_style.border_width_left == 2 and media_panel_style.border_width_top == 2
+		and utility_outer_style.border_width_left == 2 and utility_outer_style.border_width_top == 2
+		and audio_outer_style.border_width_left == 2 and audio_outer_style.border_width_top == 2,
+		"Transition, media, utility and audio cards have a 2px outer border")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var root_texture := root.get_texture()
 	if DisplayServer.get_name() != "headless" and root_texture != null:

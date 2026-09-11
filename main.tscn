@@ -46,10 +46,10 @@ content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 bg_color = Color(0.0941, 0.1098, 0.1373, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
 border_color = Color(0.1529, 0.1765, 0.2196, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
@@ -63,15 +63,22 @@ content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
 bg_color = Color(0.0941, 0.1098, 0.1373, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
 border_color = Color(0.1529, 0.1765, 0.2196, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_borderless"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.0941, 0.1098, 0.1373, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_header"]
 content_margin_left = 10.0
@@ -244,14 +251,14 @@ grow_vertical = 2
 clip_contents = true
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_borderless")
 
 [node name="PreviewVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewDock/PreviewPlayer" unique_id=2054149145]
 layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="PreviewHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewDock/PreviewPlayer/PreviewVBox" unique_id=2127850067]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
@@ -404,7 +411,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="TransitionHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
@@ -443,14 +450,14 @@ grow_vertical = 2
 clip_contents = true
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_borderless")
 
 [node name="OutputVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputDock/OutputPlayer" unique_id=2740667]
 layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="OutputHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputDock/OutputPlayer/OutputVBox" unique_id=1385628]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
@@ -607,7 +614,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="MediaHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/MediaDock/MediaPanel/MediaVBox" unique_id=1190766219]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
@@ -675,7 +682,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="UtilityHeaderCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/UtilityDock/UtilityPanel/UtilityVBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
@@ -725,7 +732,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="AudioHeaderCard" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/AudioDock/AudioPanel/AudioVBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
 
