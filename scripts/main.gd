@@ -21,6 +21,13 @@ const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
+const BUILTIN_LAYOUT := {
+	"version": 1,
+	"split_x": 0.72,
+	"split_y": 0.5,
+	"player_left": 0.43,
+	"player_right": 0.57,
+}
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
@@ -97,6 +104,7 @@ var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体�
 @onready var _status_pid: Label = %StatusPid
 @onready var _status_version: Label = %StatusVersion
 @onready var _quad_split: QuadSplitContainer = %QuadSplit
+@onready var _players_split: TripleSplitContainer = %PlayersSection
 
 
 func _ready() -> void:
@@ -196,6 +204,7 @@ func _ready() -> void:
 	_restart_button.pressed.connect(_on_restart_pressed)
 	_cast_window.close_requested.connect(_on_cast_window_close_requested)
 	_settings_window.settings_changed.connect(_apply_settings)
+	_settings_window.layout_command_requested.connect(_on_layout_command_requested)
 	# 主窗口重新获得焦点时复查条目文件存在性（源文件被外部移动/删除/恢复后标记自动更新）
 	get_window().focus_entered.connect(_refresh_missing_states)
 	_preview_progress.drag_started.connect(func() -> void: _preview_dragging = true)
@@ -205,10 +214,10 @@ func _ready() -> void:
 	_output_mute_button.pressed.connect(_on_output_mute_pressed)
 	_audio_master_mute_button.pressed.connect(_on_output_mute_pressed)
 	_audio_master_slider.value_changed.connect(_on_output_volume_changed)
-	# 内容区十字四分区：恢复上次拖拽的分割比例，拖拽结束持久化
-	_quad_split.split_x_ratio = ProjectStore.get_setting("ui", "split_x", 0.72)
-	_quad_split.split_y_ratio = ProjectStore.get_setting("ui", "split_y", 0.5)
+	# 六区域布局：外层十字分割 + 播放区内部预览/转场/输出双分割。
+	_apply_layout(_current_layout_from_settings(), false)
 	_quad_split.ratios_changed.connect(_on_quad_split_ratios_changed)
+	_players_split.ratios_changed.connect(_on_players_split_ratios_changed)
 	# PPT 翻页按钮（画面内底部 < >，仅 SLIDE 帧源时显示）
 	%PreviewPagePrev.pressed.connect(_preview.prev_page)
 	%PreviewPageNext.pressed.connect(_preview.next_page)
@@ -327,11 +336,6 @@ func _apply_settings() -> void:
 	_apply_output_volume()
 	_thumbnailer.capture_pos = float(ProjectStore.get_setting("thumbs", "position", 1.0))
 	_refresh_audio_ui()
-	# 主界面四分区拖拽范围：第一列宽度和第一排高度按当前容器百分比约束。
-	_quad_split.min_x_percent = float(ProjectStore.get_setting("ui", "min_x_percent", 35))
-	_quad_split.max_x_percent = float(ProjectStore.get_setting("ui", "max_x_percent", 85))
-	_quad_split.min_y_percent = float(ProjectStore.get_setting("ui", "min_y_percent", 35))
-	_quad_split.max_y_percent = float(ProjectStore.get_setting("ui", "max_y_percent", 75))
 	# 投屏窗口几何
 	var w := int(ProjectStore.get_setting("cast_window", "width", 960))
 	var h := int(ProjectStore.get_setting("cast_window", "height", 540))
@@ -1448,8 +1452,120 @@ func _update_slot_progress(slot: PlayerSlot, slider: HSlider, time_label: Label,
 
 
 func _on_quad_split_ratios_changed(x_ratio: float, y_ratio: float) -> void:
-	ProjectStore.set_setting("ui", "split_x", x_ratio)
-	ProjectStore.set_setting("ui", "split_y", y_ratio)
+	ProjectStore.set_settings("ui", {"split_x": x_ratio, "split_y": y_ratio})
+
+
+func _on_players_split_ratios_changed(left_ratio: float, right_ratio: float) -> void:
+	ProjectStore.set_settings("ui", {
+		"player_left": left_ratio,
+		"player_right": right_ratio,
+	})
+
+
+func get_current_layout() -> Dictionary:
+	return {
+		"version": 1,
+		"split_x": _quad_split.split_x_ratio,
+		"split_y": _quad_split.split_y_ratio,
+		"player_left": _players_split.left_ratio,
+		"player_right": _players_split.right_ratio,
+	}
+
+
+func _current_layout_from_settings() -> Dictionary:
+	return {
+		"version": 1,
+		"split_x": ProjectStore.get_setting("ui", "split_x", BUILTIN_LAYOUT.split_x),
+		"split_y": ProjectStore.get_setting("ui", "split_y", BUILTIN_LAYOUT.split_y),
+		"player_left": ProjectStore.get_setting("ui", "player_left", BUILTIN_LAYOUT.player_left),
+		"player_right": ProjectStore.get_setting("ui", "player_right", BUILTIN_LAYOUT.player_right),
+	}
+
+
+func _normalized_layout(value: Variant) -> Dictionary:
+	if not value is Dictionary:
+		return {}
+	var layout: Dictionary = value
+	for key in ["split_x", "split_y", "player_left", "player_right"]:
+		if not layout.has(key) or not layout[key] is float and not layout[key] is int:
+			return {}
+	var left := clampf(float(layout.player_left), 0.0, 1.0)
+	var right := clampf(float(layout.player_right), left, 1.0)
+	return {
+		"version": 1,
+		"split_x": clampf(float(layout.split_x), 0.0, 1.0),
+		"split_y": clampf(float(layout.split_y), 0.0, 1.0),
+		"player_left": left,
+		"player_right": right,
+	}
+
+
+func _apply_layout(value: Variant, persist := true) -> bool:
+	var layout := _normalized_layout(value)
+	if layout.is_empty():
+		return false
+	_quad_split.split_x_ratio = layout.split_x
+	_quad_split.split_y_ratio = layout.split_y
+	# 先扩展右边界再设置左边界，兼容两条边界交叉方向的布局。
+	_players_split.right_ratio = 1.0
+	_players_split.left_ratio = layout.player_left
+	_players_split.right_ratio = layout.player_right
+	if persist:
+		ProjectStore.set_settings("ui", {
+			"split_x": layout.split_x,
+			"split_y": layout.split_y,
+			"player_left": layout.player_left,
+			"player_right": layout.player_right,
+		})
+	return true
+
+
+func _on_layout_command_requested(command: String, path: String) -> void:
+	match command:
+		"save":
+			ProjectStore.set_setting("ui", "saved_layout", get_current_layout())
+			_settings_window.set_layout_status("当前布局已保存。")
+		"restore_saved":
+			var saved: Variant = ProjectStore.get_setting("ui", "saved_layout", {})
+			_settings_window.set_layout_status(
+				"已恢复保存的布局。" if _apply_layout(saved) else "还没有已保存的布局。",
+				_normalized_layout(saved).is_empty())
+		"set_default":
+			ProjectStore.set_setting("ui", "default_layout", get_current_layout())
+			_settings_window.set_layout_status("当前布局已设为默认布局。")
+		"restore_default":
+			var default_layout: Variant = ProjectStore.get_setting("ui", "default_layout", BUILTIN_LAYOUT)
+			if not _apply_layout(default_layout):
+				_apply_layout(BUILTIN_LAYOUT)
+			_settings_window.set_layout_status("已恢复默认布局。")
+		"export":
+			_export_layout(path)
+		"import":
+			_import_layout(path)
+
+
+func _export_layout(selected_path: String) -> void:
+	var path := selected_path
+	if not path.to_lower().ends_with(".spllayout"):
+		path += ".spllayout"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		_settings_window.set_layout_status("布局导出失败：无法写入文件。", true)
+		return
+	file.store_string(JSON.stringify(get_current_layout(), "\t"))
+	_settings_window.set_layout_status("布局已导出：" + path)
+
+
+func _import_layout(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		_settings_window.set_layout_status("布局导入失败：文件不存在。", true)
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not _apply_layout(parsed):
+		_settings_window.set_layout_status("布局导入失败：文件格式不正确。", true)
+		return
+	ProjectStore.set_setting("ui", "saved_layout", get_current_layout())
+	_settings_window.set_layout_status("布局已导入并应用。")
 
 
 func _on_output_volume_changed(value: float) -> void:

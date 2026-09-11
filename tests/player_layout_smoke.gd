@@ -1,5 +1,5 @@
 extends SceneTree
-## 验证播放器固定栏、黑色可变画布、16:9 画面和四分区最大/最小边界。
+## 验证播放器固定栏、黑色可变画布、16:9 画面和六区域自由布局。
 
 var failures := 0
 
@@ -121,39 +121,50 @@ func run() -> void:
 
 	var split: QuadSplitContainer = scene.get_node("%QuadSplit")
 	var players: Control = scene.find_child("PlayersSection", true, false)
-	split.max_x_percent = 50
-	split.split_x_ratio = 0.9
+	split.split_x_ratio = 0.1
 	await settle()
 	var split_available_x := split.size.x - split.dragger_width
-	check(players.size.x <= split_available_x * 0.5 + 1.0, "First column maximum percentage is enforced")
+	check(absf(players.size.x - split_available_x * 0.1) <= 2.0,
+		"First column can shrink freely without the old minimum limit")
+	split.split_x_ratio = 0.9
+	await settle()
+	check(absf(players.size.x - split_available_x * 0.9) <= 2.0,
+		"First column can expand freely without the old maximum limit")
 	root.size = Vector2i(1200, 800)
 	await settle()
 	split_available_x = split.size.x - split.dragger_width
-	check(players.size.x <= split_available_x * 0.5 + 1.0,
-		"Percentage limit is recalculated after window resize")
+	check(absf(players.size.x - split_available_x * 0.9) <= 2.0,
+		"Outer split stays proportional when the window resizes")
 	root.size = Vector2i(1440, 900)
 	await settle()
-	split_available_x = split.size.x - split.dragger_width
-	split.max_x_percent = 85
-	split.min_x_percent = 60
-	split.split_x_ratio = 0.05
-	await settle()
-	check(players.size.x >= split_available_x * 0.6 - 1.0, "First column minimum percentage is enforced")
-	split.min_x_percent = 35
-	split.max_y_percent = 55
-	split.split_y_ratio = 0.9
+	split.split_y_ratio = 0.1
 	await settle()
 	var split_available_y := split.size.y - split.dragger_width
-	check(players.size.y <= split_available_y * 0.55 + 1.0, "First row maximum percentage is enforced")
-	split.max_y_percent = 75
-	split.min_y_percent = 45
-	split.split_y_ratio = 0.05
-	await settle()
-	check(players.size.y >= split_available_y * 0.45 - 1.0, "First row minimum percentage is enforced")
-	split.min_y_percent = 35
+	check(absf(players.size.y - split_available_y * 0.1) <= 2.0,
+		"First row can shrink freely without the old minimum limit")
 	split.split_x_ratio = 0.72
 	split.split_y_ratio = 0.5
 	await settle()
+	var player_split := players as TripleSplitContainer
+	var preview_panel := scene.find_child("PreviewDock", true, false) as Control
+	var transition_panel := scene.find_child("TransitionDock", true, false) as Control
+	var output_panel := scene.find_child("OutputDock", true, false) as Control
+	check(player_split != null and preview_panel != null and transition_panel != null and output_panel != null,
+		"Preview, transition and output are three independently sized panels")
+	if player_split != null:
+		player_split.right_ratio = 0.8
+		player_split.left_ratio = 0.2
+		await settle()
+		var player_available := player_split.size.x - player_split.dragger_width * 2
+		check(absf(preview_panel.size.x - player_available * 0.2) <= 2.0,
+			"Preview panel follows its own draggable ratio")
+		check(absf(transition_panel.size.x - player_available * 0.6) <= 2.0,
+			"Transition panel follows both draggable boundaries")
+		check(output_panel.size.x <= player_available * 0.25,
+			"Output panel follows its own draggable ratio down to its control minimum")
+		player_split.right_ratio = 0.57
+		player_split.left_ratio = 0.43
+		await settle()
 	var utility_panel := scene.find_child("UtilityPanel", true, false) as PanelContainer
 	var utility_header := scene.find_child("UtilityHeaderCard", true, false) as PanelContainer
 	var utility_content := scene.find_child("UtilityContentCard", true, false) as PanelContainer
@@ -198,20 +209,22 @@ func run() -> void:
 		and media_scroll_style.corner_radius_bottom_right == 0,
 		"Media library panel and scroll area use square corners")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
-	var image := root.get_texture().get_image()
-	var screenshot := ProjectSettings.globalize_path("res://.build/player_layout.png")
-	check(image.save_png(screenshot) == OK, "Player layout screenshot saved")
-	print("SCREENSHOT=", screenshot)
+	var root_texture := root.get_texture()
+	if DisplayServer.get_name() != "headless" and root_texture != null:
+		var screenshot := ProjectSettings.globalize_path("res://.build/player_layout.png")
+		check(root_texture.get_image().save_png(screenshot) == OK, "Player layout screenshot saved")
+		print("SCREENSHOT=", screenshot)
 	var settings: SettingsWindow = scene.get_node("%SettingsWindow")
 	settings.open()
 	var tabs := settings.find_child("SettingsTabs", true, false) as TabContainer
 	if tabs != null:
 		tabs.current_tab = 2
 	await settle()
-	var settings_image := settings.get_texture().get_image()
-	var settings_screenshot := ProjectSettings.globalize_path("res://.build/layout_settings.png")
-	check(settings_image.save_png(settings_screenshot) == OK, "Layout settings screenshot saved")
-	print("SETTINGS_SCREENSHOT=", settings_screenshot)
+	var settings_texture := settings.get_texture()
+	if DisplayServer.get_name() != "headless" and settings_texture != null:
+		var settings_screenshot := ProjectSettings.globalize_path("res://.build/layout_settings.png")
+		check(settings_texture.get_image().save_png(settings_screenshot) == OK, "Layout settings screenshot saved")
+		print("SETTINGS_SCREENSHOT=", settings_screenshot)
 	settings.hide()
 	scene.queue_free()
 	await process_frame

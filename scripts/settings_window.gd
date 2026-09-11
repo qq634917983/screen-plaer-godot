@@ -1,9 +1,10 @@
 class_name SettingsWindow
 extends Window
-## 设置窗口：基础设置 + 投屏窗口设置 + 主界面四分区尺寸约束 + 集中帮助。
+## 设置窗口：基础设置 + 投屏窗口设置 + 可保存/导入导出的自由布局 + 集中帮助。
 ## 控件修改先留在窗口中；“应用”保存并生效，“确定”保存、生效并关闭。
 
 signal settings_changed
+signal layout_command_requested(command: String, path: String)
 
 const HOTKEY_ACTIONS := [
 	["quick_switch", "快速切换"],
@@ -24,13 +25,12 @@ var _height_spin: SpinBox
 var _audio_output_check: CheckBox
 var _cover_spin: SpinBox
 var _copy_media_check: CheckBox
-var _min_x_percent_spin: SpinBox
-var _max_x_percent_spin: SpinBox
-var _min_y_percent_spin: SpinBox
-var _max_y_percent_spin: SpinBox
 var _pending_hotkeys := {}
 var _apply_button: Button
 var _ok_button: Button
+var _layout_status: Label
+var _layout_export_dialog: FileDialog
+var _layout_import_dialog: FileDialog
 
 
 func _ready() -> void:
@@ -184,33 +184,73 @@ func _build_layout_tab() -> Control:
 	var tab := VBoxContainer.new()
 	tab.name = "界面布局"
 	tab.add_theme_constant_override("separation", 8)
-	tab.add_child(_make_header("四分区拖拽范围"))
+	tab.add_child(_make_header("六区域自由布局"))
 
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 8)
 	tab.add_child(grid)
-	for text in ["分区", "最小值", "最大值"]:
-		var heading := Label.new()
-		heading.text = text
-		heading.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
-		grid.add_child(heading)
-
-	var first_column := _make_layout_bound_row(grid, "第一列宽度", 35, 85)
-	_min_x_percent_spin = first_column[0]
-	_max_x_percent_spin = first_column[1]
-	var first_row := _make_layout_bound_row(grid, "第一排高度", 35, 75)
-	_min_y_percent_spin = first_row[0]
-	_max_y_percent_spin = first_row[1]
+	_add_layout_button(grid, "SaveLayoutButton", "保存当前布局", "save")
+	_add_layout_button(grid, "RestoreLayoutButton", "恢复已保存布局", "restore_saved")
+	_add_layout_button(grid, "SetDefaultLayoutButton", "设为默认布局", "set_default")
+	_add_layout_button(grid, "RestoreDefaultLayoutButton", "恢复默认布局", "restore_default")
+	_add_layout_button(grid, "ExportLayoutButton", "导出布局…", "export")
+	_add_layout_button(grid, "ImportLayoutButton", "导入布局…", "import")
 
 	var note := Label.new()
-	note.text = "数值均为当前四分区可用宽高的百分比，第二列和第二排自动占用剩余空间。控件自身所需尺寸始终优先，避免播放器和按钮被压住。"
+	note.text = "拖动主界面的分割线可自由改变预览播放器、输出播放器、转场、媒体库、常用功能和音频控制的大小。布局按窗口比例保存，旧的最大/最小百分比限制已取消。"
 	note.add_theme_font_size_override("font_size", 11)
 	note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tab.add_child(note)
+	_layout_status = Label.new()
+	_layout_status.name = "LayoutStatus"
+	_layout_status.add_theme_font_size_override("font_size", 11)
+	_layout_status.add_theme_color_override("font_color", Color(0.2706, 0.8, 0.498, 1))
+	_layout_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tab.add_child(_layout_status)
+
+	_layout_export_dialog = FileDialog.new()
+	_layout_export_dialog.title = "导出界面布局"
+	_layout_export_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	_layout_export_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_layout_export_dialog.filters = PackedStringArray(["*.spllayout ; ScreenPlayer 布局"])
+	_layout_export_dialog.file_selected.connect(func(path: String) -> void:
+		layout_command_requested.emit("export", path))
+	add_child(_layout_export_dialog)
+	_layout_import_dialog = FileDialog.new()
+	_layout_import_dialog.title = "导入界面布局"
+	_layout_import_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_layout_import_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_layout_import_dialog.filters = PackedStringArray(["*.spllayout ; ScreenPlayer 布局"])
+	_layout_import_dialog.file_selected.connect(func(path: String) -> void:
+		layout_command_requested.emit("import", path))
+	add_child(_layout_import_dialog)
 	return tab
+
+
+func _add_layout_button(parent: GridContainer, node_name: String, text: String, command: String) -> void:
+	var button := Button.new()
+	button.name = node_name
+	button.text = text
+	button.custom_minimum_size = Vector2(170, 38)
+	button.pressed.connect(func() -> void:
+		if command == "export":
+			_layout_export_dialog.popup_centered_ratio(0.7)
+		elif command == "import":
+			_layout_import_dialog.popup_centered_ratio(0.7)
+		else:
+			layout_command_requested.emit(command, ""))
+	parent.add_child(button)
+
+
+func set_layout_status(message: String, is_error := false) -> void:
+	if _layout_status == null:
+		return
+	_layout_status.text = message
+	_layout_status.add_theme_color_override("font_color",
+		Color(0.95, 0.35, 0.35) if is_error else Color(0.2706, 0.8, 0.498, 1))
 
 
 func _build_help_tab() -> Control:
@@ -230,7 +270,7 @@ func _build_help_tab() -> Control:
 		"点击“添加文件”或从文件管理器拖入视频、音频、图片、网页和 PPT。“编辑顺序”可调整媒体与播放列表的位置，“尺寸”可切换卡片大小。")
 	_add_help_section(content, "音频控制",
 		"主音量作用于所有输出；每个视频和音频 item 有独立纵向音量条与静音按钮。最终音量为主音量乘以 item 音量。预览端始终静音，输出播放器与投屏窗口共享一路声音。")
-	_add_help_section(content, "实用功能",
+	_add_help_section(content, "常用功能",
 		"“隐藏投屏”切换独立投屏窗口的显示状态；“重启软件”会先清理播放器和浏览器资源，再重新启动程序。")
 	_add_help_section(content, "投屏窗口",
 		"输出播放器与投屏窗口共享同一解码实例和画面纹理，因此画面与声音保持一致。投屏窗口的大小、位置、缩放和平移可在“窗口设置”页调整。")
@@ -297,29 +337,6 @@ func _make_spin(parent: Control, label_text: String, minv: float, maxv: float, s
 	return spin
 
 
-func _make_layout_bound_row(parent: GridContainer, label_text: String, default_min: int, default_max: int) -> Array[SpinBox]:
-	var label := Label.new()
-	label.text = label_text
-	parent.add_child(label)
-	var min_spin := SpinBox.new()
-	min_spin.min_value = 5
-	min_spin.max_value = 95
-	min_spin.step = 1
-	min_spin.value = default_min
-	min_spin.suffix = " %"
-	min_spin.custom_minimum_size.x = 105
-	parent.add_child(min_spin)
-	var max_spin := SpinBox.new()
-	max_spin.min_value = 5
-	max_spin.max_value = 95
-	max_spin.step = 1
-	max_spin.value = default_max
-	max_spin.suffix = " %"
-	max_spin.custom_minimum_size.x = 105
-	parent.add_child(max_spin)
-	return [min_spin, max_spin]
-
-
 func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "width", int(_width_spin.value))
 	ProjectStore.set_setting("cast_window", "height", int(_height_spin.value))
@@ -328,22 +345,6 @@ func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "zoom", int(_zoom_spin.value))
 	ProjectStore.set_setting("cast_window", "pan_x", int(_pan_x_spin.value))
 	ProjectStore.set_setting("cast_window", "pan_y", int(_pan_y_spin.value))
-
-
-func _save_layout_settings() -> void:
-	_normalize_layout_max(_max_x_percent_spin, _min_x_percent_spin)
-	_normalize_layout_max(_max_y_percent_spin, _min_y_percent_spin)
-	ProjectStore.set_settings("ui", {
-		"min_x_percent": int(_min_x_percent_spin.value),
-		"max_x_percent": int(_max_x_percent_spin.value),
-		"min_y_percent": int(_min_y_percent_spin.value),
-		"max_y_percent": int(_max_y_percent_spin.value),
-	})
-
-
-func _normalize_layout_max(max_spin: SpinBox, min_spin: SpinBox) -> void:
-	if max_spin.value > 0 and max_spin.value < min_spin.value:
-		max_spin.set_value_no_signal(min_spin.value)
 
 
 func _apply_changes() -> void:
@@ -355,7 +356,6 @@ func _apply_changes() -> void:
 		ProjectStore.set_setting("hotkeys", action,
 			int(_pending_hotkeys.get(action, _default_hotkey(action))))
 	_save_window_settings()
-	_save_layout_settings()
 	settings_changed.emit()
 
 
@@ -369,7 +369,7 @@ func _confirm_changes() -> void:
 func open() -> void:
 	_load_basic_settings()
 	_load_window_settings()
-	_load_layout_settings()
+	set_layout_status("")
 	_refresh_hotkey_buttons()
 	show()
 	grab_focus()
@@ -404,13 +404,6 @@ func _load_window_settings() -> void:
 	_set_spin_no_signal(_zoom_spin, ProjectStore.get_setting("cast_window", "zoom", 100))
 	_set_spin_no_signal(_pan_x_spin, ProjectStore.get_setting("cast_window", "pan_x", 0))
 	_set_spin_no_signal(_pan_y_spin, ProjectStore.get_setting("cast_window", "pan_y", 0))
-
-
-func _load_layout_settings() -> void:
-	_set_spin_no_signal(_min_x_percent_spin, ProjectStore.get_setting("ui", "min_x_percent", 35))
-	_set_spin_no_signal(_max_x_percent_spin, ProjectStore.get_setting("ui", "max_x_percent", 85))
-	_set_spin_no_signal(_min_y_percent_spin, ProjectStore.get_setting("ui", "min_y_percent", 35))
-	_set_spin_no_signal(_max_y_percent_spin, ProjectStore.get_setting("ui", "max_y_percent", 75))
 
 
 func _set_spin_no_signal(spin: SpinBox, value: Variant) -> void:

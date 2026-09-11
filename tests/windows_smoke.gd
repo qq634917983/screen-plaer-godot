@@ -73,7 +73,7 @@ func run() -> void:
 	scene._thumbnailer.enqueue([args[0]])
 	await create_timer(2.0).timeout
 	check(thumbnail.has(args[0]), "Background thumbnail capture succeeds")
-	var media_panel: Control = scene.get_node("%QuadSplit/MediaPanel")
+	var media_panel: Control = scene.get_node("%QuadSplit/MediaDock")
 	var output_controls: Control = scene._output_play_button.get_parent().get_parent()
 	check(output_controls.get_global_rect().end.y <= media_panel.get_global_rect().position.y, "Player controls stay above media panel on Windows")
 	var img := Image.create(64, 36, false, Image.FORMAT_RGB8)
