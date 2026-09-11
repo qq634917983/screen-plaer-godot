@@ -1,5 +1,5 @@
 extends SceneTree
-## 验证播放器三段式结构、内容同宽和四分区最大/最小边界。
+## 验证播放器固定栏、黑色可变画布、16:9 画面和四分区最大/最小边界。
 
 var failures := 0
 
@@ -15,6 +15,13 @@ func check(ok: bool, message: String) -> void:
 func settle() -> void:
 	for _i in 8:
 		await process_frame
+
+
+func rect_contains(outer: Rect2, inner: Rect2, tolerance := 1.0) -> bool:
+	return inner.position.x >= outer.position.x - tolerance \
+		and inner.position.y >= outer.position.y - tolerance \
+		and inner.end.x <= outer.end.x + tolerance \
+		and inner.end.y <= outer.end.y + tolerance
 
 
 func _initialize() -> void:
@@ -33,21 +40,84 @@ func run() -> void:
 	root.size = Vector2i(1440, 900)
 	await settle()
 
+	var fixed_heights := {}
+	var content_heights := {}
+	var title_bar: Control = scene.find_child("TitleBar", true, false)
+	var menu_bar: Control = scene.find_child("MenuBar", true, false)
+	check(title_bar != null and menu_bar != null, "Window title and menu bars exist")
+	if title_bar != null and menu_bar != null:
+		fixed_heights["TitleBar"] = title_bar.size.y
+		fixed_heights["MenuBar"] = menu_bar.size.y
+
 	for prefix in ["Preview", "Output"]:
 		var player: Control = scene.find_child(prefix + "Player", true, false)
 		var header: Control = scene.find_child(prefix + "Header", true, false)
+		var content: Control = scene.find_child(prefix + "ScreenRow", true, false)
 		var screen: Control = scene.find_child(prefix + "Screen", true, false)
 		var controls: Control = scene.find_child(prefix + "Controls", true, false)
-		check(player != null and header != null and screen != null and controls != null,
+		check(player != null and header != null and content != null and screen != null and controls != null,
 			prefix + " player has header/content/control sections")
-		if player == null or header == null or screen == null or controls == null:
+		if player == null or header == null or content == null or screen == null or controls == null:
 			continue
-		check(header.position.y < screen.position.y and screen.position.y < controls.position.y,
+		check(header.get_global_rect().end.y <= content.get_global_rect().position.y + 1.0 \
+			and content.get_global_rect().end.y <= controls.get_global_rect().position.y + 1.0,
 			prefix + " sections are ordered header/content/controls")
-		check(absf(screen.size.x - player.size.x) <= 3.0,
-			prefix + " video content matches parent width")
+		check(absf(content.size.x - player.size.x) <= 3.0,
+			prefix + " black canvas matches parent width")
 		check(absf(header.size.x - player.size.x) <= 3.0 and absf(controls.size.x - player.size.x) <= 3.0,
 			prefix + " header and controls match parent width")
+		check(rect_contains(content.get_global_rect(), screen.get_global_rect()),
+			prefix + " video stays inside black canvas")
+		check(screen.size.y > 0.0 and absf(screen.size.x / screen.size.y - 16.0 / 9.0) < 0.02,
+			prefix + " video keeps 16:9 aspect ratio")
+		fixed_heights[prefix + "Header"] = header.size.y
+		fixed_heights[prefix + "Controls"] = controls.size.y
+		content_heights[prefix] = content.size.y
+
+	root.size = Vector2i(1440, 1080)
+	await settle()
+	if title_bar != null and menu_bar != null:
+		check(absf(title_bar.size.y - float(fixed_heights["TitleBar"])) <= 1.0,
+			"Window title bar height stays fixed while resizing")
+		check(absf(menu_bar.size.y - float(fixed_heights["MenuBar"])) <= 1.0,
+			"Menu bar height stays fixed while resizing")
+	for prefix in ["Preview", "Output"]:
+		var header: Control = scene.find_child(prefix + "Header", true, false)
+		var content: Control = scene.find_child(prefix + "ScreenRow", true, false)
+		var screen: Control = scene.find_child(prefix + "Screen", true, false)
+		var controls: Control = scene.find_child(prefix + "Controls", true, false)
+		if header == null or content == null or screen == null or controls == null:
+			continue
+		check(absf(header.size.y - float(fixed_heights[prefix + "Header"])) <= 1.0,
+			prefix + " header height stays fixed while resizing")
+		check(absf(controls.size.y - float(fixed_heights[prefix + "Controls"])) <= 1.0,
+			prefix + " controls height stays fixed while resizing")
+		check(absf(content.size.y - float(content_heights[prefix])) > 10.0,
+			prefix + " black canvas absorbs height changes")
+		check(rect_contains(content.get_global_rect(), screen.get_global_rect()),
+			prefix + " resized video stays inside black canvas")
+
+	root.size = Vector2i(1100, 650)
+	await settle()
+	if title_bar != null and menu_bar != null:
+		check(absf(title_bar.size.y - float(fixed_heights["TitleBar"])) <= 1.0 \
+			and absf(menu_bar.size.y - float(fixed_heights["MenuBar"])) <= 1.0,
+			"Window bars stay fixed at compact window height")
+	for prefix in ["Preview", "Output"]:
+		var header: Control = scene.find_child(prefix + "Header", true, false)
+		var content: Control = scene.find_child(prefix + "ScreenRow", true, false)
+		var screen: Control = scene.find_child(prefix + "Screen", true, false)
+		var controls: Control = scene.find_child(prefix + "Controls", true, false)
+		if header == null or content == null or screen == null or controls == null:
+			continue
+		check(absf(header.size.y - float(fixed_heights[prefix + "Header"])) <= 1.0 \
+			and absf(controls.size.y - float(fixed_heights[prefix + "Controls"])) <= 1.0,
+			prefix + " bars stay fixed at compact window height")
+		check(rect_contains(content.get_global_rect(), screen.get_global_rect()),
+			prefix + " compact video stays inside black canvas")
+
+	root.size = Vector2i(1440, 900)
+	await settle()
 
 	var split: QuadSplitContainer = scene.get_node("%QuadSplit")
 	var players: Control = scene.find_child("PlayersSection", true, false)

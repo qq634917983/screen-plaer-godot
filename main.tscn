@@ -143,6 +143,7 @@ layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="TitleBar" type="PanelContainer" parent="RootVBox"]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 script = ExtResource("5_titlebar")
 
@@ -232,6 +233,7 @@ theme_override_font_sizes/font_size = 10
 text = "PREVIEW"
 
 [node name="PreviewScreenRow" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1517347592]
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
@@ -241,7 +243,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.777778
-stretch_mode = 0
+stretch_mode = 2
 alignment_horizontal = 1
 alignment_vertical = 1
 
@@ -287,6 +289,7 @@ size_flags_vertical = 8
 text = ">"
 
 [node name="PreviewControls" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1839191732]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_controls")
 
@@ -386,6 +389,7 @@ layout_mode = 2
 text = "详情"
 
 [node name="OutputScreenRow" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=2013791843]
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
@@ -395,7 +399,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.777778
-stretch_mode = 0
+stretch_mode = 2
 alignment_horizontal = 1
 alignment_vertical = 1
 
@@ -441,6 +445,7 @@ size_flags_vertical = 8
 text = ">"
 
 [node name="OutputControls" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=22644085]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_controls")
 
