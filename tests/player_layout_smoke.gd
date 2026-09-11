@@ -24,6 +24,18 @@ func rect_contains(outer: Rect2, inner: Rect2, tolerance := 1.0) -> bool:
 		and inner.end.y <= outer.end.y + tolerance
 
 
+func has_no_border(style: StyleBoxFlat) -> bool:
+	return style != null \
+		and style.border_width_left == 0 \
+		and style.border_width_top == 0 \
+		and style.border_width_right == 0 \
+		and style.border_width_bottom == 0
+
+
+func color_difference(a: Color, b: Color) -> float:
+	return absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b)
+
+
 func _initialize() -> void:
 	create_timer(20.0).timeout.connect(func() -> void:
 		push_error("Player layout smoke test timed out")
@@ -48,6 +60,30 @@ func run() -> void:
 	if title_bar != null and menu_bar != null:
 		fixed_heights["TitleBar"] = title_bar.size.y
 		fixed_heights["MenuBar"] = menu_bar.size.y
+		var title_style := title_bar.get_theme_stylebox("panel") as StyleBoxFlat
+		var window_style := (scene as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+		check(title_style != null and window_style != null
+			and color_difference(title_style.bg_color, window_style.bg_color) > 0.08,
+			"Window title bar has a distinct blue-gray background")
+
+	var transition_content := scene.find_child("TransitionContent", true, false) as Control
+	var quick_switch := scene.find_child("QuickSwitch", true, false) as Button
+	check(transition_content != null and quick_switch != null, "Transition quick switch exists")
+	if transition_content != null and quick_switch != null:
+		check(quick_switch.text == "快速切换" and not quick_switch.text.contains("→")
+			and not quick_switch.text.contains("\n"),
+			"Quick switch uses a single-line label without an arrow")
+		check(quick_switch.size.x >= 110.0 and quick_switch.size.y <= 36.0,
+			"Quick switch is wider and shorter")
+		check(quick_switch.get_global_rect().position.y
+			- transition_content.get_global_rect().position.y <= 26.0,
+			"Quick switch sits near the top of the transition content")
+
+	for button_name in ["PreviewPlay", "PreviewStop", "OutputPlay", "OutputStop", "OutputMute"]:
+		var player_button := scene.find_child(button_name, true, false) as Button
+		var normal_style := player_button.get_theme_stylebox("normal") as StyleBoxFlat if player_button != null else null
+		check(player_button != null and has_no_border(normal_style),
+			button_name + " has no rectangular outline")
 
 	for prefix in ["Preview", "Output"]:
 		var player: Control = scene.find_child(prefix + "Player", true, false)

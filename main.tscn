@@ -164,6 +164,35 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.2314, 0.5098, 0.9657, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_icon_button"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_icon_button_hover"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0.2078, 0.2431, 0.3059, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_icon_button_pressed"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1059, 0.1294, 0.1725, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
 [node name="MainWindow" type="PanelContainer" unique_id=1541358816]
 anchors_preset = 15
 anchor_right = 1.0
@@ -350,9 +379,9 @@ theme_override_constants/separation = -1
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_icon_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_icon_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_icon_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
@@ -361,9 +390,9 @@ text = "▶"
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_icon_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_icon_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_icon_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"
@@ -426,15 +455,27 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
 
-[node name="TransitionCenter" type="CenterContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent"]
+[node name="TransitionCenter" type="MarginContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="TransitionStack" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter"]
 layout_mode = 2
 
-[node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter" unique_id=363366299]
-custom_minimum_size = Vector2(72, 72)
+[node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter/TransitionStack" unique_id=363366299]
+custom_minimum_size = Vector2(112, 34)
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
 tooltip_text = "把预览端当前媒体、进度和播放状态推送到输出端"
-text = "快速切换\n→"
+text = "快速切换"
+
+[node name="TransitionSpacer" type="Control" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter/TransitionStack"]
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="OutputDock" type="Control" parent="RootVBox/MainContent/QuadSplit/PlayersSection"]
 clip_contents = true
@@ -553,9 +594,9 @@ theme_override_constants/separation = -1
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_icon_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_icon_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_icon_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
@@ -564,9 +605,9 @@ text = "▶"
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_icon_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_icon_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_icon_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"
@@ -583,9 +624,9 @@ editable = false
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "静音"
-theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
-theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_icon_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_icon_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_icon_button_pressed")
 text = "🔊"
 
 [node name="OutputTime" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputDock/OutputPlayer/OutputVBox/OutputControls/OutputControlRow" unique_id=2121415499]

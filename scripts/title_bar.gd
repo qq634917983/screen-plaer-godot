@@ -25,7 +25,7 @@ func _ready() -> void:
 	name = "TitleBar"
 	custom_minimum_size = Vector2(0, 32)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.105, 0.13)
+	style.bg_color = Color(0.105, 0.145, 0.205)
 	style.border_width_bottom = 1
 	style.border_color = Color(0.1529, 0.1765, 0.2196)
 	style.content_margin_left = 10
