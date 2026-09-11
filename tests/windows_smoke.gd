@@ -26,6 +26,7 @@ func run() -> void:
 		quit(1)
 		return
 	var scene = load("res://main.tscn").instantiate()
+	scene.cef_enabled = false
 	scene.cef_cache_path = "user://smoke/cef-%d" % OS.get_process_id()
 	root.add_child(scene)
 	await process_frame
@@ -38,7 +39,9 @@ func run() -> void:
 	# All test playback stays muted, including output.
 	output.set_muted(true)
 	preview.load_media(args[0], true)
-	await create_timer(1.5).timeout
+	var playback_deadline := Time.get_ticks_msec() + 5000
+	while (preview.elapsed <= 0.2 or preview.duration <= 2.0) and Time.get_ticks_msec() < playback_deadline:
+		await process_frame
 	check(preview.elapsed > 0.2 and preview.duration > 2, "Video time and duration advance")
 	check(preview.mpv.get_texture() != null, "Video produces texture")
 	check(preview.muted, "Preview remains muted")

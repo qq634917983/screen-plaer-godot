@@ -1,6 +1,6 @@
 class_name SettingsWindow
 extends Window
-## 设置窗口：基础设置（声音开关、快捷键）+ 投屏窗口设置（大小/位置/缩放/平移）。
+## 设置窗口：基础设置 + 投屏窗口设置 + 主界面四分区尺寸约束。
 ## 控件修改先留在窗口中；“应用”保存并生效，“确定”保存、生效并关闭。
 
 signal settings_changed
@@ -24,6 +24,14 @@ var _height_spin: SpinBox
 var _audio_output_check: CheckBox
 var _cover_spin: SpinBox
 var _copy_media_check: CheckBox
+var _min_left_spin: SpinBox
+var _max_left_spin: SpinBox
+var _min_right_spin: SpinBox
+var _max_right_spin: SpinBox
+var _min_top_spin: SpinBox
+var _max_top_spin: SpinBox
+var _min_bottom_spin: SpinBox
+var _max_bottom_spin: SpinBox
 var _pending_hotkeys := {}
 var _apply_button: Button
 var _ok_button: Button
@@ -61,10 +69,12 @@ func _build_ui() -> void:
 	margin.add_child(root)
 
 	var tabs := TabContainer.new()
+	tabs.name = "SettingsTabs"
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(tabs)
 	tabs.add_child(_build_basic_tab())
 	tabs.add_child(_build_window_tab())
+	tabs.add_child(_build_layout_tab())
 
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_END
@@ -173,6 +183,45 @@ func _build_window_tab() -> Control:
 	return tab
 
 
+func _build_layout_tab() -> Control:
+	var tab := VBoxContainer.new()
+	tab.name = "界面布局"
+	tab.add_theme_constant_override("separation", 8)
+	tab.add_child(_make_header("四分区拖拽范围"))
+
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 8)
+	tab.add_child(grid)
+	for text in ["分区", "最小值", "最大值"]:
+		var heading := Label.new()
+		heading.text = text
+		heading.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
+		grid.add_child(heading)
+
+	var left := _make_layout_bound_row(grid, "左列宽度", 420)
+	_min_left_spin = left[0]
+	_max_left_spin = left[1]
+	var right := _make_layout_bound_row(grid, "右列宽度", 220)
+	_min_right_spin = right[0]
+	_max_right_spin = right[1]
+	var top := _make_layout_bound_row(grid, "上排高度", 260)
+	_min_top_spin = top[0]
+	_max_top_spin = top[1]
+	var bottom := _make_layout_bound_row(grid, "下排高度", 180)
+	_min_bottom_spin = bottom[0]
+	_max_bottom_spin = bottom[1]
+
+	var note := Label.new()
+	note.text = "拖动中央竖线、横线或交叉点时遵守这些范围。最大值为 0 表示自动、不限制；控件自身所需尺寸始终优先，避免播放器和按钮被压住。"
+	note.add_theme_font_size_override("font_size", 11)
+	note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tab.add_child(note)
+	return tab
+
+
 func _make_header(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -216,6 +265,29 @@ func _make_spin(parent: Control, label_text: String, minv: float, maxv: float, s
 	return spin
 
 
+func _make_layout_bound_row(parent: GridContainer, label_text: String, default_min: int) -> Array[SpinBox]:
+	var label := Label.new()
+	label.text = label_text
+	parent.add_child(label)
+	var min_spin := SpinBox.new()
+	min_spin.min_value = 100
+	min_spin.max_value = 7680
+	min_spin.step = 10
+	min_spin.value = default_min
+	min_spin.suffix = " px"
+	min_spin.custom_minimum_size.x = 105
+	parent.add_child(min_spin)
+	var max_spin := SpinBox.new()
+	max_spin.min_value = 0
+	max_spin.max_value = 7680
+	max_spin.step = 10
+	max_spin.value = 0
+	max_spin.suffix = " px"
+	max_spin.custom_minimum_size.x = 105
+	parent.add_child(max_spin)
+	return [min_spin, max_spin]
+
+
 func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "width", int(_width_spin.value))
 	ProjectStore.set_setting("cast_window", "height", int(_height_spin.value))
@@ -224,6 +296,28 @@ func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "zoom", int(_zoom_spin.value))
 	ProjectStore.set_setting("cast_window", "pan_x", int(_pan_x_spin.value))
 	ProjectStore.set_setting("cast_window", "pan_y", int(_pan_y_spin.value))
+
+
+func _save_layout_settings() -> void:
+	_normalize_layout_max(_max_left_spin, _min_left_spin)
+	_normalize_layout_max(_max_right_spin, _min_right_spin)
+	_normalize_layout_max(_max_top_spin, _min_top_spin)
+	_normalize_layout_max(_max_bottom_spin, _min_bottom_spin)
+	ProjectStore.set_settings("ui", {
+		"min_left": int(_min_left_spin.value),
+		"max_left": int(_max_left_spin.value),
+		"min_right": int(_min_right_spin.value),
+		"max_right": int(_max_right_spin.value),
+		"min_top": int(_min_top_spin.value),
+		"max_top": int(_max_top_spin.value),
+		"min_bottom": int(_min_bottom_spin.value),
+		"max_bottom": int(_max_bottom_spin.value),
+	})
+
+
+func _normalize_layout_max(max_spin: SpinBox, min_spin: SpinBox) -> void:
+	if max_spin.value > 0 and max_spin.value < min_spin.value:
+		max_spin.set_value_no_signal(min_spin.value)
 
 
 func _apply_changes() -> void:
@@ -235,6 +329,7 @@ func _apply_changes() -> void:
 		ProjectStore.set_setting("hotkeys", action,
 			int(_pending_hotkeys.get(action, _default_hotkey(action))))
 	_save_window_settings()
+	_save_layout_settings()
 	settings_changed.emit()
 
 
@@ -248,6 +343,7 @@ func _confirm_changes() -> void:
 func open() -> void:
 	_load_basic_settings()
 	_load_window_settings()
+	_load_layout_settings()
 	_refresh_hotkey_buttons()
 	show()
 	grab_focus()
@@ -282,6 +378,17 @@ func _load_window_settings() -> void:
 	_set_spin_no_signal(_zoom_spin, ProjectStore.get_setting("cast_window", "zoom", 100))
 	_set_spin_no_signal(_pan_x_spin, ProjectStore.get_setting("cast_window", "pan_x", 0))
 	_set_spin_no_signal(_pan_y_spin, ProjectStore.get_setting("cast_window", "pan_y", 0))
+
+
+func _load_layout_settings() -> void:
+	_set_spin_no_signal(_min_left_spin, ProjectStore.get_setting("ui", "min_left", 420))
+	_set_spin_no_signal(_max_left_spin, ProjectStore.get_setting("ui", "max_left", 0))
+	_set_spin_no_signal(_min_right_spin, ProjectStore.get_setting("ui", "min_right", 220))
+	_set_spin_no_signal(_max_right_spin, ProjectStore.get_setting("ui", "max_right", 0))
+	_set_spin_no_signal(_min_top_spin, ProjectStore.get_setting("ui", "min_top", 260))
+	_set_spin_no_signal(_max_top_spin, ProjectStore.get_setting("ui", "max_top", 0))
+	_set_spin_no_signal(_min_bottom_spin, ProjectStore.get_setting("ui", "min_bottom", 180))
+	_set_spin_no_signal(_max_bottom_spin, ProjectStore.get_setting("ui", "max_bottom", 0))
 
 
 func _set_spin_no_signal(spin: SpinBox, value: Variant) -> void:

@@ -53,6 +53,83 @@ bg_color = Color(0.0667, 0.0784, 0.098, 1)
 border_width_top = 1
 border_color = Color(0.1529, 0.1765, 0.2196, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_card"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.0941, 0.1098, 0.1373, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_header"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1451, 0.1686, 0.2118, 1)
+border_width_bottom = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_controls"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.1451, 0.1686, 0.2118, 1)
+border_width_top = 1
+border_color = Color(0.1529, 0.1765, 0.2196, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_content"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.0353, 0.0431, 0.0549, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_button"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1451, 0.1686, 0.2118, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.56, 0.65, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_button_hover"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1765, 0.2078, 0.2627, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.56, 0.65, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_button_pressed"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+bg_color = Color(0.1176, 0.1373, 0.1765, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2314, 0.5098, 0.9657, 1)
+
 [node name="MainWindow" type="PanelContainer" unique_id=1541358816]
 anchors_preset = 15
 anchor_right = 1.0
@@ -128,29 +205,43 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
 
 [node name="PreviewVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer" unique_id=2054149145]
 layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PreviewHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=2127850067]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
+
+[node name="PreviewHeaderRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewHeader"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PreviewHeader" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=2127850067]
-layout_mode = 2
-
-[node name="PreviewTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewHeader" unique_id=1890253301]
+[node name="PreviewTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewHeader/PreviewHeaderRow" unique_id=1890253301]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "预览播放器"
 
-[node name="PreviewScreenRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1517347592]
+[node name="PreviewBadge" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewHeader/PreviewHeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2314, 0.5098, 0.9657, 1)
+theme_override_font_sizes/font_size = 10
+text = "PREVIEW"
+
+[node name="PreviewScreenRow" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1517347592]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
 
 [node name="PreviewAspect" type="AspectRatioContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewScreenRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.777778
-stretch_mode = 2
+stretch_mode = 0
 alignment_horizontal = 1
 alignment_vertical = 1
 
@@ -195,31 +286,41 @@ layout_mode = 2
 size_flags_vertical = 8
 text = ">"
 
-[node name="PreviewControls" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1839191732]
+[node name="PreviewControls" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox" unique_id=1839191732]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_controls")
+
+[node name="PreviewControlRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="PreviewButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1680052939]
+[node name="PreviewButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow" unique_id=1680052939]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = -1
 
-[node name="PreviewPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=15278169]
+[node name="PreviewPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow/PreviewButtons" unique_id=15278169]
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
 
-[node name="PreviewStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewButtons" unique_id=160637239]
+[node name="PreviewStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow/PreviewButtons" unique_id=160637239]
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"
 
-[node name="PreviewProgress" type="HSlider" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1306791199]
+[node name="PreviewProgress" type="HSlider" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow" unique_id=1306791199]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -227,14 +328,14 @@ size_flags_vertical = 4
 step = 0.1
 editable = false
 
-[node name="PreviewTime" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=1476090968]
+[node name="PreviewTime" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow" unique_id=1476090968]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4431, 0.4941, 0.5686, 1)
 theme_override_font_sizes/font_size = 12
 text = "00:00 / 00:00"
 
-[node name="PreviewTouchEdit" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls" unique_id=2034854903]
+[node name="PreviewTouchEdit" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/PreviewPlayer/PreviewVBox/PreviewControls/PreviewControlRow" unique_id=2034854903]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -243,42 +344,58 @@ toggle_mode = true
 text = "触点"
 
 [node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection" unique_id=363366299]
+custom_minimum_size = Vector2(52, 0)
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
-text = "快速切换"
+tooltip_text = "把预览端当前媒体、进度和播放状态推送到输出端"
+text = "快速\n切换"
 
 [node name="OutputPlayer" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection" unique_id=58785956]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_card")
 
 [node name="OutputVBox" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer" unique_id=2740667]
 layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="OutputHeader" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=1385628]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_header")
+
+[node name="OutputHeaderRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="OutputHeader" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=1385628]
-layout_mode = 2
-
-[node name="OutputTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader" unique_id=1693657217]
+[node name="OutputTitle" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader/OutputHeaderRow" unique_id=1693657217]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "输出播放器"
 
-[node name="OutputDetails" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader" unique_id=1927900627]
+[node name="OutputBadge" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader/OutputHeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2706, 0.8, 0.498, 1)
+theme_override_font_sizes/font_size = 10
+text = "OUTPUT"
+
+[node name="OutputDetails" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputHeader/OutputHeaderRow" unique_id=1927900627]
 layout_mode = 2
 text = "详情"
 
-[node name="OutputScreenRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=2013791843]
+[node name="OutputScreenRow" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=2013791843]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
 
 [node name="OutputAspect" type="AspectRatioContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputScreenRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.777778
-stretch_mode = 2
+stretch_mode = 0
 alignment_horizontal = 1
 alignment_vertical = 1
 
@@ -323,31 +440,41 @@ layout_mode = 2
 size_flags_vertical = 8
 text = ">"
 
-[node name="OutputControls" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=22644085]
+[node name="OutputControls" type="PanelContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox" unique_id=22644085]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_player_controls")
+
+[node name="OutputControlRow" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="OutputButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=629596362]
+[node name="OutputButtons" type="HBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow" unique_id=629596362]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = -1
 
-[node name="OutputPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=80473041]
+[node name="OutputPlay" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow/OutputButtons" unique_id=80473041]
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "▶"
 
-[node name="OutputStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputButtons" unique_id=1525202474]
+[node name="OutputStop" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow/OutputButtons" unique_id=1525202474]
 custom_minimum_size = Vector2(34, 0)
 theme_override_fonts/font = SubResource("font_player_controls")
 theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
 unique_name_in_owner = true
 layout_mode = 2
 text = "■"
 
-[node name="OutputProgress" type="HSlider" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=1958909645]
+[node name="OutputProgress" type="HSlider" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow" unique_id=1958909645]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -355,13 +482,16 @@ size_flags_vertical = 4
 step = 0.1
 editable = false
 
-[node name="OutputMute" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=1017476724]
+[node name="OutputMute" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow" unique_id=1017476724]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "静音"
+theme_override_styles/normal = SubResource("StyleBoxFlat_player_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_player_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_player_button_pressed")
 text = "🔊"
 
-[node name="OutputTime" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls" unique_id=2121415499]
+[node name="OutputTime" type="Label" parent="RootVBox/MainContent/QuadSplit/PlayersSection/OutputPlayer/OutputVBox/OutputControls/OutputControlRow" unique_id=2121415499]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4431, 0.4941, 0.5686, 1)

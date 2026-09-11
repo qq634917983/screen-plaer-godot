@@ -25,6 +25,7 @@ const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
 var _preview: PlayerSlot
 var _output: PlayerSlot
 var cef_cache_path := "user://cef_cache"  # 测试可在入树前设置独立目录，避免占用正在运行的浏览器配置
+var cef_enabled := true  # 非网页冒烟测试可关闭，避免与已运行编辑器的 CEF 单例互相占用
 var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null）
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
 var _pptx_converter  # PptxConverter（同上）
@@ -133,7 +134,7 @@ func _ready() -> void:
 
 	# 浏览器内核（gdcef）：全局唯一 GDCEF 节点，预览/输出两端共用；
 	# 未安装扩展时网页条目显示占位提示，其余功能不受影响
-	if ClassDB.class_exists(&"GdCEF"):
+	if cef_enabled and ClassDB.class_exists(&"GdCEF"):
 		_cef = ClassDB.instantiate(&"GdCEF") as Node
 		_cef.name = "CEF"
 		add_child(_cef)
@@ -319,6 +320,15 @@ func _apply_settings() -> void:
 	_output.set_volume(int(ProjectStore.get_setting("audio", "output_volume", 100)))
 	_thumbnailer.capture_pos = float(ProjectStore.get_setting("thumbs", "position", 1.0))
 	_refresh_audio_ui()
+	# 主界面四分区拖拽范围（最大值 0 = 自动/不限制）
+	_quad_split.min_left = float(ProjectStore.get_setting("ui", "min_left", 420))
+	_quad_split.max_left = float(ProjectStore.get_setting("ui", "max_left", 0))
+	_quad_split.min_right = float(ProjectStore.get_setting("ui", "min_right", 220))
+	_quad_split.max_right = float(ProjectStore.get_setting("ui", "max_right", 0))
+	_quad_split.min_top = float(ProjectStore.get_setting("ui", "min_top", 260))
+	_quad_split.max_top = float(ProjectStore.get_setting("ui", "max_top", 0))
+	_quad_split.min_bottom = float(ProjectStore.get_setting("ui", "min_bottom", 180))
+	_quad_split.max_bottom = float(ProjectStore.get_setting("ui", "max_bottom", 0))
 	# 投屏窗口几何
 	var w := int(ProjectStore.get_setting("cast_window", "width", 960))
 	var h := int(ProjectStore.get_setting("cast_window", "height", 540))

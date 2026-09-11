@@ -46,6 +46,23 @@ const QUADRANT_NAMES: Array[String] = ["PlayersSection", "UtilityPanel", "MediaP
 		min_bottom = value
 		update_minimum_size()
 		queue_sort()
+## 最大值为 0 表示不限制；当窗口小到最小/最大约束互相冲突时优先保证最小值。
+@export var max_left := 0.0:
+	set(value):
+		max_left = value
+		queue_sort()
+@export var max_right := 0.0:
+	set(value):
+		max_right = value
+		queue_sort()
+@export var max_top := 0.0:
+	set(value):
+		max_top = value
+		queue_sort()
+@export var max_bottom := 0.0:
+	set(value):
+		max_bottom = value
+		queue_sort()
 
 var _drag_mode := 0  # 0=无 1=竖条 2=横条 3=交叉点（两轴一起）
 
@@ -80,12 +97,31 @@ func _notification(what: int) -> void:
 
 func _split_x_px() -> float:
 	var limits := _panel_minimums()
-	return clampf(size.x * split_x_ratio, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
+	var bounds := _axis_bounds(size.x, limits.x, limits.y, max_left, max_right)
+	return clampf(size.x * split_x_ratio, bounds.x, bounds.y)
 
 
 func _split_y_px() -> float:
 	var limits := _panel_minimums()
-	return clampf(size.y * split_y_ratio, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
+	var bounds := _axis_bounds(size.y, limits.z, limits.w, max_top, max_bottom)
+	return clampf(size.y * split_y_ratio, bounds.x, bounds.y)
+
+
+## 返回前一列/行允许的像素范围。后一列/行的最大值会转换成前一侧的下限。
+## 如果屏幕尺寸使两个最大值无法同时满足，则放宽最大值并继续保证两侧最小值。
+func _axis_bounds(total: float, min_a: float, min_b: float, max_a: float, max_b: float) -> Vector2:
+	var available := maxf(0.0, total - dragger_width)
+	var base_low := min_a
+	var base_high := maxf(base_low, available - min_b)
+	var low := base_low
+	var high := base_high
+	if max_b > 0.0:
+		low = maxf(low, available - maxf(max_b, min_b))
+	if max_a > 0.0:
+		high = minf(high, maxf(max_a, min_a))
+	if low > high:
+		return Vector2(base_low, base_high)
+	return Vector2(low, high)
 
 
 func _sort_children() -> void:
@@ -142,10 +178,12 @@ func _gui_input(event: InputEvent) -> void:
 		if _drag_mode != 0:
 			var limits := _panel_minimums()
 			if _drag_mode & 1:
-				var px := clampf(event.position.x, limits.x, maxf(limits.x, size.x - dragger_width - limits.y))
+				var x_bounds := _axis_bounds(size.x, limits.x, limits.y, max_left, max_right)
+				var px := clampf(event.position.x, x_bounds.x, x_bounds.y)
 				split_x_ratio = px / maxf(size.x, 1.0)
 			if _drag_mode & 2:
-				var py := clampf(event.position.y, limits.z, maxf(limits.z, size.y - dragger_width - limits.w))
+				var y_bounds := _axis_bounds(size.y, limits.z, limits.w, max_top, max_bottom)
+				var py := clampf(event.position.y, y_bounds.x, y_bounds.y)
 				split_y_ratio = py / maxf(size.y, 1.0)
 			queue_sort()
 			accept_event()

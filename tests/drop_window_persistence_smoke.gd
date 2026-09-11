@@ -46,6 +46,7 @@ func run() -> void:
 	ProjectStore.set_setting("media", "copy_to_project", false)
 
 	var scene = load("res://main.tscn").instantiate()
+	scene.cef_enabled = false
 	scene.cef_cache_path = "user://tests/cef-%s" % stamp
 	root.add_child(scene)
 	await process_frame
