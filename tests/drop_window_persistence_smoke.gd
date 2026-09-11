@@ -66,6 +66,11 @@ func run() -> void:
 	var target := Vector2i(mini(1100, usable.x), mini(650, usable.y))
 	target.x = maxi(target.x, 1024)
 	target.y = maxi(target.y, 600)
+	# 用户上次窗口尺寸可能恰好就是默认测试值；改用另一档以确保触发 size_changed。
+	if root.size == target:
+		target = Vector2i(1024, 600)
+		if root.size == target:
+			target = Vector2i(mini(1080, usable.x), mini(630, usable.y))
 	root.size = target
 	await create_timer(0.5).timeout
 	check(int(ProjectStore.get_setting("main_window", "width", 0)) == target.x, "Main window width is saved")

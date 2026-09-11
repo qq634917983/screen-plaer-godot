@@ -2,7 +2,7 @@ class_name MediaItemCard
 extends PanelContainer
 ## 媒体库条目卡片（布局参照 doc/item.html，配色与全局主题 ui/theme.tres 一致）：
 ## 标题栏（蓝色序号 + 文件名 + 类型徽标）+ 16:9 黑色画面区（缩略图/占位字形）
-## + 无缝 3×2 按钮网格（播放 / 静音 / 循环 / 预览 / 设置 / 删除）。
+## + 3×2 按钮网格（播放 / 静音 / 循环 / 预览 / 设置 / 删除）；三段均为直角无描边。
 ## 点击标题栏/画面区任意处 = 加载到预览；「播放」= 推送到输出端；
 ## 静音/循环是条目级偏好（随项目持久化，推送到输出端时生效，
 ## 正在输出该条目时立即生效）。
@@ -15,6 +15,7 @@ signal settings_requested(card: MediaItemCard)
 signal delete_requested(card: MediaItemCard)
 signal loop_toggled(card: MediaItemCard)
 signal mute_toggled(card: MediaItemCard)
+signal move_requested(card: MediaItemCard, delta: int)
 
 const HIGHLIGHT_COLOR := Color(0.45, 0.85, 0.55)  # 当前输出条目（绿色）
 ## 卡片三档固定宽度（小/中/大），不随窗口拉伸；高度按 16:9 画面区推导
@@ -27,8 +28,6 @@ const C_ELEVATED := Color(0.1451, 0.1686, 0.2118) # 标题栏 / 按钮底
 const C_HOVER := Color(0.1765, 0.2078, 0.2627)    # 按钮悬停
 const C_PRESSED := Color(0.1176, 0.1373, 0.1765)  # 按钮按下
 const C_DISABLED := Color(0.1059, 0.1216, 0.1529) # 按钮禁用
-const C_BORDER := Color(0.1529, 0.1765, 0.2196)   # 描边
-const C_BTN_LINE := Color(0.5, 0.56, 0.65)        # 按钮间亮线分隔
 const C_TEXT := Color(0.7569, 0.7922, 0.8510)     # 主文字
 const C_TEXT_DIM := Color(0.5569, 0.6, 0.6588)    # 次文字
 
@@ -45,32 +44,33 @@ var _btn_play: Button
 var _btn_mute: Button
 var _btn_loop: Button
 var _btn_preview: Button
+var _order_box: HBoxContainer
+var _btn_up: Button
+var _btn_down: Button
 var _missing := false
 
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	# 固定宽度 210：内容宽 206，16:9 画面区高 116，标题栏 26，按钮区 ~56
+	# 固定宽度 210：16:9 画面区高 118，标题栏 26，按钮区 58
 	# （宽高全部写死为最小尺寸，避免 AspectRatioContainer 在流式布局里协商失败被压扁）
 	custom_minimum_size = Vector2(210, 202)
-	# 卡片轮廓 = 全局面板样式（与播放器/媒体库面板同形）：
-	# #181C22 底 + 1px #27303A 描边 + 4px 圆角
+	# 卡片采用无边框、无圆角的三段式平面结构。
 	var style := StyleBoxFlat.new()
 	style.bg_color = C_PANEL
-	style.border_color = C_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
 	style.set_content_margin_all(0)
 	add_theme_stylebox_override("panel", style)
 
 	var vbox := VBoxContainer.new()
+	vbox.name = "CardSections"
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_theme_constant_override("separation", 0)
 	add_child(vbox)
 
 	# ---- 标题行：纯文字（蓝色序号 + 文件名 + 类型徽标），与面板标题同形 ----
 	var header := PanelContainer.new()
+	header.name = "TitleSection"
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.custom_minimum_size = Vector2(0, 26)
 	var header_style := StyleBoxFlat.new()
@@ -107,14 +107,21 @@ func _init() -> void:
 	_type_label.add_theme_color_override("font_color", C_TEXT_DIM)
 	name_row.add_child(_type_label)
 
-	# ---- 画面区：16:9 黑底 + 1px 描边（与播放器屏幕块同形） ----
+	_order_box = HBoxContainer.new()
+	_order_box.name = "OrderControls"
+	_order_box.visible = false
+	_order_box.add_theme_constant_override("separation", 2)
+	name_row.add_child(_order_box)
+	_btn_up = _make_order_button("↑", -1)
+	_btn_down = _make_order_button("↓", 1)
+
+	# ---- 画面区：16:9 黑底，无描边 ----
 	_display = PanelContainer.new()
+	_display.name = "PreviewSection"
 	_display.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_display.custom_minimum_size = Vector2(0, 116)  # 206 内容宽 × 9/16
+	_display.custom_minimum_size = Vector2(0, 118)  # 210 × 9/16
 	var display_style := StyleBoxFlat.new()
 	display_style.bg_color = Color.BLACK
-	display_style.border_color = C_BORDER
-	display_style.set_border_width_all(1)
 	_display.add_theme_stylebox_override("panel", display_style)
 	vbox.add_child(_display)
 
@@ -139,12 +146,14 @@ func _init() -> void:
 	_thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	thumb_area.add_child(_thumb)
 
-	# ---- 按钮网格：3×2 无缝网格（负间距让相邻 1px 描边重叠成单线） ----
+	# ---- 按钮网格：3×2 直角无描边 ----
 	var grid := GridContainer.new()
+	grid.name = "ButtonsSection"
 	grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", -1)
-	grid.add_theme_constant_override("v_separation", -1)
+	grid.custom_minimum_size = Vector2(0, 58)
+	grid.add_theme_constant_override("h_separation", 1)
+	grid.add_theme_constant_override("v_separation", 1)
 	vbox.add_child(grid)
 
 	# U+FE0E 强制文本呈现（防止 🔇🖥 落到彩色 emoji 字体渲染）
@@ -171,15 +180,21 @@ func set_index(i: int) -> void:
 	_index_label.text = str(i)
 
 
-## 卡片总高 = 标题 26 + 16:9 画面区 + 按钮区 56 + 描边 4
+func set_order_editing(on: bool, can_move_up := true, can_move_down := true) -> void:
+	_order_box.visible = on
+	_btn_up.disabled = not can_move_up
+	_btn_down.disabled = not can_move_down
+
+
+## 卡片总高 = 标题 26 + 16:9 画面区 + 按钮区 58
 static func height_for_width(w: int) -> int:
-	return 86 + roundi((w - 4) * 9.0 / 16.0)
+	return 84 + roundi(w * 9.0 / 16.0)
 
 
 ## 应用卡片规格：宽高全部写死为最小尺寸，卡片不随窗口/分区拉伸
 func apply_size(w: int) -> void:
-	var dh := roundi((w - 4) * 9.0 / 16.0)
-	custom_minimum_size = Vector2(w, 86 + dh)
+	var dh := roundi(w * 9.0 / 16.0)
+	custom_minimum_size = Vector2(w, 84 + dh)
 	_display.custom_minimum_size = Vector2(0, dh)
 
 
@@ -274,11 +289,25 @@ func _make_button(parent: Control, icon: String, text: String, tip: String, on_p
 	return b
 
 
-static func _btn_style(bg: Color) -> StyleBoxFlat:
+func _make_order_button(text: String, delta: int) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.tooltip_text = "上移" if delta < 0 else "下移"
+	b.custom_minimum_size = Vector2(24, 20)
+	b.add_theme_font_size_override("font_size", 12)
+	b.add_theme_stylebox_override("normal", _btn_style(C_ELEVATED, 2))
+	b.add_theme_stylebox_override("hover", _btn_style(C_HOVER, 2))
+	b.add_theme_stylebox_override("pressed", _btn_style(C_PRESSED, 2))
+	b.add_theme_stylebox_override("disabled", _btn_style(C_DISABLED, 2))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	b.pressed.connect(func() -> void: move_requested.emit(self, delta))
+	_order_box.add_child(b)
+	return b
+
+
+static func _btn_style(bg: Color, vertical_margin := 6) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
-	s.border_color = C_BTN_LINE  # 按钮间亮线分隔
-	s.set_border_width_all(1)
-	s.content_margin_top = 6
-	s.content_margin_bottom = 6
+	s.content_margin_top = vertical_margin
+	s.content_margin_bottom = vertical_margin
 	return s

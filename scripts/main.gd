@@ -45,6 +45,7 @@ var _project_path := ""
 var _preview_dragging := false
 var _output_dragging := false
 var _card_size_idx := 1  # 媒体库卡片规格索引（小/中/大）
+var _order_editing := false
 var _title_bar  # TitleBar（自绘标题栏，无边框主窗口用）
 var _preview_dots  # 预览画面触点可视化层（TouchPointsLayer）
 var _output_dots  # 输出画面触点可视化层（投屏窗口不叠加触点标记）
@@ -60,6 +61,7 @@ var _restoring_main_window_size := false
 @onready var _add_file_button: Button = %AddFileButton
 @onready var _add_list_button: Button = %AddListButton
 @onready var _card_size_button: MenuButton = %CardSizeButton
+@onready var _order_edit_button: Button = %OrderEditButton
 @onready var _file_dialog: FileDialog = %FileDialog
 @onready var _project_open_dialog: FileDialog = %ProjectOpenDialog
 @onready var _project_save_dialog: FileDialog = %ProjectSaveDialog
@@ -172,6 +174,7 @@ func _ready() -> void:
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
 	_add_list_button.pressed.connect(_on_add_list_pressed)
+	_order_edit_button.toggled.connect(_on_order_edit_toggled)
 	# 媒体库卡片规格：三档固定尺寸（小/中/大，不随窗口拉伸），选择持久化
 	var size_popup := _card_size_button.get_popup()
 	for i in MediaItemCard.CARD_WIDTHS.size():
@@ -401,6 +404,7 @@ func _load_project_from(path: String) -> void:
 			_add_media_item(MediaObject.create(str(media_path)))
 	for pd in data["playlists"]:
 		_add_playlist(PlaylistObject.from_dict(pd))
+	_apply_library_order(data.get("library_order", []))
 	ProjectStore.set_last_project_path(path)
 	_update_title()
 
@@ -408,7 +412,8 @@ func _load_project_from(path: String) -> void:
 func _save_current_project() -> void:
 	if _project_path.is_empty():
 		return
-	var err := ProjectStore.save_project(_project_path, _project_name, _media_items, _playlists)
+	var err := ProjectStore.save_project(
+		_project_path, _project_name, _media_items, _playlists, _library_order_data())
 	if err != OK:
 		push_error("项目保存失败（%s）：%s" % [_project_path, error_string(err)])
 		return
@@ -467,10 +472,98 @@ func _add_media_item(media: MediaObject) -> void:
 	card.delete_requested.connect(_on_card_delete)
 	card.loop_toggled.connect(_on_card_loop_toggled)
 	card.mute_toggled.connect(_on_card_mute_toggled)
+	card.move_requested.connect(_move_library_card)
 	card.set_missing(not media.exists())
 	_media_desc.visible = false
 	_apply_card_cover(card)
 	_refresh_card_indices()
+	_refresh_order_controls()
+
+
+func _on_order_edit_toggled(on: bool) -> void:
+	_order_editing = on
+	_order_edit_button.text = "完成排序" if on else "编辑顺序"
+	_refresh_order_controls()
+
+
+func _library_cards() -> Array[Control]:
+	var cards: Array[Control] = []
+	for child in _media_grid.get_children():
+		if child is MediaItemCard or child is PlaylistCard:
+			cards.append(child)
+	return cards
+
+
+func _refresh_order_controls() -> void:
+	var cards := _library_cards()
+	for i in cards.size():
+		cards[i].set_order_editing(_order_editing, i > 0, i < cards.size() - 1)
+
+
+func _move_library_card(card: Control, delta: int) -> void:
+	var cards := _library_cards()
+	var from := cards.find(card)
+	var to := from + delta
+	if from < 0 or to < 0 or to >= cards.size():
+		return
+	_media_grid.move_child(card, cards[to].get_index())
+	_sync_library_arrays_from_grid()
+	_refresh_card_indices()
+	_refresh_order_controls()
+	_save_current_project()
+
+
+func _sync_library_arrays_from_grid() -> void:
+	_media_items.clear()
+	_playlists.clear()
+	for card in _library_cards():
+		if card is MediaItemCard:
+			_media_items.append(card.media)
+		elif card is PlaylistCard:
+			_playlists.append(card.playlist)
+
+
+func _library_order_data() -> Array:
+	var result: Array = []
+	for card in _library_cards():
+		if card is MediaItemCard:
+			var media_index := _media_items.find(card.media)
+			if media_index >= 0:
+				result.append({"kind": "media", "index": media_index})
+		elif card is PlaylistCard:
+			var playlist_index := _playlists.find(card.playlist)
+			if playlist_index >= 0:
+				result.append({"kind": "playlist", "index": playlist_index})
+	return result
+
+
+func _apply_library_order(order: Array) -> void:
+	if order.is_empty():
+		_refresh_order_controls()
+		return
+	var media_cards: Array[Control] = []
+	var playlist_cards: Array[Control] = []
+	for card in _library_cards():
+		if card is MediaItemCard:
+			media_cards.append(card)
+		else:
+			playlist_cards.append(card)
+	var ordered: Array[Control] = []
+	for entry in order:
+		if not entry is Dictionary:
+			continue
+		var source := media_cards if str(entry.get("kind", "")) == "media" else playlist_cards
+		var index := int(entry.get("index", -1))
+		if index >= 0 and index < source.size() and not ordered.has(source[index]):
+			ordered.append(source[index])
+	for card in _library_cards():
+		if not ordered.has(card):
+			ordered.append(card)
+	for i in ordered.size():
+		_media_grid.move_child(ordered[i], i)
+	_sync_library_arrays_from_grid()
+	_refresh_card_indices()
+	_refresh_order_controls()
 
 
 ## 卡片序号 = 媒体库顺序（标题栏蓝色数字，增删后重排）；列表卡片不编号
@@ -634,6 +727,7 @@ func _clear_media_items() -> void:
 		win.queue_free()
 	_item_windows.clear()
 	for card in _media_grid.get_children():
+		_media_grid.remove_child(card)
 		card.queue_free()
 	_media_desc.visible = true
 
@@ -853,6 +947,7 @@ func _on_card_delete(card: MediaItemCard) -> void:
 	# 删除的若是当前输出条目，刷新高亮（延迟到卡片真正释放后）
 	_update_output_highlight.call_deferred()
 	_refresh_card_indices.call_deferred()
+	_refresh_order_controls.call_deferred()
 
 
 func _update_output_highlight() -> void:
@@ -958,9 +1053,12 @@ func _add_playlist(pl: PlaylistObject) -> void:
 	card.setup(pl)
 	card.apply_size(MediaItemCard.CARD_WIDTHS[_card_size_idx])
 	card.play_requested.connect(_on_playlist_play)
+	card.preview_requested.connect(_on_playlist_preview)
 	card.settings_requested.connect(_on_playlist_settings)
 	card.delete_requested.connect(_on_playlist_delete)
+	card.move_requested.connect(_move_library_card)
 	_media_desc.visible = false
+	_refresh_order_controls()
 
 
 ## 列表卡片「播放」：推送输出端顺序播放整个列表（再次点击 = 停止列表）
@@ -972,6 +1070,15 @@ func _on_playlist_play(card: PlaylistCard) -> void:
 	_runner.stop()  # 停掉正在播放的其他列表
 	if not _runner.start(card.playlist):
 		push_warning("播放列表为空或全部条目不可播放：" + card.playlist.name)
+
+
+func _on_playlist_preview(card: PlaylistCard) -> void:
+	for entry in card.playlist.items:
+		var media := _find_media(str(entry.get("path", "")))
+		if media != null and media.is_playable() and media.exists():
+			_load_preview(media)
+			return
+	push_warning("播放列表中没有可预览的媒体：" + card.playlist.name)
 
 
 ## Runner 加载回调：条目走卡片「播放」同一通路（投屏窗口自动弹出）
@@ -1029,6 +1136,7 @@ func _on_playlist_delete(card: PlaylistCard) -> void:
 	card.queue_free()
 	_media_desc.visible = _media_items.is_empty() and _playlists.is_empty()
 	_save_current_project()
+	_refresh_order_controls.call_deferred()
 
 
 ## 定时自动播放：0.5s tick 检查各列表的开启/关闭时间，

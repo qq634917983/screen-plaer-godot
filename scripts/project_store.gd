@@ -4,7 +4,8 @@ extends RefCounted
 ## 项目文件（*.splproj，ConfigFile 格式）：项目名 + 媒体库条目列表
 ## （media/items = 媒体对象字典数组，含路径与缩放/偏移属性；
 ## 另保留 media/paths 纯路径列表以兼容旧版）+ 播放列表
-## （playlist/lists = PlaylistObject 字典数组：条目/时长/定时自动播放）。
+## （playlist/lists = PlaylistObject 字典数组：条目/时长/定时自动播放）；
+## library/order 保存媒体与播放列表卡片的混排顺序。
 ## 应用设置（user://settings.cfg）：上次打开的项目路径。
 ##
 ## 项目缓存捆绑（Phase 9 起）：项目文件 X.splproj 的同级缓存目录 X_cache/，
@@ -21,7 +22,7 @@ const GLOBAL_THUMB_DIR := "user://thumbnails"
 const GLOBAL_PPTX_DIR := "user://pptx"
 
 
-static func save_project(path: String, project_name: String, items: Array, playlists: Array = []) -> Error:
+static func save_project(path: String, project_name: String, items: Array, playlists: Array = [], library_order: Array = []) -> Error:
 	# ConfigFile.save 不自动建目录，先确保父目录存在
 	var dir := path.get_base_dir()
 	if not dir.is_empty():
@@ -39,6 +40,7 @@ static func save_project(path: String, project_name: String, items: Array, playl
 	for pl: PlaylistObject in playlists:
 		pl_dicts.append(pl.to_dict())
 	cfg.set_value("playlist", "lists", pl_dicts)
+	cfg.set_value("library", "order", library_order)
 	return cfg.save(path)
 
 
@@ -51,6 +53,7 @@ static func load_project(path: String) -> Dictionary:
 		"media_paths": cfg.get_value("media", "paths", PackedStringArray()),
 		"items": cfg.get_value("media", "items", []),
 		"playlists": cfg.get_value("playlist", "lists", []),
+		"library_order": cfg.get_value("library", "order", []),
 	}
 
 

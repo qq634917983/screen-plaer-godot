@@ -519,6 +519,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "媒体"
 
+[node name="OrderEditButton" type="Button" parent="RootVBox/MainContent/QuadSplit/MediaPanel/MediaVBox/MediaHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "编辑顺序"
+
 [node name="CardSizeButton" type="MenuButton" parent="RootVBox/MainContent/QuadSplit/MediaPanel/MediaVBox/MediaHeader" unique_id=1987654321]
 unique_name_in_owner = true
 layout_mode = 2
