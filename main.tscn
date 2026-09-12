@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/triple_split_container.gd" id="4_triplesplit"]
 
 [ext_resource type="Script" path="res://scripts/title_bar.gd" id="5_titlebar"]
+[ext_resource type="Texture2D" path="res://assets/app_icon_256.png" id="6_app_icon"]
 
 [sub_resource type="SystemFont" id="font_player_controls"]
 font_names = PackedStringArray("Segoe UI Symbol", "Apple Symbols", "PingFang SC")
@@ -192,6 +193,20 @@ corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_startup_progress_bg"]
+bg_color = Color(0.0706, 0.098, 0.1451, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_startup_progress_fill"]
+bg_color = Color(0.149, 0.6745, 0.9294, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="MainWindow" type="PanelContainer" unique_id=1541358816]
 anchors_preset = 15
@@ -976,3 +991,75 @@ size = Vector2i(460, 480)
 visible = false
 transient = true
 script = ExtResource("3_h2yge")
+
+[node name="StartupLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="StartupOverlay" type="ColorRect" parent="StartupLayer"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.0353, 0.0549, 0.0863, 1)
+
+[node name="StartupCenter" type="CenterContainer" parent="StartupLayer/StartupOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StartupColumn" type="VBoxContainer" parent="StartupLayer/StartupOverlay/StartupCenter"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="StartupIcon" type="TextureRect" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("6_app_icon")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="StartupTitle" type="Label" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098, 0.9451, 1, 1)
+theme_override_font_sizes/font_size = 25
+text = "ScreenPlayer"
+horizontal_alignment = 1
+
+[node name="StartupSubtitle" type="Label" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5255, 0.6392, 0.7765, 1)
+theme_override_font_sizes/font_size = 12
+text = "跨窗口同步播放器"
+horizontal_alignment = 1
+
+[node name="StartupSpacer" type="Control" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="StartupProgress" type="ProgressBar" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 10)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_startup_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_startup_progress_fill")
+value = 5.0
+show_percentage = false
+
+[node name="StartupStage" type="Label" parent="StartupLayer/StartupOverlay/StartupCenter/StartupColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6078, 0.6863, 0.7843, 1)
+theme_override_font_sizes/font_size = 12
+text = "正在启动…"
+horizontal_alignment = 1

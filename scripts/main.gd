@@ -61,6 +61,7 @@ var _main_window_save_timer: Timer
 var _pending_main_window_size := Vector2i.ZERO
 var _restoring_main_window_size := false
 var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体库音频调音台
+var _startup_initializing := true
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -105,9 +106,16 @@ var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体�
 @onready var _status_version: Label = %StatusVersion
 @onready var _quad_split: QuadSplitContainer = %QuadSplit
 @onready var _players_split: TripleSplitContainer = %PlayersSection
+@onready var _startup_overlay: ColorRect = %StartupOverlay
+@onready var _startup_progress: ProgressBar = %StartupProgress
+@onready var _startup_stage: Label = %StartupStage
 
 
 func _ready() -> void:
+	_startup_overlay.visible = true
+	_startup_overlay.modulate = Color.WHITE
+	_set_startup_progress(6.0, "正在准备界面…")
+	await get_tree().process_frame
 	# 无边框主窗口 + 自绘标题栏 + 手动边缘缩放：窗口拖动/缩放由代码逐帧完成，
 	# 不进入 Windows 的模态移动/缩放消息循环（该循环会冻结整个进程主循环），
 	# 因此拖动主窗口时播放与投屏画面不再中断
@@ -124,6 +132,8 @@ func _ready() -> void:
 	_main_window_save_timer.timeout.connect(_save_main_window_size)
 	main_window.size_changed.connect(_queue_main_window_size_save)
 	main_window.files_dropped.connect(_on_files_dropped)
+	_set_startup_progress(20.0, "正在创建播放窗口…")
+	await get_tree().process_frame
 
 	_preview = PlayerSlot.new()
 	_preview.name = "PreviewSlot"
@@ -139,6 +149,8 @@ func _ready() -> void:
 	_output.state_changed.connect(_on_output_state_changed)
 	# 投屏窗口与输出播放器共享同一纹理：同一解码实例，物理上不可能不同步
 	_output.frame_updated.connect(func(tex: Texture2D) -> void: _cast_video_view.texture = tex)
+	_set_startup_progress(38.0, "正在初始化播放器…")
+	await get_tree().process_frame
 
 	_thumbnailer = ThumbnailerScene.new()
 	_thumbnailer.name = "Thumbnailer"
@@ -147,6 +159,8 @@ func _ready() -> void:
 
 	# 浏览器内核（gdcef）：全局唯一 GDCEF 节点，预览/输出两端共用；
 	# 未安装扩展时网页条目显示占位提示，其余功能不受影响
+	_set_startup_progress(50.0, "正在初始化网页组件…")
+	await get_tree().process_frame
 	if cef_enabled and ClassDB.class_exists(&"GdCEF"):
 		_cef = ClassDB.instantiate(&"GdCEF") as Node
 		_cef.name = "CEF"
@@ -166,6 +180,8 @@ func _ready() -> void:
 			_cef = null
 	_preview.web_cef = _cef
 	_output.web_cef = _cef
+	_set_startup_progress(68.0, "正在准备媒体组件…")
+	await get_tree().process_frame
 
 	# PPT 转换管理器：复用全局 GDCEF，隐藏浏览器后台把 pptx 转成自包含 HTML
 	_pptx_converter = PptxConverterScene.new()
@@ -182,6 +198,8 @@ func _ready() -> void:
 	_runner.started.connect(func(_pl: PlaylistObject) -> void: _refresh_playlist_cards())
 	_runner.item_started.connect(func(_pl: PlaylistObject, _i: int) -> void: _refresh_playlist_cards())
 	_runner.stopped.connect(_on_playlist_stopped)
+	_set_startup_progress(78.0, "正在连接界面控件…")
+	await get_tree().process_frame
 
 	_add_file_button.pressed.connect(_on_add_file_pressed)
 	_add_list_button.pressed.connect(_on_add_list_pressed)
@@ -235,9 +253,23 @@ func _ready() -> void:
 	%PreviewTouchEdit.toggled.connect(func(on: bool) -> void: _preview.touch_edit_mode = on)
 	_preview.touch_edit_clicked.connect(_on_touch_edit_clicked)
 	_setup_menus()
+	_set_startup_progress(88.0, "正在恢复媒体项目…")
+	await get_tree().process_frame
 	_load_initial_project()
 	_apply_settings()
 	_update_status_bar()
+	_startup_initializing = false
+	_set_startup_progress(100.0, "准备完成")
+	await get_tree().process_frame
+	var startup_tween := create_tween()
+	startup_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	startup_tween.tween_property(_startup_overlay, "modulate:a", 0.0, 0.22)
+	startup_tween.finished.connect(func() -> void: _startup_overlay.visible = false)
+
+
+func _set_startup_progress(value: float, stage: String) -> void:
+	_startup_progress.value = value
+	_startup_stage.text = stage
 
 
 func _exit_tree() -> void:
@@ -247,6 +279,8 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	if _startup_initializing:
+		return
 	_update_progress_ui()
 	_status_timer += delta
 	if _status_timer >= 0.5:
