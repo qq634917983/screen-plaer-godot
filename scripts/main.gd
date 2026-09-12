@@ -96,6 +96,7 @@ var _startup_initializing := true
 @onready var _output_mute_button: Button = %OutputMute
 @onready var _audio_channels: HBoxContainer = %AudioChannels
 @onready var _audio_master_item: PanelContainer = %AudioMasterItem
+@onready var _audio_master_header: PanelContainer = %AudioMasterHeader
 @onready var _audio_master_slider: VSlider = %AudioMasterSlider
 @onready var _audio_master_value: Label = %AudioMasterValue
 @onready var _audio_master_mute_button: Button = %AudioMasterMute
@@ -1500,7 +1501,7 @@ func get_current_layout() -> Dictionary:
 	return {
 		"version": 1,
 		"split_x": _quad_split.split_x_ratio,
-		"split_y": _quad_split.split_y_ratio,
+		"split_y": _quad_split.effective_split_y_ratio(),
 		"player_left": _players_split.left_ratio,
 		"player_right": _players_split.right_ratio,
 	}
@@ -1665,23 +1666,44 @@ func _rebuild_audio_channels() -> void:
 func _add_audio_channel(media: MediaObject) -> void:
 	var item := PanelContainer.new()
 	item.name = "AudioItem_" + media.path.md5_text().left(8)
-	item.custom_minimum_size = Vector2(92, 230)
+	item.custom_minimum_size = Vector2(92, 236)
 	item.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	item.add_theme_stylebox_override("panel", _audio_master_item.get_theme_stylebox("panel").duplicate())
 	_audio_channels.add_child(item)
 
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	item.add_child(column)
+	var item_stack := VBoxContainer.new()
+	item_stack.add_theme_constant_override("separation", 0)
+	item.add_child(item_stack)
+
+	var header := PanelContainer.new()
+	header.name = "ChannelHeader"
+	header.custom_minimum_size = Vector2(0, 30)
+	header.add_theme_stylebox_override("panel", _audio_master_header.get_theme_stylebox("panel").duplicate())
+	item_stack.add_child(header)
 
 	var title := Label.new()
 	title.custom_minimum_size = Vector2(74, 0)
 	title.text = media.display_name().get_basename()
 	title.tooltip_text = media.display_name()
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	column.add_child(title)
+	title.add_theme_color_override("font_color", Color(0.8196, 0.851, 0.902))
+	title.add_theme_font_size_override("font_size", 12)
+	header.add_child(title)
+
+	var body := MarginContainer.new()
+	body.add_theme_constant_override("margin_left", 8)
+	body.add_theme_constant_override("margin_top", 6)
+	body.add_theme_constant_override("margin_right", 8)
+	body.add_theme_constant_override("margin_bottom", 6)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	item_stack.add_child(body)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.add_child(column)
 
 	var value_label := Label.new()
 	value_label.text = str(media.volume)
@@ -1705,7 +1727,14 @@ func _add_audio_channel(media: MediaObject) -> void:
 	mute_button.text = "🔇" if media.muted else "🔊"
 	column.add_child(mute_button)
 
-	_audio_item_controls[media] = {"slider": slider, "value": value_label, "mute": mute_button}
+	_audio_item_controls[media] = {
+		"item": item,
+		"header": header,
+		"title": title,
+		"slider": slider,
+		"value": value_label,
+		"mute": mute_button,
+	}
 	slider.value_changed.connect(_on_media_volume_changed.bind(media))
 	mute_button.pressed.connect(_on_media_mixer_mute_pressed.bind(media))
 

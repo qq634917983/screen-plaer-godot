@@ -20,6 +20,10 @@ const QUADRANT_NAMES: Array[String] = ["PlayersSection", "UtilityDock", "MediaDo
 	set(value):
 		split_y_ratio = clampf(value, 0.0, 1.0)
 		queue_sort()
+@export var minimum_pane_height := 44:
+	set(value):
+		minimum_pane_height = maxi(0, value)
+		queue_sort()
 
 var _drag_mode := 0 # 0=无 1=竖条 2=横条 3=交叉点
 
@@ -46,7 +50,13 @@ func _split_x_px() -> float:
 
 
 func _split_y_px() -> float:
-	return _available_y() * split_y_ratio
+	var available := _available_y()
+	var protected_height := minf(float(minimum_pane_height), available * 0.5)
+	return clampf(available * split_y_ratio, protected_height, available - protected_height)
+
+
+func effective_split_y_ratio() -> float:
+	return _split_y_px() / maxf(_available_y(), 1.0)
 
 
 func _sort_children() -> void:
@@ -109,7 +119,12 @@ func _gui_input(event: InputEvent) -> void:
 			if _drag_mode & 1:
 				split_x_ratio = clampf((event.position.x - dragger_width * 0.5) / maxf(_available_x(), 1.0), 0.0, 1.0)
 			if _drag_mode & 2:
-				split_y_ratio = clampf((event.position.y - dragger_width * 0.5) / maxf(_available_y(), 1.0), 0.0, 1.0)
+				var available := maxf(_available_y(), 1.0)
+				var protected_ratio := minf(float(minimum_pane_height) / available, 0.5)
+				split_y_ratio = clampf(
+					(event.position.y - dragger_width * 0.5) / available,
+					protected_ratio,
+					1.0 - protected_ratio)
 			accept_event()
 		else:
 			mouse_default_cursor_shape = _cursor_for_zone(_hit_zone(event.position))

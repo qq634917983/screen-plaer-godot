@@ -178,6 +178,22 @@ func run() -> void:
 	var split_available_y := split.size.y - split.dragger_width
 	check(absf(players.size.y - split_available_y * 0.1) <= 2.0,
 		"First row can shrink freely without the old minimum limit")
+	split.split_y_ratio = 1.0
+	await settle()
+	var audio_dock := scene.find_child("AudioDock", true, false) as Control
+	var protected_audio_header := scene.find_child("AudioHeaderCard", true, false) as Control
+	check(audio_dock != null and protected_audio_header != null
+		and audio_dock.size.y >= 44.0
+		and rect_contains(audio_dock.get_global_rect(), protected_audio_header.get_global_rect()),
+		"Bottom audio title bar stays fully visible at the vertical drag limit")
+	split.split_y_ratio = 0.0
+	await settle()
+	var utility_dock := scene.find_child("UtilityDock", true, false) as Control
+	var protected_utility_header := scene.find_child("UtilityHeaderCard", true, false) as Control
+	check(utility_dock != null and protected_utility_header != null
+		and utility_dock.size.y >= 44.0
+		and rect_contains(utility_dock.get_global_rect(), protected_utility_header.get_global_rect()),
+		"Top title bars stay fully visible at the vertical drag limit")
 	split.split_x_ratio = 0.72
 	split.split_y_ratio = 0.5
 	await settle()
@@ -216,12 +232,18 @@ func run() -> void:
 		and audio_header.get_parent().get_theme_constant("separation") == 0,
 		"Audio title and content form one bordered card")
 	var audio_master_item := scene.find_child("AudioMasterItem", true, false) as PanelContainer
+	var audio_master_header := scene.find_child("AudioMasterHeader", true, false) as PanelContainer
+	var audio_master_title := scene.find_child("AudioMasterLabel", true, false) as Label
 	var audio_master_slider := scene.find_child("AudioMasterSlider", true, false) as VSlider
 	var audio_master_mute := scene.find_child("AudioMasterMute", true, false) as Button
 	check(audio_master_item != null and audio_master_slider != null and audio_master_mute != null
 		and audio_master_item.is_ancestor_of(audio_master_slider)
 		and audio_master_item.is_ancestor_of(audio_master_mute),
 		"Audio mixer master item has a vertical volume slider and mute control")
+	check(audio_master_header != null and audio_master_title != null
+		and audio_master_header.is_ancestor_of(audio_master_title)
+		and not audio_master_title.text.is_empty(),
+		"Audio mixer master controller has a dedicated title bar")
 	check(absf(audio_master_slider.get_global_rect().get_center().x
 		- audio_master_item.get_global_rect().get_center().x) <= 1.0,
 		"Master volume slider is horizontally centered in its item")

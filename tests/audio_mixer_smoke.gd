@@ -17,6 +17,13 @@ func settle() -> void:
 		await process_frame
 
 
+func wait_for_startup(scene: Node) -> void:
+	for _i in 60:
+		if not scene._startup_initializing:
+			return
+		await process_frame
+
+
 func _initialize() -> void:
 	create_timer(20.0).timeout.connect(func() -> void:
 		push_error("Audio mixer smoke test timed out")
@@ -39,7 +46,8 @@ func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
 	scene.cef_enabled = false
 	root.add_child(scene)
-	await settle()
+	await wait_for_startup(scene)
+	check(not scene._startup_initializing, "Main scene startup completes before mixer checks")
 	scene._clear_media_items()
 	scene._project_path = test_path
 
@@ -53,17 +61,28 @@ func run() -> void:
 
 	var channels: HBoxContainer = scene.get_node("%AudioChannels")
 	check(channels.get_child_count() == 3, "Mixer contains master plus video/audio media items")
+	var master_header := scene.get_node("%AudioMasterHeader") as PanelContainer
+	var master_title := scene.find_child("AudioMasterLabel", true, false) as Label
+	check(master_header != null and master_title != null and not master_title.text.is_empty(),
+		"Master controller has its own title bar")
 	check(scene._audio_item_controls.has(video) and scene._audio_item_controls.has(audio),
 		"Every audio-capable media item has mixer controls")
 	check(not scene._audio_item_controls.has(image), "Silent image item is omitted from mixer")
 	for media: MediaObject in [video, audio]:
 		var controls: Dictionary = scene._audio_item_controls[media]
-		check(controls["slider"] is VSlider and controls["mute"] is Button,
-			media.display_name() + " uses vertical volume and mute controls")
+		check(controls["slider"] is VSlider and controls["mute"] is Button
+			and controls["header"] is PanelContainer and controls["title"] is Label
+			and not (controls["title"] as Label).text.is_empty(),
+			media.display_name() + " has a title bar, vertical volume and mute controls")
 		var slider := controls["slider"] as VSlider
-		var item := slider.get_parent().get_parent() as PanelContainer
+		var item := controls["item"] as PanelContainer
 		check(absf(slider.get_global_rect().get_center().x - item.get_global_rect().get_center().x) <= 1.0,
 			media.display_name() + " volume slider is horizontally centered")
+		var channel_header_style := (controls["header"] as PanelContainer).get_theme_stylebox("panel") as StyleBoxFlat
+		var master_header_style := master_header.get_theme_stylebox("panel") as StyleBoxFlat
+		check(channel_header_style != null and master_header_style != null
+			and channel_header_style.bg_color == master_header_style.bg_color,
+			media.display_name() + " title bar matches the master controller")
 
 	var video_slider := scene._audio_item_controls[video]["slider"] as VSlider
 	video_slider.value = 37
