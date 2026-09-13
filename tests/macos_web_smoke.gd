@@ -26,8 +26,10 @@ func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
 	scene.cef_cache_path = "user://smoke/cef-%d" % OS.get_process_id()
 	root.add_child(scene)
-	await process_frame
-	check(scene._cef != null, "CEF initializes on macOS")
+	while scene._startup_initializing:
+		await process_frame
+	check(scene._cef == null, "CEF stays unloaded during normal startup")
+	check(await scene._ensure_cef(false), "CEF initializes on first web use on macOS")
 	if scene._cef == null:
 		scene.queue_free()
 		await process_frame

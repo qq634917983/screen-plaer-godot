@@ -29,7 +29,8 @@ func run() -> void:
 	scene.cef_enabled = false
 	scene.cef_cache_path = "user://smoke/cef-%d" % OS.get_process_id()
 	root.add_child(scene)
-	await process_frame
+	while scene._startup_initializing:
+		await process_frame
 	var preview: PlayerSlot = scene._preview
 	var output: PlayerSlot = scene._output
 	check(preview.is_available() and output.is_available(), "Native MPV initializes")

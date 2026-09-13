@@ -49,8 +49,8 @@ func run() -> void:
 	scene.cef_enabled = false
 	scene.cef_cache_path = "user://tests/cef-%s" % stamp
 	root.add_child(scene)
-	await process_frame
-	await process_frame
+	while scene._startup_initializing:
+		await process_frame
 	root.files_dropped.emit(PackedStringArray([ProjectSettings.globalize_path(image_path), ProjectSettings.globalize_path(ignored_path)]))
 	await process_frame
 	check(scene._media_items.size() == 1, "Drop adds supported media and ignores unsupported file")

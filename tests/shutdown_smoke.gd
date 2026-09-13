@@ -10,7 +10,7 @@ func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
 	scene.cef_cache_path = "user://smoke/cef-shutdown-%d" % OS.get_process_id()
 	root.add_child(scene)
-	for i in range(6):
+	while scene._startup_initializing:
 		await process_frame
 	print("SHUTDOWN start_msec=", Time.get_ticks_msec())
 	scene._request_app_quit()

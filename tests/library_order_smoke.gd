@@ -45,7 +45,8 @@ func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
 	scene.cef_enabled = false
 	root.add_child(scene)
-	await settle()
+	while scene._startup_initializing:
+		await process_frame
 	scene._clear_media_items()
 	await process_frame
 	scene._project_path = test_path

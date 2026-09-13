@@ -34,6 +34,9 @@ var _output: PlayerSlot
 var cef_cache_path := "user://cef_cache"  # 测试可在入树前设置独立目录，避免占用正在运行的浏览器配置
 var cef_enabled := true  # 非网页冒烟测试可关闭，避免与已运行编辑器的 CEF 单例互相占用
 var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null）
+var _cef_initializing := false
+var _pending_cef_preview := ""  # 首次初始化 CEF 后继续加载的网页/PPT
+var _pending_cef_output := ""
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
 var _pptx_converter  # PptxConverter（同上）
 var _media_items: Array[MediaObject] = []  # 与媒体卡片一一对应
@@ -62,6 +65,7 @@ var _pending_main_window_size := Vector2i.ZERO
 var _restoring_main_window_size := false
 var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体库音频调音台
 var _startup_initializing := true
+var _loading_tween: Tween
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -158,30 +162,11 @@ func _ready() -> void:
 	add_child(_thumbnailer)
 	_thumbnailer.thumbnail_ready.connect(_on_thumbnail_ready)
 
-	# 浏览器内核（gdcef）：全局唯一 GDCEF 节点，预览/输出两端共用；
-	# 未安装扩展时网页条目显示占位提示，其余功能不受影响
-	_set_startup_progress(50.0, "正在初始化网页组件…")
-	await get_tree().process_frame
-	if cef_enabled and ClassDB.class_exists(&"GdCEF"):
-		_cef = ClassDB.instantiate(&"GdCEF") as Node
-		_cef.name = "CEF"
-		add_child(_cef)
-		var cef_config := {"locale": "zh-CN"}
-		if OS.get_name() == "macOS":
-			# .app/项目目录可能只读；浏览器持久数据放用户数据目录。
-			var cache := ProjectSettings.globalize_path(cef_cache_path)
-			DirAccess.make_dir_recursive_absolute(cache)
-			cef_config["root_cache_path"] = cache
-			cef_config["cache_path"] = cache
-			cef_config["log_file"] = ProjectSettings.globalize_path("user://cef.log")
-			cef_config["remote_debugging_port"] = 0
-		if not _cef.initialize(cef_config):
-			push_error("CEF 初始化失败：" + _cef.get_error())
-			_cef.queue_free()
-			_cef = null
-	_preview.web_cef = _cef
-	_output.web_cef = _cef
-	_set_startup_progress(68.0, "正在准备媒体组件…")
+	# CEF 是启动阶段最重的组件。普通视频/音频/图片不需要浏览器，因此这里只
+	# 准备引用；首次打开网页或 PPT 时再由 _ensure_cef 初始化并显示进度。
+	_preview.web_cef = null
+	_output.web_cef = null
+	_set_startup_progress(50.0, "正在准备媒体组件…")
 	await get_tree().process_frame
 
 	# PPT 转换管理器：复用全局 GDCEF，隐藏浏览器后台把 pptx 转成自包含 HTML
@@ -262,15 +247,80 @@ func _ready() -> void:
 	_startup_initializing = false
 	_set_startup_progress(100.0, "准备完成")
 	await get_tree().process_frame
-	var startup_tween := create_tween()
-	startup_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	startup_tween.tween_property(_startup_overlay, "modulate:a", 0.0, 0.22)
-	startup_tween.finished.connect(func() -> void: _startup_overlay.visible = false)
+	_hide_loading_overlay()
 
 
 func _set_startup_progress(value: float, stage: String) -> void:
 	_startup_progress.value = value
 	_startup_stage.text = stage
+
+
+func _cef_ready() -> bool:
+	return _cef != null and is_instance_valid(_cef)
+
+
+## 首次真正使用网页/PPT 时才初始化 CEF。initialize 本身是同步调用，所以先让
+## 遮罩至少绘制一帧，避免用户误以为点击没有响应；并发请求共用同一次初始化。
+func _ensure_cef(show_feedback := true) -> bool:
+	if _cef_ready():
+		return true
+	if not cef_enabled or not ClassDB.class_exists(&"GdCEF"):
+		return false
+	if _cef_initializing:
+		while _cef_initializing:
+			await get_tree().process_frame
+		return _cef_ready()
+
+	_cef_initializing = true
+	if show_feedback:
+		_show_loading_overlay("首次使用，正在初始化网页组件…", 35.0)
+		await get_tree().process_frame
+	var started_msec := Time.get_ticks_msec()
+	var instance := ClassDB.instantiate(&"GdCEF") as Node
+	instance.name = "CEF"
+	add_child(instance)
+	var cef_config := {"locale": "zh-CN"}
+	if OS.get_name() == "macOS":
+		# .app/项目目录可能只读；浏览器持久数据放用户数据目录。
+		var cache := ProjectSettings.globalize_path(cef_cache_path)
+		DirAccess.make_dir_recursive_absolute(cache)
+		cef_config["root_cache_path"] = cache
+		cef_config["cache_path"] = cache
+		cef_config["log_file"] = ProjectSettings.globalize_path("user://cef.log")
+		cef_config["remote_debugging_port"] = 0
+	if instance.initialize(cef_config):
+		_cef = instance
+		_preview.web_cef = _cef
+		_output.web_cef = _cef
+		if _pptx_converter != null:
+			_pptx_converter.setup(_cef)
+	else:
+		push_error("CEF 初始化失败：" + instance.get_error())
+		instance.queue_free()
+	_cef_initializing = false
+	print("CEF_LAZY_INIT_MS=%d" % (Time.get_ticks_msec() - started_msec))
+	if show_feedback:
+		_set_startup_progress(100.0, "网页组件准备完成" if _cef_ready() else "网页组件初始化失败")
+		await get_tree().process_frame
+		_hide_loading_overlay()
+	return _cef_ready()
+
+
+func _show_loading_overlay(stage: String, progress: float) -> void:
+	if _loading_tween != null and _loading_tween.is_valid():
+		_loading_tween.kill()
+	_startup_overlay.visible = true
+	_startup_overlay.modulate = Color.WHITE
+	_set_startup_progress(progress, stage)
+
+
+func _hide_loading_overlay() -> void:
+	if _loading_tween != null and _loading_tween.is_valid():
+		_loading_tween.kill()
+	_loading_tween = create_tween()
+	_loading_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_loading_tween.tween_property(_startup_overlay, "modulate:a", 0.0, 0.22)
+	_loading_tween.finished.connect(func() -> void: _startup_overlay.visible = false)
 
 
 func _exit_tree() -> void:
@@ -775,6 +825,10 @@ func _clear_media_items() -> void:
 ## 按类型把条目加载到预览端：视频/音频走 mpv，图片走静态纹理通路，网页走 CEF，
 ## PPT 走预转 HTML（无缓存时触发转换并显示占位，完成后自动加载）
 func _load_preview(m: MediaObject) -> void:
+	if m.type in [MediaObject.Type.HTML, MediaObject.Type.PPT] and not _cef_ready():
+		_pending_cef_preview = m.path
+		_load_preview_after_cef(m)
+		return
 	match m.type:
 		MediaObject.Type.IMAGE:
 			_preview.load_static(m.path)
@@ -791,6 +845,19 @@ func _load_preview(m: MediaObject) -> void:
 			_preview.load_media(m.path)
 	_preview.set_view_transform(m.scale, m.offset())
 	_preview.web_points = m.touch_points  # 共享引用：触点编辑即时生效
+
+
+func _load_preview_after_cef(m: MediaObject) -> void:
+	var path := m.path
+	_preview_label.text = "网页组件初始化中…\n" + m.display_name()
+	var ok := await _ensure_cef()
+	if _pending_cef_preview != path:
+		return  # 等待期间用户已经选择了另一个条目
+	_pending_cef_preview = ""
+	if not ok:
+		_preview_label.text = "网页组件初始化失败\n" + m.display_name()
+		return
+	_load_preview(m)
 
 
 ## PPT 缓存查找：项目 X_cache 优先，回退全局 user://pptx；都没有返回 ""
@@ -909,6 +976,10 @@ func _on_card_push(card: MediaItemCard) -> void:
 ## 直接加载到输出端（从开头自动播放）：视频/音频走 mpv，图片走静态纹理，
 ## 网页走 CEF，PPT 走缓存 HTML（无缓存时后台转换，完成自动起播）
 func _load_output(m: MediaObject) -> void:
+	if m.type in [MediaObject.Type.HTML, MediaObject.Type.PPT] and not _cef_ready():
+		_pending_cef_output = m.path
+		_load_output_after_cef(m)
+		return
 	_output_media = m
 	match m.type:
 		MediaObject.Type.IMAGE:
@@ -930,6 +1001,18 @@ func _load_output(m: MediaObject) -> void:
 	_output.web_points = m.touch_points  # 共享引用：触点编辑即时生效
 	_apply_output_media_prefs()
 	_show_cast_window()
+
+
+func _load_output_after_cef(m: MediaObject) -> void:
+	var path := m.path
+	var ok := await _ensure_cef()
+	if _pending_cef_output != path:
+		return  # 等待期间输出请求已被后来的条目替代
+	_pending_cef_output = ""
+	if not ok:
+		push_warning("网页组件初始化失败，无法播放：" + m.path)
+		return
+	_load_output(m)
 
 
 ## 输出端加载媒体后的统一收尾：条目级循环/静音偏好（静音与全局开关为或关系）、
@@ -955,6 +1038,18 @@ func _on_card_settings(card: MediaItemCard) -> void:
 	if _item_windows.has(card.media_path) and is_instance_valid(_item_windows[card.media_path]):
 		_item_windows[card.media_path].grab_focus()
 		return
+	if card.media.type == MediaObject.Type.HTML and not _cef_ready():
+		_open_web_settings_after_cef(card)
+		return
+	_open_item_settings(card)
+
+
+func _open_web_settings_after_cef(card: MediaItemCard) -> void:
+	if await _ensure_cef() and is_instance_valid(card):
+		_open_item_settings(card)
+
+
+func _open_item_settings(card: MediaItemCard) -> void:
 	var win := ItemSettingsWindow.new()
 	win.setup(card.media)
 	win.cef = _cef  # 设置窗口右侧实时预览的内嵌浏览器用（无 gdcef 时预览区为空）
@@ -1130,9 +1225,9 @@ func _runner_load_item(path: String) -> bool:
 	return true
 
 
-## Runner 查询：该路径正在后台做 PPT 转换（此期间不算外部干预）
+## Runner 查询：该路径正在初始化 CEF 或后台做 PPT 转换（此期间不算外部干预）
 func _runner_is_pending(path: String) -> bool:
-	return _pending_ppt_output == path
+	return _pending_cef_output == path or _pending_ppt_output == path
 
 
 func _on_playlist_stopped(_pl: PlaylistObject, reason: String) -> void:
@@ -1243,6 +1338,8 @@ func _on_quick_switch_pressed() -> void:
 	if _preview.media_path.is_empty():
 		var m := _first_playable()
 		if m == null:
+			return
+		if m.type in [MediaObject.Type.HTML, MediaObject.Type.PPT] and not await _ensure_cef():
 			return
 		_load_preview(m)
 	var state := _preview.get_state()

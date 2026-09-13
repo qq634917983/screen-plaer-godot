@@ -31,7 +31,8 @@ func run() -> void:
 	scene.cef_enabled = false
 	scene.cef_cache_path = "user://smoke/cef-settings-button-%d" % OS.get_process_id()
 	root.add_child(scene)
-	await process_frame
+	while scene._startup_initializing:
+		await process_frame
 
 	var button: Button = scene.get_node("%MenuSettings")
 	check(button is Button, "MenuSettings is a plain Button")
