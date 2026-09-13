@@ -160,35 +160,42 @@ func run() -> void:
 
 	var split: QuadSplitContainer = scene.get_node("%QuadSplit")
 	var players: Control = scene.find_child("PlayersSection", true, false)
+	var media_dock := scene.find_child("MediaDock", true, false) as Control
+	var audio_dock := scene.find_child("AudioDock", true, false) as Control
 	split.split_x_ratio = 0.1
 	await settle()
-	var split_available_x := split.size.x - split.dragger_width
-	check(absf(players.size.x - split_available_x * 0.1) <= 2.0,
-		"First column can shrink freely without the old minimum limit")
+	check(players.size.x >= media_dock.custom_minimum_size.x - 1.0,
+		"Media column respects the media library minimum width")
 	split.split_x_ratio = 0.9
 	await settle()
-	check(absf(players.size.x - split_available_x * 0.9) <= 2.0,
-		"First column can expand freely without the old maximum limit")
+	check(audio_dock.size.x >= audio_dock.custom_minimum_size.x - 1.0,
+		"Audio column respects the mixer minimum width")
+	split.split_x_ratio = 0.65
+	await settle()
+	var split_available_x := split.size.x - split.dragger_width
 	root.size = Vector2i(1200, 800)
 	await settle()
 	split_available_x = split.size.x - split.dragger_width
-	check(absf(players.size.x - split_available_x * 0.9) <= 2.0,
+	check(absf(players.size.x - split_available_x * 0.65) <= 2.0,
 		"Outer split stays proportional when the window resizes")
 	root.size = Vector2i(1440, 900)
 	await settle()
 	split.split_y_ratio = 0.1
 	await settle()
-	var split_available_y := split.size.y - split.dragger_width
-	check(absf(players.size.y - split_available_y * 0.1) <= 2.0,
-		"First row can shrink freely without the old minimum limit")
+	check(players.size.y >= 124.0,
+		"First row stops at its structural minimum height")
 	split.split_y_ratio = 1.0
 	await settle()
-	var audio_dock := scene.find_child("AudioDock", true, false) as Control
+	var audio_master_item := scene.find_child("AudioMasterItem", true, false) as PanelContainer
+	var audio_master_slider := scene.find_child("AudioMasterSlider", true, false) as VSlider
 	var protected_audio_header := scene.find_child("AudioHeaderCard", true, false) as Control
-	check(audio_dock != null and protected_audio_header != null
-		and audio_dock.size.y >= 44.0
-		and rect_contains(audio_dock.get_global_rect(), protected_audio_header.get_global_rect()),
-		"Bottom audio title bar stays fully visible at the vertical drag limit")
+	check(audio_dock != null and media_dock != null and protected_audio_header != null
+		and audio_dock.size.y >= audio_dock.custom_minimum_size.y - 1.0
+		and absf(audio_dock.size.y - media_dock.size.y) <= 1.0
+		and rect_contains(audio_dock.get_global_rect(), protected_audio_header.get_global_rect())
+		and rect_contains(audio_dock.get_global_rect(), audio_master_item.get_global_rect())
+		and rect_contains(audio_dock.get_global_rect(), audio_master_slider.get_global_rect()),
+		"Media and audio share a bottom height that keeps the full volume control visible")
 	split.split_y_ratio = 0.0
 	await settle()
 	var utility_dock := scene.find_child("UtilityDock", true, false) as Control
@@ -207,6 +214,13 @@ func run() -> void:
 	check(player_split != null and preview_panel != null and transition_panel != null and output_panel != null,
 		"Preview, transition and output are three independently sized panels")
 	if player_split != null:
+		player_split.right_ratio = 0.5
+		player_split.left_ratio = 0.49
+		await settle()
+		var quick_switch_at_limit := scene.find_child("QuickSwitch", true, false) as Button
+		check(transition_panel.size.x >= transition_panel.custom_minimum_size.x - 1.0
+			and rect_contains(transition_panel.get_global_rect(), quick_switch_at_limit.get_global_rect()),
+			"Transition panel cannot shrink below its button and side margins")
 		player_split.right_ratio = 0.8
 		player_split.left_ratio = 0.2
 		await settle()
@@ -234,10 +248,8 @@ func run() -> void:
 		and audio_header.get_parent() == audio_content.get_parent()
 		and audio_header.get_parent().get_theme_constant("separation") == 0,
 		"Audio title and content form one bordered card")
-	var audio_master_item := scene.find_child("AudioMasterItem", true, false) as PanelContainer
 	var audio_master_header := scene.find_child("AudioMasterHeader", true, false) as PanelContainer
 	var audio_master_title := scene.find_child("AudioMasterLabel", true, false) as Label
-	var audio_master_slider := scene.find_child("AudioMasterSlider", true, false) as VSlider
 	var audio_master_mute := scene.find_child("AudioMasterMute", true, false) as Button
 	check(audio_master_item != null and audio_master_slider != null and audio_master_mute != null
 		and audio_master_item.is_ancestor_of(audio_master_slider)

@@ -101,8 +101,12 @@ func run() -> void:
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.build"))
 	var screenshot := ProjectSettings.globalize_path("res://.build/audio_mixer.png")
-	check(root.get_texture().get_image().save_png(screenshot) == OK, "Audio mixer screenshot saved")
-	print("SCREENSHOT=", screenshot)
+	if DisplayServer.get_name() != "headless":
+		var screenshot_image := root.get_texture().get_image()
+		check(screenshot_image.save_png(screenshot) == OK, "Audio mixer screenshot saved")
+		print("SCREENSHOT=", screenshot)
+	else:
+		print("SKIP: Headless renderer does not expose a viewport image")
 
 	scene.queue_free()
 	await process_frame

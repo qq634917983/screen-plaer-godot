@@ -25,7 +25,8 @@ var _drag_boundary := 0
 
 
 func _get_minimum_size() -> Vector2:
-	return Vector2(dragger_width * 2, 0)
+	var mins := _panel_minimums()
+	return Vector2(mins.x + mins.y + mins.z + dragger_width * 2, 0)
 
 
 func _notification(what: int) -> void:
@@ -37,17 +38,34 @@ func _available_width() -> float:
 	return maxf(0.0, size.x - dragger_width * 2.0)
 
 
-func _left_px() -> float:
-	return _available_width() * left_ratio
+func _panel_minimums() -> Vector3:
+	var result := Vector3.ZERO
+	for child in get_children():
+		if not child is Control:
+			continue
+		var idx := PANEL_NAMES.find(child.name)
+		if idx >= 0:
+			result[idx] = (child as Control).get_combined_minimum_size().x
+	return result
 
 
-func _right_px() -> float:
-	return _available_width() * right_ratio
+## 返回两条分割线在可用宽度中的位置，并保证三栏的实际最小宽度。
+func _boundaries_px() -> Vector2:
+	var available := _available_width()
+	var mins := _panel_minimums()
+	var total_min := mins.x + mins.y + mins.z
+	if total_min > available and total_min > 0.0:
+		var scale := available / total_min
+		return Vector2(mins.x * scale, (mins.x + mins.y) * scale)
+	var left := clampf(available * left_ratio, mins.x, available - mins.y - mins.z)
+	var right := clampf(available * right_ratio, left + mins.y, available - mins.z)
+	return Vector2(left, right)
 
 
 func _sort_children() -> void:
-	var left := _left_px()
-	var right := _right_px()
+	var boundaries := _boundaries_px()
+	var left := boundaries.x
+	var right := boundaries.y
 	var g := float(dragger_width)
 	var rects: Array[Rect2] = [
 		Rect2(0, 0, left, size.y),
@@ -66,15 +84,17 @@ func _sort_children() -> void:
 
 func _draw() -> void:
 	var divider := Color(0.10, 0.12, 0.15, 1.0)
-	draw_rect(Rect2(_left_px(), 0, dragger_width, size.y), divider)
-	draw_rect(Rect2(_right_px() + dragger_width, 0, dragger_width, size.y), divider)
+	var boundaries := _boundaries_px()
+	draw_rect(Rect2(boundaries.x, 0, dragger_width, size.y), divider)
+	draw_rect(Rect2(boundaries.y + dragger_width, 0, dragger_width, size.y), divider)
 
 
 func _boundary_at(pos: Vector2) -> int:
 	var half := dragger_width * 0.5
-	if absf(pos.x - (_left_px() + half)) <= half:
+	var boundaries := _boundaries_px()
+	if absf(pos.x - (boundaries.x + half)) <= half:
 		return 1
-	if absf(pos.x - (_right_px() + dragger_width * 1.5)) <= half:
+	if absf(pos.x - (boundaries.y + dragger_width * 1.5)) <= half:
 		return 2
 	return 0
 
@@ -95,12 +115,17 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 	elif event is InputEventMouseMotion:
 		if _drag_boundary != 0:
+			var available := maxf(_available_width(), 1.0)
+			var mins := _panel_minimums()
+			var boundaries := _boundaries_px()
 			if _drag_boundary == 1:
-				var ratio := clampf((event.position.x - dragger_width * 0.5) / maxf(_available_width(), 1.0), 0.0, 1.0)
-				left_ratio = minf(ratio, right_ratio)
+				var left := clampf(event.position.x - dragger_width * 0.5,
+					mins.x, boundaries.y - mins.y)
+				left_ratio = left / available
 			else:
-				var ratio := clampf((event.position.x - dragger_width * 1.5) / maxf(_available_width(), 1.0), 0.0, 1.0)
-				right_ratio = maxf(ratio, left_ratio)
+				var right := clampf(event.position.x - dragger_width * 1.5,
+					boundaries.x + mins.y, available - mins.z)
+				right_ratio = right / available
 			accept_event()
 		else:
 			mouse_default_cursor_shape = CURSOR_HSIZE if _boundary_at(event.position) else CURSOR_ARROW

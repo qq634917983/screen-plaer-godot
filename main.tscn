@@ -445,6 +445,7 @@ toggle_mode = true
 text = "触点"
 
 [node name="TransitionDock" type="Control" parent="RootVBox/MainContent/QuadSplit/PlayersSection"]
+custom_minimum_size = Vector2(128, 0)
 clip_contents = true
 layout_mode = 2
 
@@ -661,6 +662,7 @@ theme_override_font_sizes/font_size = 12
 text = "00:00 / 00:00"
 
 [node name="MediaDock" type="Control" parent="RootVBox/MainContent/QuadSplit"]
+custom_minimum_size = Vector2(480, 296)
 clip_contents = true
 layout_mode = 2
 
@@ -730,6 +732,7 @@ theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 
 [node name="UtilityDock" type="Control" parent="RootVBox/MainContent/QuadSplit"]
+custom_minimum_size = Vector2(220, 124)
 clip_contents = true
 layout_mode = 2
 
@@ -779,6 +782,7 @@ layout_mode = 2
 text = "重启软件"
 
 [node name="AudioDock" type="Control" parent="RootVBox/MainContent/QuadSplit"]
+custom_minimum_size = Vector2(220, 296)
 clip_contents = true
 layout_mode = 2
 

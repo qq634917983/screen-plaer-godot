@@ -578,3 +578,11 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] 所有生成封面同时写全局缓存和当前项目 `X_cache/thumbs/`
 - [x] `player_layout_smoke` 验证按钮双侧留白；`lazy_cef_startup_smoke` 验证图片、
       音频、HTML 项目封面缓存及网页首帧；Windows 视频回归通过
+
+## 工作区分区最小尺寸（2026-09-13）
+
+- [x] 转场最小宽度设为 128px，完整容纳 96px 快速切换按钮和两侧各 16px 留白
+- [x] 媒体库和音频控制最小宽度分别设为 480px、220px，拖动时不再压坏内部控件
+- [x] 媒体库与音频控制共用 296px 下排最小高度，完整容纳音控标题、通道和音量滑杆
+- [x] QuadSplitContainer 和 TripleSplitContainer 在拖动、恢复比例及窗口缩放时统一遵守子组件最小尺寸
+- [x] `player_layout_smoke` 覆盖横纵极限拖动、共同底边和音量控件完整可见

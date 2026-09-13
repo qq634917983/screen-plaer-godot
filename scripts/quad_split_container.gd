@@ -29,7 +29,8 @@ var _drag_mode := 0 # 0=无 1=竖条 2=横条 3=交叉点
 
 
 func _get_minimum_size() -> Vector2:
-	return Vector2(dragger_width, dragger_width)
+	var mins := _pane_minimums()
+	return Vector2(mins[0] + mins[1] + dragger_width, mins[2] + mins[3] + dragger_width)
 
 
 func _notification(what: int) -> void:
@@ -46,13 +47,44 @@ func _available_y() -> float:
 
 
 func _split_x_px() -> float:
-	return _available_x() * split_x_ratio
+	var mins := _pane_minimums()
+	return _bounded_split(_available_x(), _available_x() * split_x_ratio, mins[0], mins[1])
 
 
 func _split_y_px() -> float:
 	var available := _available_y()
-	var protected_height := minf(float(minimum_pane_height), available * 0.5)
-	return clampf(available * split_y_ratio, protected_height, available - protected_height)
+	var mins := _pane_minimums()
+	return _bounded_split(available, available * split_y_ratio, mins[2], mins[3])
+
+
+## 返回左列、右列、上排、下排的实际最小尺寸。
+func _pane_minimums() -> Array[float]:
+	var result: Array[float] = [0.0, 0.0, float(minimum_pane_height), float(minimum_pane_height)]
+	for child in get_children():
+		if not child is Control:
+			continue
+		var idx := QUADRANT_NAMES.find(child.name)
+		if idx < 0:
+			continue
+		var minimum := (child as Control).get_combined_minimum_size()
+		if idx == 0 or idx == 2:
+			result[0] = maxf(result[0], minimum.x)
+		else:
+			result[1] = maxf(result[1], minimum.x)
+		if idx == 0 or idx == 1:
+			result[2] = maxf(result[2], minimum.y)
+		else:
+			result[3] = maxf(result[3], minimum.y)
+	return result
+
+
+func _bounded_split(available: float, desired: float, first_min: float, second_min: float) -> float:
+	if available <= 0.0:
+		return 0.0
+	var total_min := first_min + second_min
+	if total_min > available and total_min > 0.0:
+		return available * first_min / total_min
+	return clampf(desired, first_min, available - second_min)
 
 
 func effective_split_y_ratio() -> float:
@@ -117,14 +149,17 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion:
 		if _drag_mode != 0:
 			if _drag_mode & 1:
-				split_x_ratio = clampf((event.position.x - dragger_width * 0.5) / maxf(_available_x(), 1.0), 0.0, 1.0)
+				var available_x := maxf(_available_x(), 1.0)
+				var mins := _pane_minimums()
+				var split_x := _bounded_split(available_x,
+					event.position.x - dragger_width * 0.5, mins[0], mins[1])
+				split_x_ratio = split_x / available_x
 			if _drag_mode & 2:
 				var available := maxf(_available_y(), 1.0)
-				var protected_ratio := minf(float(minimum_pane_height) / available, 0.5)
-				split_y_ratio = clampf(
-					(event.position.y - dragger_width * 0.5) / available,
-					protected_ratio,
-					1.0 - protected_ratio)
+				var mins := _pane_minimums()
+				var split_y := _bounded_split(available,
+					event.position.y - dragger_width * 0.5, mins[2], mins[3])
+				split_y_ratio = split_y / available
 			accept_event()
 		else:
 			mouse_default_cursor_shape = _cursor_for_zone(_hit_zone(event.position))
