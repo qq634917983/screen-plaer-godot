@@ -73,8 +73,11 @@ func run() -> void:
 		check(quick_switch.text == "快速切换" and not quick_switch.text.contains("→")
 			and not quick_switch.text.contains("\n"),
 			"Quick switch uses a single-line label without an arrow")
-		check(quick_switch.size.x >= 110.0 and quick_switch.size.y <= 36.0,
-			"Quick switch is wider and shorter")
+		var side_gap := quick_switch.get_global_rect().position.x - transition_content.get_global_rect().position.x
+		check(quick_switch.size.x >= 90.0 and quick_switch.size.y <= 36.0
+			and side_gap >= 15.0
+			and transition_content.get_global_rect().end.x - quick_switch.get_global_rect().end.x >= 15.0,
+			"Quick switch is short and keeps left/right margins")
 		check(quick_switch.get_global_rect().position.y
 			- transition_content.get_global_rect().position.y <= 26.0,
 			"Quick switch sits near the top of the transition content")

@@ -6,8 +6,8 @@ extends PanelContainer
 ## 点击标题栏/画面区任意处 = 加载到预览；「播放」= 推送到输出端；
 ## 静音/循环是条目级偏好（随项目持久化，推送到输出端时生效，
 ## 正在输出该条目时立即生效）。
-## 视频封面由 Thumbnailer 后台抓帧生成；图片直接读文件缩略；
-## 音频/网页/PPT 等无封面类型显示类型占位字形。
+## 视频与网页封面由后台抓帧生成，图片和音频生成图也统一写入项目封面缓存；
+## PPT 在首次预览第一页后抓取封面。
 
 signal preview_requested(card: MediaItemCard)
 signal push_requested(card: MediaItemCard)

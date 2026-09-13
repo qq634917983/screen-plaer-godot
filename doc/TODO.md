@@ -568,3 +568,13 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] `lazy_cef_startup_smoke` 验证启动阶段保持未加载、首次网页请求初始化及首帧恢复；
       Windows 视频播放回归通过
 - [x] Windows Release 实测主窗口就绪时间由约 19.7 秒降至约 7.5 秒
+
+## 转场按钮留白与全类型封面缓存（2026-09-13）
+
+- [x] 快速切换按钮缩为 96×34，转场内容区左右各保留 16px，不再贴满父容器
+- [x] 新增 WebThumbnailer，复用 CEF 独立离屏抓取 HTML 真实网页画面，不切换预览/输出
+- [x] 已有项目缺少的 HTML 封面进入待处理队列，CEF 首次启用后自动逐项补齐
+- [x] 图片原图缩略与音频统一波形封面也写入 PNG，视频/PPT 保持真实首帧抓取
+- [x] 所有生成封面同时写全局缓存和当前项目 `X_cache/thumbs/`
+- [x] `player_layout_smoke` 验证按钮双侧留白；`lazy_cef_startup_smoke` 验证图片、
+      音频、HTML 项目封面缓存及网页首帧；Windows 视频回归通过

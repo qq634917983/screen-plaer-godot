@@ -18,6 +18,7 @@ extends PanelContainer
 const MediaItemCardScene := preload("res://scripts/media_item_card.gd")
 const PlaylistCardScene := preload("res://scripts/playlist_card.gd")
 const ThumbnailerScene := preload("res://scripts/thumbnailer.gd")
+const WebThumbnailerScene := preload("res://scripts/web_thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
@@ -38,6 +39,9 @@ var _cef_initializing := false
 var _pending_cef_preview := ""  # 首次初始化 CEF 后继续加载的网页/PPT
 var _pending_cef_output := ""
 var _thumbnailer  # Thumbnailer（preload 实例化，不依赖全局类注册）
+var _web_thumbnailer  # WebThumbnailer（复用延迟初始化的 CEF，独立离屏抓取 HTML 封面）
+var _web_cover_backlog: Array[String] = []
+var _web_cover_init_requested := false
 var _pptx_converter  # PptxConverter（同上）
 var _media_items: Array[MediaObject] = []  # 与媒体卡片一一对应
 var _playlists: Array[PlaylistObject] = []  # 播放列表（与列表卡片一一对应）
@@ -161,6 +165,10 @@ func _ready() -> void:
 	_thumbnailer.name = "Thumbnailer"
 	add_child(_thumbnailer)
 	_thumbnailer.thumbnail_ready.connect(_on_thumbnail_ready)
+	_web_thumbnailer = WebThumbnailerScene.new()
+	_web_thumbnailer.name = "WebThumbnailer"
+	add_child(_web_thumbnailer)
+	_web_thumbnailer.thumbnail_ready.connect(_on_thumbnail_ready)
 
 	# CEF 是启动阶段最重的组件。普通视频/音频/图片不需要浏览器，因此这里只
 	# 准备引用；首次打开网页或 PPT 时再由 _ensure_cef 初始化并显示进度。
@@ -294,6 +302,9 @@ func _ensure_cef(show_feedback := true) -> bool:
 		_output.web_cef = _cef
 		if _pptx_converter != null:
 			_pptx_converter.setup(_cef)
+		if _web_thumbnailer != null:
+			_web_thumbnailer.setup(_cef)
+			_flush_web_cover_backlog()
 	else:
 		push_error("CEF 初始化失败：" + instance.get_error())
 		instance.queue_free()
@@ -486,11 +497,11 @@ func _load_project_from(path: String) -> void:
 	_clear_media_items()
 	if not data["items"].is_empty():
 		for d in data["items"]:
-			_add_media_item(MediaObject.from_dict(d))
+			_add_media_item(MediaObject.from_dict(d), false)
 	else:
 		# 旧版项目文件只有纯路径列表
 		for media_path in data["media_paths"]:
-			_add_media_item(MediaObject.create(str(media_path)))
+			_add_media_item(MediaObject.create(str(media_path)), false)
 	for pd in data["playlists"]:
 		_add_playlist(PlaylistObject.from_dict(pd))
 	_apply_library_order(data.get("library_order", []))
@@ -547,7 +558,7 @@ func _update_title() -> void:
 
 # ---------- 媒体库（卡片式） ----------
 
-func _add_media_item(media: MediaObject) -> void:
+func _add_media_item(media: MediaObject, generate_web_cover := true) -> void:
 	if _find_media(media.path) != null:
 		return  # 已在库中（条目设置窗口以路径为键，不允许重复）
 	_media_items.append(media)
@@ -563,7 +574,7 @@ func _add_media_item(media: MediaObject) -> void:
 	card.mute_toggled.connect(_on_card_mute_toggled)
 	card.move_requested.connect(_move_library_card)
 	card.set_missing(not media.exists())
-	_apply_card_cover(card)
+	_apply_card_cover(card, generate_web_cover)
 	_refresh_card_indices()
 	_refresh_order_controls()
 	_rebuild_audio_channels()
@@ -735,57 +746,76 @@ func _first_playable() -> MediaObject:
 	return null
 
 
-func _apply_card_cover(card: MediaItemCard) -> void:
-	# 视频：优先内存缓存，其次已持久化的封面文件（项目 X_cache 优先于全局
-	# user://thumbnails），都没有则排队后台截取；
-	# PPT：封面在首次预览时从幻灯片第一页抓帧（无队列截取器通路）；
-	# 图片：直接读文件缩略；音频/网页保持卡片的类型占位字形
+func _apply_card_cover(card: MediaItemCard, generate_web_cover := false) -> void:
+	# 所有媒体统一先读项目 X_cache/thumbs，再回退全局缓存；没有封面时按类型
+	# 自动生成。HTML 使用独立 CEF 离屏浏览器，不会占用预览/输出播放器。
 	if not card.media.exists():
 		return  # 文件已丢失：不做封面（图片读不到、视频排队截取也只会失败）
+	if _thumb_cache.has(card.media_path):
+		card.set_thumbnail(_thumb_cache[card.media_path])
+		return
+	var cached := ProjectStore.find_cover(_project_cache_dir, card.media_path)
+	if not cached.is_empty():
+		var cached_image := Image.load_from_file(cached)
+		if cached_image != null:
+			var cached_texture := ImageTexture.create_from_image(cached_image)
+			_thumb_cache[card.media_path] = cached_texture
+			card.set_thumbnail(cached_texture)
+			return
 	match card.media.type:
 		MediaObject.Type.VIDEO:
-			if _thumb_cache.has(card.media_path):
-				card.set_thumbnail(_thumb_cache[card.media_path])
-				return
-			var cover := ProjectStore.find_cover(_project_cache_dir, card.media_path)
-			if not cover.is_empty():
-				var img := Image.load_from_file(cover)
-				if img != null:
-					var tex := ImageTexture.create_from_image(img)
-					_thumb_cache[card.media_path] = tex
-					card.set_thumbnail(tex)
-					return
 			_thumbnailer.enqueue([card.media_path])
 		MediaObject.Type.PPT:
-			if _thumb_cache.has(card.media_path):
-				card.set_thumbnail(_thumb_cache[card.media_path])
-				return
-			var cover := ProjectStore.find_cover(_project_cache_dir, card.media_path)
-			if not cover.is_empty():
-				var img := Image.load_from_file(cover)
-				if img != null:
-					var tex := ImageTexture.create_from_image(img)
-					_thumb_cache[card.media_path] = tex
-					card.set_thumbnail(tex)
+			pass  # 首次预览第一页后由 _schedule_ppt_cover_grab 抓取
 		MediaObject.Type.IMAGE:
-			if _thumb_cache.has(card.media_path):
-				card.set_thumbnail(_thumb_cache[card.media_path])
-				return
 			var img := Image.load_from_file(card.media_path)
 			if img == null:
 				return
-			# 等比缩放到 320x180 以内，避免大图占内存
-			var ratio := minf(320.0 / img.get_width(), 180.0 / img.get_height())
-			if ratio < 1.0:
-				img.resize(int(img.get_width() * ratio), int(img.get_height() * ratio), Image.INTERPOLATE_BILINEAR)
-			var tex := ImageTexture.create_from_image(img)
-			_thumb_cache[card.media_path] = tex
-			card.set_thumbnail(tex)
+			_save_cover(card.media_path, img)
+		MediaObject.Type.AUDIO:
+			_save_cover(card.media_path, _make_audio_cover())
+		MediaObject.Type.HTML:
+			if not _web_cover_backlog.has(card.media_path):
+				_web_cover_backlog.append(card.media_path)
+			if generate_web_cover:
+				_request_web_cover_generation()
 
 
-## 封面写盘：全局 user://thumbnails/ 写穿（项目 X_cache 在保存项目时同步）。
-## 视频封面（Thumbnailer）与 PPT 封面（幻灯片首帧抓图）共用此通路。
+func _request_web_cover_generation() -> void:
+	if _web_cover_init_requested or _web_cover_backlog.is_empty():
+		return
+	_web_cover_init_requested = true
+	var ok := await _ensure_cef()
+	_web_cover_init_requested = false
+	if ok:
+		_flush_web_cover_backlog()
+
+
+func _flush_web_cover_backlog() -> void:
+	if _web_thumbnailer == null or not _cef_ready() or _web_cover_backlog.is_empty():
+		return
+	_web_thumbnailer.enqueue(_web_cover_backlog)
+	_web_cover_backlog.clear()
+
+
+func _make_audio_cover() -> Image:
+	var image := Image.create(320, 180, false, Image.FORMAT_RGB8)
+	image.fill(Color("10151f"))
+	# 没有可截图画面的音频用统一波形封面，保证卡片和项目缓存仍有实际 PNG。
+	var heights := [28, 52, 78, 108, 68, 42, 92, 120, 76, 48, 66, 98, 58]
+	for i in heights.size():
+		var height: int = heights[i]
+		var x := 53 + i * 17
+		var color := Color("3b82f6").lerp(Color("35d6c1"), float(i) / float(heights.size() - 1))
+		image.fill_rect(Rect2i(x, (180 - height) / 2, 9, height), color)
+	return image
+
+
+## 封面写盘：同时写全局 user://thumbnails/ 和当前项目 X_cache/thumbs/。
+## 视频、图片、音频生成图、HTML 网页截图与 PPT 首帧共用此通路。
 func _save_cover(path: String, img: Image) -> void:
+	if img == null or img.is_empty():
+		return
 	# 等比缩放到 320x180 以内，与 Thumbnailer 输出一致
 	var scale := minf(320.0 / img.get_width(), 180.0 / img.get_height())
 	if scale < 1.0:
@@ -793,6 +823,10 @@ func _save_cover(path: String, img: Image) -> void:
 	var err := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(ProjectStore.GLOBAL_THUMB_DIR))
 	if err == OK:
 		img.save_png(ProjectStore.GLOBAL_THUMB_DIR + "/" + path.md5_text() + ".png")
+	if not _project_cache_dir.is_empty():
+		var project_thumb_dir := _project_cache_dir + "/thumbs"
+		if DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(project_thumb_dir)) == OK:
+			img.save_png(project_thumb_dir + "/" + path.md5_text() + ".png")
 	var tex := ImageTexture.create_from_image(img)
 	_thumb_cache[path] = tex
 	for card in _media_grid.get_children():
@@ -1436,6 +1470,8 @@ func _request_app_quit() -> void:
 		_output.prepare_shutdown()
 	if _thumbnailer != null and _thumbnailer.has_method("prepare_shutdown"):
 		_thumbnailer.prepare_shutdown()
+	if _web_thumbnailer != null and _web_thumbnailer.has_method("prepare_shutdown"):
+		_web_thumbnailer.prepare_shutdown()
 	if _pptx_converter != null and _pptx_converter.has_method("prepare_shutdown"):
 		_pptx_converter.prepare_shutdown()
 	# 给 queue_free 的浏览器一个消息循环周期，再进入全局 CEF shutdown。

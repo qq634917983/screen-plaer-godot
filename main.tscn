@@ -481,16 +481,16 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_player_content")
 
 [node name="TransitionCenter" type="MarginContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
+theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 8
+theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 8
 
 [node name="TransitionStack" type="VBoxContainer" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter"]
 layout_mode = 2
 
 [node name="QuickSwitch" type="Button" parent="RootVBox/MainContent/QuadSplit/PlayersSection/TransitionDock/TransitionPanel/TransitionVBox/TransitionContent/TransitionCenter/TransitionStack" unique_id=363366299]
-custom_minimum_size = Vector2(112, 34)
+custom_minimum_size = Vector2(96, 34)
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
