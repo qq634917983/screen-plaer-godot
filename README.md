@@ -7,6 +7,17 @@
 
 双平台依赖、启动方法与验证范围见 [doc/PLATFORMS.md](doc/PLATFORMS.md)。
 
+Windows 可安装版本由 Inno Setup 生成。先按下方 Release 流程准备原生依赖，然后执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build_windows_installer.ps1 `
+  -Godot "D:/app/godot/Godot_v4.7.2-stable_win64_console.exe"
+```
+
+脚本先构建完整 Release 目录，再输出 `dist/ScreenPlayer-Setup-<版本>.exe`。如果 Release
+目录已经由 `tools/build_windows_release.ps1` 验证完成，可增加 `-SkipReleaseBuild` 只重新生成安装包。
+当前项目尚未配置 Windows 代码签名证书，因此首次运行安装包时系统可能显示“未知发布者”。
+
 ## macOS 运行
 
 `master` 已合并 ARM64 macOS 与 x86_64 Windows 的双平台适配，共用业务逻辑，按平台加载原生依赖。

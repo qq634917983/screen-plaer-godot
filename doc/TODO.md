@@ -586,3 +586,11 @@ Windows 真机不在当前环境，保留既有正常 DLL，不能将配置检�
 - [x] 媒体库与音频控制共用 296px 下排最小高度，完整容纳音控标题、通道和音量滑杆
 - [x] QuadSplitContainer 和 TripleSplitContainer 在拖动、恢复比例及窗口缩放时统一遵守子组件最小尺寸
 - [x] `player_layout_smoke` 覆盖横纵极限拖动、共同底边和音量控件完整可见
+
+## Windows 可安装发行包（2026-09-14）
+
+- [x] 新增 Inno Setup 安装定义，递归打包完整 Release 目录及 MPV、CEF、VC++ 运行库
+- [x] 默认安装到当前用户目录，无需管理员权限，包含开始菜单、可选桌面快捷方式和卸载入口
+- [x] 新增 `tools/build_windows_installer.ps1`，可串联 Release 构建或复用已验证发行目录
+- [x] 安装包版本自动读取 `project.godot`，构建结束输出文件大小与 SHA256
+- [x] 隔离目录实测静默安装/卸载通过，安装后的 MPV 与 CEF 原生扩展加载通过
