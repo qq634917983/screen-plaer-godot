@@ -32,6 +32,8 @@ const BUILTIN_LAYOUT := {
 
 var _preview: PlayerSlot
 var _output: PlayerSlot
+var _cast_geometry_request := 0
+
 var cef_cache_path := "user://cef_cache"  # 测试可在入树前设置独立目录，避免占用正在运行的浏览器配置
 var cef_enabled := true  # 非网页冒烟测试可关闭，避免与已运行编辑器的 CEF 单例互相占用
 var _cef: Node  # GDCEF 浏览器内核管理节点（gdcef 未安装时为 null）
@@ -217,6 +219,9 @@ func _ready() -> void:
 	_cast_window.close_requested.connect(_on_cast_window_close_requested)
 	_settings_window.settings_changed.connect(_apply_settings)
 	_settings_window.layout_command_requested.connect(_on_layout_command_requested)
+	# 原生子窗口的键盘事件不会冒泡到主窗口。
+	_cast_window.window_input.connect(_on_cast_hotkey_input)
+	_settings_window.window_input.connect(_on_cast_hotkey_input)
 	# 主窗口重新获得焦点时复查条目文件存在性（源文件被外部移动/删除/恢复后标记自动更新）
 	get_window().focus_entered.connect(_refresh_missing_states)
 	_preview_progress.drag_started.connect(func() -> void: _preview_dragging = true)
@@ -351,16 +356,31 @@ func _process(delta: float) -> void:
 		_check_playlist_schedules()
 
 
+func _input(event: InputEvent) -> void:
+	_on_cast_hotkey_input(event)
+
+
+func _on_cast_hotkey_input(event: InputEvent) -> void:
+	if _settings_window.is_capturing_hotkey():
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.get_keycode_with_modifiers() == SettingsWindow.get_hotkey("toggle_cast"):
+			_on_hide_cast_pressed()
+			var focused := Window.get_focused_window()
+			if focused != null:
+				focused.set_input_as_handled()
+
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var key_event := event as InputEventKey
-	if key_event.keycode == SettingsWindow.get_hotkey("quick_switch"):
+	if key_event.get_keycode_with_modifiers() == SettingsWindow.get_hotkey("quick_switch"):
 		_on_quick_switch_pressed()
 		get_viewport().set_input_as_handled()
 		return
 	for i in 3:
-		if key_event.keycode == SettingsWindow.get_hotkey("switch_item_%d" % (i + 1)):
+		if key_event.get_keycode_with_modifiers() == SettingsWindow.get_hotkey("switch_item_%d" % (i + 1)):
 			_switch_item(i)
 			get_viewport().set_input_as_handled()
 			return
@@ -435,11 +455,7 @@ func _apply_settings() -> void:
 	# 投屏窗口几何
 	var w := int(ProjectStore.get_setting("cast_window", "width", 960))
 	var h := int(ProjectStore.get_setting("cast_window", "height", 540))
-	_cast_window.size = Vector2i(w, h)
-	var pos_x := int(ProjectStore.get_setting("cast_window", "pos_x", -1))
-	var pos_y := int(ProjectStore.get_setting("cast_window", "pos_y", -1))
-	if pos_x >= 0 and pos_y >= 0:
-		_cast_window.position = Vector2i(pos_x, pos_y)
+	_apply_cast_geometry()
 	var zoom := float(ProjectStore.get_setting("cast_window", "zoom", 100)) / 100.0
 	var pan := Vector2(
 		float(ProjectStore.get_setting("cast_window", "pan_x", 0)),
@@ -454,6 +470,32 @@ func _apply_settings() -> void:
 	_cast_video_view.pivot_offset = Vector2(w, h) / 2.0
 	_cast_video_view.scale = Vector2(zoom * item_scale, zoom * item_scale)
 	_cast_video_view.position = pan + item_offset
+
+
+func _apply_cast_geometry() -> void:
+	_cast_geometry_request += 1
+	var request := _cast_geometry_request
+	var target_size := Vector2i(
+		int(ProjectStore.get_setting("cast_window", "width", 960)),
+		int(ProjectStore.get_setting("cast_window", "height", 540)))
+	var centered := get_window().position + (get_window().size - target_size) / 2
+	var x := int(ProjectStore.get_setting("cast_window", "pos_x", -1))
+	var y := int(ProjectStore.get_setting("cast_window", "pos_y", -1))
+	var target_position := Vector2i(centered.x if x == -1 else x, centered.y if y == -1 else y)
+	# 原生窗口的 resize/show 可能异步改写位置；按最终几何校验，旧请求立即让位。
+	for attempt in 6:
+		if request != _cast_geometry_request:
+			return
+		if _cast_window.size != target_size:
+			_cast_window.size = target_size
+		_cast_window.position = target_position
+		await get_tree().process_frame
+		await get_tree().process_frame
+		if request != _cast_geometry_request:
+			return
+		if _cast_window.size == target_size and _cast_window.position == target_position:
+			return
+	push_warning("投屏窗口几何未被系统接受，请检查显示器布局。")
 
 
 # ---------- 快捷键 ----------
@@ -1403,13 +1445,9 @@ func _on_quick_switch_pressed() -> void:
 
 
 func _show_cast_window() -> void:
-	# 首次弹出时若未设置固定位置，则居中于主窗口
-	if not _cast_window.visible:
-		var pos_x := int(ProjectStore.get_setting("cast_window", "pos_x", -1))
-		if pos_x < 0:
-			var main_win := get_window()
-			_cast_window.position = main_win.position + (main_win.size - _cast_window.size) / 2
 	_cast_window.show()
+	_apply_cast_geometry()
+	_hide_cast_button.text = "隐藏投屏"
 
 
 func _on_output_state_changed() -> void:
@@ -1426,8 +1464,12 @@ func _on_output_state_changed() -> void:
 
 
 func _on_hide_cast_pressed() -> void:
-	_cast_window.visible = not _cast_window.visible
-	_hide_cast_button.text = "隐藏投屏" if _cast_window.visible else "显示投屏"
+	if _cast_window.visible:
+		_cast_window.hide()
+		_hide_cast_button.text = "显示投屏"
+		get_window().grab_focus()
+	else:
+		_show_cast_window()
 
 
 func _on_cast_window_close_requested() -> void:

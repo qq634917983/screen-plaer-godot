@@ -8,6 +8,7 @@ signal layout_command_requested(command: String, path: String)
 
 const HOTKEY_ACTIONS := [
 	["quick_switch", "快速切换"],
+	["toggle_cast", "显示/隐藏投屏窗口"],
 	["switch_item_1", "切换条目 1"],
 	["switch_item_2", "切换条目 2"],
 	["switch_item_3", "切换条目 3"],
@@ -35,6 +36,11 @@ var _layout_import_dialog: FileDialog
 
 func _ready() -> void:
 	close_requested.connect(hide)
+	visibility_changed.connect(func() -> void:
+		if not visible:
+			_capturing_action = ""
+			_refresh_hotkey_buttons()
+	)
 	_build_ui()
 
 
@@ -42,8 +48,11 @@ func _input(event: InputEvent) -> void:
 	if _capturing_action.is_empty():
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode in [KEY_CTRL, KEY_ALT, KEY_SHIFT, KEY_META]:
+			get_viewport().set_input_as_handled()
+			return
 		if event.keycode != KEY_ESCAPE:
-			_pending_hotkeys[_capturing_action] = event.keycode
+			_pending_hotkeys[_capturing_action] = event.get_keycode_with_modifiers()
 		_capturing_action = ""
 		_refresh_hotkey_buttons()
 		get_viewport().set_input_as_handled()
@@ -68,8 +77,8 @@ func _build_ui() -> void:
 	tabs.name = "SettingsTabs"
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(tabs)
-	tabs.add_child(_build_basic_tab())
-	tabs.add_child(_build_window_tab())
+	tabs.add_child(_scroll_tab(_build_basic_tab()))
+	tabs.add_child(_scroll_tab(_build_window_tab()))
 	tabs.add_child(_build_layout_tab())
 	tabs.add_child(_build_help_tab())
 
@@ -89,6 +98,15 @@ func _build_ui() -> void:
 	_ok_button.custom_minimum_size.x = 88
 	_ok_button.pressed.connect(_confirm_changes)
 	actions.add_child(_ok_button)
+
+
+func _scroll_tab(content: Control) -> ScrollContainer:
+	var scroll := ScrollContainer.new()
+	scroll.name = content.name
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	return scroll
 
 
 func _build_basic_tab() -> Control:
@@ -143,7 +161,7 @@ func _build_basic_tab() -> Control:
 	for entry in HOTKEY_ACTIONS:
 		tab.add_child(_make_hotkey_row(entry[0], entry[1]))
 	var key_note := Label.new()
-	key_note.text = "点击右侧按钮后按下新按键（Esc 取消）。「切换条目 N」= 直接把媒体库第 N 个视频推送到输出端。"
+	key_note.text = "点击右侧按钮后按下新按键或组合键（Esc 取消）。「切换条目 N」= 直接把媒体库第 N 个视频推送到输出端。"
 	key_note.add_theme_font_size_override("font_size", 11)
 	key_note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
 	key_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -172,11 +190,15 @@ func _build_window_tab() -> Control:
 	_pan_y_spin = _make_spin(grid, "平移 Y", -4096, 4096, 1, 0)
 
 	var note := Label.new()
-	note.text = "位置 X/Y 为 -1 时表示自动居中于主窗口；缩放/平移作用于窗口内的画面。"
+	note.text = "位置 X、Y 各自为 -1 时，该方向自动居中；支持负坐标的扩展屏幕。输入后点击「应用窗口设置」。缩放/平移作用于窗口内的画面。"
 	note.add_theme_font_size_override("font_size", 11)
 	note.add_theme_color_override("font_color", Color(0.56, 0.6, 0.66))
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tab.add_child(note)
+	var apply_button := Button.new()
+	apply_button.text = "应用窗口设置"
+	apply_button.pressed.connect(_commit_window_settings)
+	tab.add_child(apply_button)
 	return tab
 
 
@@ -337,6 +359,21 @@ func _make_spin(parent: Control, label_text: String, minv: float, maxv: float, s
 	return spin
 
 
+func _commit_window_settings() -> void:
+	# SpinBox 的文本可能尚未按 Enter 确认；先统一提交，再保存一组完整数值。
+	for spin: SpinBox in [_width_spin, _height_spin, _pos_x_spin, _pos_y_spin,
+			_zoom_spin, _pan_x_spin, _pan_y_spin]:
+		spin.set_block_signals(true)
+		spin.apply()
+		spin.set_block_signals(false)
+	_save_window_settings()
+	settings_changed.emit()
+
+
+func is_capturing_hotkey() -> bool:
+	return not _capturing_action.is_empty()
+
+
 func _save_window_settings() -> void:
 	ProjectStore.set_setting("cast_window", "width", int(_width_spin.value))
 	ProjectStore.set_setting("cast_window", "height", int(_height_spin.value))
@@ -412,6 +449,8 @@ func _set_spin_no_signal(spin: SpinBox, value: Variant) -> void:
 
 static func _default_hotkey(action: String) -> int:
 	match action:
+		"toggle_cast":
+			return KEY_P | KEY_MASK_CTRL | KEY_MASK_ALT
 		"quick_switch":
 			return KEY_Q
 		"switch_item_1":
