@@ -123,6 +123,7 @@ var _loading_tween: Tween
 
 
 func _ready() -> void:
+	AppLog.info("app", "main_initializing")
 	_startup_overlay.visible = true
 	_startup_overlay.modulate = Color.WHITE
 	_set_startup_progress(6.0, "正在准备界面…")
@@ -217,6 +218,11 @@ func _ready() -> void:
 	_hide_cast_button.pressed.connect(_on_hide_cast_pressed)
 	_restart_button.pressed.connect(_on_restart_pressed)
 	_cast_window.close_requested.connect(_on_cast_window_close_requested)
+	_cast_window.visibility_changed.connect(func() -> void:
+		AppLog.info("cast", "visibility_changed", {"visible": _cast_window.visible,
+			"x": _cast_window.position.x, "y": _cast_window.position.y}))
+	_cast_window.focus_entered.connect(func() -> void: AppLog.debug("cast", "focus_entered"))
+	_cast_window.focus_exited.connect(func() -> void: AppLog.debug("cast", "focus_exited"))
 	_settings_window.settings_changed.connect(_apply_settings)
 	_settings_window.layout_command_requested.connect(_on_layout_command_requested)
 	# 原生子窗口的键盘事件不会冒泡到主窗口。
@@ -261,6 +267,11 @@ func _ready() -> void:
 	_set_startup_progress(100.0, "准备完成")
 	await get_tree().process_frame
 	_hide_loading_overlay()
+	var screens := []
+	for index in DisplayServer.get_screen_count():
+		screens.append({"index": index, "position": str(DisplayServer.screen_get_position(index)),
+			"size": str(DisplayServer.screen_get_size(index)), "scale": DisplayServer.screen_get_scale(index)})
+	AppLog.info("app", "main_ready", {"media_count": _media_items.size(), "screens": screens})
 
 
 func _set_startup_progress(value: float, stage: String) -> void:
@@ -365,6 +376,7 @@ func _on_cast_hotkey_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.get_keycode_with_modifiers() == SettingsWindow.get_hotkey("toggle_cast"):
+			AppLog.info("hotkey", "cast_toggle", {"shortcut": OS.get_keycode_string(event.get_keycode_with_modifiers()), "visible_before": _cast_window.visible})
 			_on_hide_cast_pressed()
 			var focused := Window.get_focused_window()
 			if focused != null:
@@ -408,6 +420,7 @@ func _setup_menus() -> void:
 
 	var help_popup := _menu_help.get_popup()
 	help_popup.add_item("关于 ScreenPlayer", 0)
+	help_popup.add_item("打开日志文件夹", 1)
 	help_popup.id_pressed.connect(_on_menu_help_id_pressed)
 
 
@@ -439,6 +452,9 @@ func _on_menu_settings_pressed() -> void:
 
 
 func _on_menu_help_id_pressed(_id: int) -> void:
+	if _id == 1:
+		AppLog.open_folder()
+		return
 	_about_dialog.dialog_text = "ScreenPlayer v%s\n跨窗口同步播放器\n\n预览 → 快速切换 → 输出 + 投屏窗口\n输出与投屏窗口共享同一解码实例与纹理，画面声音完全一致。" \
 		% ProjectSettings.get_setting("application/config/version", "0.1.1")
 	_about_dialog.popup_centered()
@@ -475,6 +491,7 @@ func _apply_settings() -> void:
 func _apply_cast_geometry() -> void:
 	_cast_geometry_request += 1
 	var request := _cast_geometry_request
+	var started_usec := Time.get_ticks_usec()
 	var target_size := Vector2i(
 		int(ProjectStore.get_setting("cast_window", "width", 960)),
 		int(ProjectStore.get_setting("cast_window", "height", 540)))
@@ -482,19 +499,26 @@ func _apply_cast_geometry() -> void:
 	var x := int(ProjectStore.get_setting("cast_window", "pos_x", -1))
 	var y := int(ProjectStore.get_setting("cast_window", "pos_y", -1))
 	var target_position := Vector2i(centered.x if x == -1 else x, centered.y if y == -1 else y)
+	AppLog.info("cast", "geometry_requested", {"request_id": request, "x": target_position.x, "y": target_position.y, "width": target_size.x, "height": target_size.y, "visible": _cast_window.visible, "actual_x": _cast_window.position.x, "actual_y": _cast_window.position.y})
 	# 原生窗口的 resize/show 可能异步改写位置；按最终几何校验，旧请求立即让位。
 	for attempt in 6:
 		if request != _cast_geometry_request:
+			AppLog.debug("cast", "geometry_superseded", {"request_id": request})
 			return
+		if attempt > 0:
+			AppLog.debug("cast", "geometry_retry", {"request_id": request, "attempt": attempt + 1, "actual_x": _cast_window.position.x, "actual_y": _cast_window.position.y})
 		if _cast_window.size != target_size:
 			_cast_window.size = target_size
 		_cast_window.position = target_position
 		await get_tree().process_frame
 		await get_tree().process_frame
 		if request != _cast_geometry_request:
+			AppLog.debug("cast", "geometry_superseded", {"request_id": request})
 			return
 		if _cast_window.size == target_size and _cast_window.position == target_position:
+			AppLog.info("cast", "geometry_applied", {"request_id": request, "attempts": attempt + 1, "duration_us": Time.get_ticks_usec() - started_usec, "x": _cast_window.position.x, "y": _cast_window.position.y, "width": _cast_window.size.x, "height": _cast_window.size.y})
 			return
+	AppLog.warn("cast", "geometry_failed", {"request_id": request, "actual_x": _cast_window.position.x, "actual_y": _cast_window.position.y, "actual_width": _cast_window.size.x, "actual_height": _cast_window.size.y})
 	push_warning("投屏窗口几何未被系统接受，请检查显示器布局。")
 
 
@@ -529,6 +553,7 @@ func _load_initial_project() -> void:
 
 
 func _load_project_from(path: String) -> void:
+	AppLog.info("project", "open_requested", AppLog.media_ref(path))
 	var data := ProjectStore.load_project(path)
 	if data.is_empty():
 		push_warning("项目文件无法读取：" + path)
@@ -559,6 +584,7 @@ func _save_current_project() -> void:
 	if err != OK:
 		push_error("项目保存失败（%s）：%s" % [_project_path, error_string(err)])
 		return
+	AppLog.debug("project", "saved", {"resource": AppLog.media_ref(_project_path), "items": _media_items.size()})
 	# 同步项目缓存捆绑：封面 + PPT 转换结果复制进 X_cache/（缺失才复制）
 	ProjectStore.sync_project_cache(_project_path, _media_items)
 
@@ -901,6 +927,7 @@ func _clear_media_items() -> void:
 ## 按类型把条目加载到预览端：视频/音频走 mpv，图片走静态纹理通路，网页走 CEF，
 ## PPT 走预转 HTML（无缓存时触发转换并显示占位，完成后自动加载）
 func _load_preview(m: MediaObject) -> void:
+	AppLog.info("playback", "preview_requested", AppLog.media_ref(m.path))
 	if m.type in [MediaObject.Type.HTML, MediaObject.Type.PPT] and not _cef_ready():
 		_pending_cef_preview = m.path
 		_load_preview_after_cef(m)
@@ -1052,6 +1079,7 @@ func _on_card_push(card: MediaItemCard) -> void:
 ## 直接加载到输出端（从开头自动播放）：视频/音频走 mpv，图片走静态纹理，
 ## 网页走 CEF，PPT 走缓存 HTML（无缓存时后台转换，完成自动起播）
 func _load_output(m: MediaObject) -> void:
+	AppLog.info("playback", "output_requested", AppLog.media_ref(m.path))
 	if m.type in [MediaObject.Type.HTML, MediaObject.Type.PPT] and not _cef_ready():
 		_pending_cef_output = m.path
 		_load_output_after_cef(m)
@@ -1410,6 +1438,7 @@ func _on_output_stop_pressed() -> void:
 # ---------- 快速切换 / 投屏窗口 ----------
 
 func _on_quick_switch_pressed() -> void:
+	AppLog.info("playback", "quick_switch", {"preview": AppLog.media_ref(_preview.media_path), "time": _preview.elapsed, "playing": _preview.playing})
 	# 预览为空但媒体库有内容时，先加载第一个可播放条目再切换
 	if _preview.media_path.is_empty():
 		var m := _first_playable()
@@ -1445,6 +1474,7 @@ func _on_quick_switch_pressed() -> void:
 
 
 func _show_cast_window() -> void:
+	AppLog.info("cast", "show_requested", {"visible_before": _cast_window.visible})
 	_cast_window.show()
 	_apply_cast_geometry()
 	_hide_cast_button.text = "隐藏投屏"
@@ -1464,6 +1494,7 @@ func _on_output_state_changed() -> void:
 
 
 func _on_hide_cast_pressed() -> void:
+	AppLog.info("cast", "visibility_toggle", {"visible_before": _cast_window.visible})
 	if _cast_window.visible:
 		_cast_window.hide()
 		_hide_cast_button.text = "显示投屏"
@@ -1473,6 +1504,7 @@ func _on_hide_cast_pressed() -> void:
 
 
 func _on_cast_window_close_requested() -> void:
+	AppLog.info("cast", "close_requested")
 	_cast_window.hide()
 	_hide_cast_button.text = "显示投屏"
 

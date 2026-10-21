@@ -46,6 +46,7 @@ var current_page := 0  # SLIDE 帧源当前页（0 基）
 var _video_view: TextureRect
 var _placeholder: Control
 var _browser: Node  # GdBrowserView（WEB 帧源）
+var _load_started_usec := 0
 var _awaiting_first_frame := false
 var _pending_seek := -1.0  # 首帧到达后要跳转的位置（load_file 前 seek 会被忽略）
 var _seek_retries := 0  # 首帧时 demuxer 可能未就绪导致 seek 丢失，用 time_changed 校验重试
@@ -84,6 +85,7 @@ func is_available() -> bool:
 ## autoplay=false 时装载后立即暂停（load_file 本身会自动起播）。
 ## seek_pos >= 0 时首帧到达后跳转到该进度。
 func load_media(path: String, autoplay := true, seek_pos := -1.0) -> void:
+	AppLog.info("player", "media_load", {"slot": str(name), "resource": AppLog.media_ref(path), "autoplay": autoplay, "seek": seek_pos})
 	if mpv == null:
 		push_warning("MPVPlayer 不可用，无法播放：" + path)
 		return
@@ -102,6 +104,7 @@ func load_media(path: String, autoplay := true, seek_pos := -1.0) -> void:
 				_placeholder.text = "文件不存在：\n" + path
 		state_changed.emit()
 		return
+	_load_started_usec = Time.get_ticks_usec()
 	media_path = path
 	source_kind = SourceKind.MPV
 	elapsed = 0.0
@@ -134,6 +137,7 @@ func load_media(path: String, autoplay := true, seek_pos := -1.0) -> void:
 ## 静态纹理帧源通路：图片等无需解码的媒体直接读图显示（不经 mpv）。
 ## 与 mpv 通路共用显示与 frame_updated 信号，投屏窗口对帧源类型无感知。
 func load_static(path: String) -> void:
+	AppLog.info("player", "image_load", {"slot": str(name), "resource": AppLog.media_ref(path)})
 	var img := Image.load_from_file(path)
 	if img == null:
 		push_warning("图片加载失败：" + path)
@@ -162,6 +166,7 @@ func load_static(path: String) -> void:
 ## 分辨率（WEB_VIEWPORT_SIZE），窗口缩放由 TextureRect 完成——与视频同模型，
 ## 小窗口下页面等比缩小但完整可见；投屏窗口持有同一纹理引用即自动跟随。
 func load_web(path: String) -> void:
+	AppLog.info("player", "web_load", {"slot": str(name), "resource": AppLog.media_ref(path)})
 	var url := PlatformPaths.browser_url(path)
 	if not _start_browser(url, SourceKind.WEB):
 		return
@@ -176,6 +181,7 @@ func load_web(path: String) -> void:
 ## start_page 为起始页（0 基，快速切换时对齐预览端页码）；
 ## source_path 为原始 pptx 路径（媒体身份/高亮匹配用），空则用 html_path。
 func load_slides(html_path: String, p_page_count := 0, start_page := 0, source_path := "") -> void:
+	AppLog.info("player", "slides_load", {"slot": str(name), "resource": AppLog.media_ref(source_path), "pages": p_page_count, "start_page": start_page})
 	var url := PlatformPaths.browser_url(html_path)
 	if not _start_browser(url, SourceKind.SLIDE):
 		return
@@ -334,6 +340,7 @@ func _on_view_gui_input(event: InputEvent) -> void:
 
 
 func toggle_play() -> void:
+	AppLog.info("player", "toggle_play", {"slot": str(name), "playing_before": playing, "time": elapsed})
 	if media_path.is_empty() or source_kind != SourceKind.MPV:
 		return  # 静态/网页媒体没有播放/暂停语义
 	if mpv == null:
@@ -347,6 +354,7 @@ func toggle_play() -> void:
 
 
 func stop() -> void:
+	AppLog.info("player", "stop", {"slot": str(name), "resource": AppLog.media_ref(media_path), "time": elapsed})
 	if media_path.is_empty():
 		return
 	if mpv != null and source_kind == SourceKind.MPV:
@@ -373,6 +381,7 @@ func stop() -> void:
 
 
 func seek(pos: float) -> void:
+	AppLog.info("player", "seek", {"slot": str(name), "target": pos, "time_before": elapsed, "playing": playing})
 	if source_kind == SourceKind.SLIDE:
 		goto_page(int(pos))  # 幻灯片帧源：seek 语义 = 跳页
 		return
@@ -501,6 +510,7 @@ func _on_texture_updated(texture: Texture2D) -> void:
 	if source_kind != SourceKind.MPV:
 		return  # 静态帧源显示期间忽略 mpv 残留帧
 	if _awaiting_first_frame:
+		AppLog.info("player", "first_frame", {"slot": str(name), "duration_us": Time.get_ticks_usec() - _load_started_usec})
 		_awaiting_first_frame = false
 		if _pending_seek >= 0.0:
 			seek(_pending_seek)  # 此时 seek 可能因 demuxer 未就绪而丢失，time_changed 里会校验重试
@@ -518,13 +528,16 @@ func _on_time_changed(time_pos: float) -> void:
 	if _pending_seek < 0.0:
 		return
 	if absf(time_pos - _pending_seek) <= 0.15:
+		AppLog.debug("player", "seek_applied", {"slot": str(name), "time": time_pos, "retries": _seek_retries})
 		_pending_seek = -1.0  # seek 已生效
 	elif _seek_retries < 5:
 		_seek_retries += 1
+		AppLog.debug("player", "seek_retry", {"slot": str(name), "target": _pending_seek, "actual": time_pos, "attempt": _seek_retries})
 		var target := _pending_seek
 		mpv.call("set_time_pos", target)
 		elapsed = target
 		if not playing:
 			mpv.call("pause")  # set_time_pos 会强制解除暂停
 	else:
+		AppLog.warn("player", "seek_failed", {"slot": str(name), "target": _pending_seek, "actual": time_pos})
 		_pending_seek = -1.0  # 放弃重试

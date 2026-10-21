@@ -43,6 +43,7 @@ func start(pl: PlaylistObject) -> bool:
 	playlist = pl
 	item_index = -1
 	_list_start_msec = Time.get_ticks_msec()
+	AppLog.info("playlist", "started", {"name": pl.name, "items": pl.items.size()})
 	started.emit(pl)
 	_advance(0)
 	var ok := playlist != null  # 全部条目不可播时 _advance 已自行停止
@@ -56,6 +57,7 @@ func stop(reason := "manual") -> void:
 	playlist = null
 	item_index = -1
 	_item_repeat = 0
+	AppLog.info("playlist", "stopped", {"name": pl.name, "reason": reason})
 	stopped.emit(pl, reason)
 
 
@@ -76,6 +78,7 @@ func _process(_delta: float) -> void:
 		_item_clock_started = true
 		_item_start_msec = now
 		_slot.set_looping(false)
+		AppLog.info("playlist", "item_started", {"index": item_index, "resource": AppLog.media_ref(path)})
 		item_started.emit(playlist, item_index)
 		return
 	# 列表总时长：播满即停（判定先于条目推进，末尾项不拖尾）

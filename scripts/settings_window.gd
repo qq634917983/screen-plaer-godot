@@ -53,6 +53,7 @@ func _input(event: InputEvent) -> void:
 			return
 		if event.keycode != KEY_ESCAPE:
 			_pending_hotkeys[_capturing_action] = event.get_keycode_with_modifiers()
+			AppLog.info("settings", "hotkey_captured", {"action": _capturing_action, "shortcut": OS.get_keycode_string(event.get_keycode_with_modifiers())})
 		_capturing_action = ""
 		_refresh_hotkey_buttons()
 		get_viewport().set_input_as_handled()
@@ -79,8 +80,9 @@ func _build_ui() -> void:
 	root.add_child(tabs)
 	tabs.add_child(_scroll_tab(_build_basic_tab()))
 	tabs.add_child(_scroll_tab(_build_window_tab()))
-	tabs.add_child(_build_layout_tab())
+	tabs.add_child(_scroll_tab(_build_layout_tab()))
 	tabs.add_child(_build_help_tab())
+	tabs.add_child(_scroll_tab(_build_logging_tab()))
 
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_END
@@ -316,6 +318,52 @@ func _add_help_section(parent: VBoxContainer, title_text: String, body_text: Str
 	section.add_child(body)
 
 
+func _build_logging_tab() -> Control:
+	var tab := VBoxContainer.new()
+	tab.name = "日志诊断"
+	tab.add_theme_constant_override("separation", 10)
+	tab.add_child(_make_header("记录详细程度"))
+	var level := OptionButton.new()
+	for label_text: String in ["详细调试 DEBUG", "常规 INFO（推荐）", "警告 WARN", "错误 ERROR"]:
+		level.add_item(label_text)
+	level.selected = clampi(int(ProjectStore.get_setting("logging", "level", 1)), 0, 3)
+	level.item_selected.connect(func(index: int) -> void:
+		ProjectStore.set_setting("logging", "level", index)
+		AppLog.set_level(index))
+	tab.add_child(level)
+	var note := Label.new()
+	note.text = "常规模式记录关键操作与结果；复现问题时可开启详细调试。日志在后台批量写入，按文件大小轮转并清理旧会话。程序异常退出时，最后一小段尚未落盘的日志可能丢失。"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tab.add_child(note)
+	var path_label := Label.new()
+	path_label.text = ProjectSettings.globalize_path(AppLog.LOG_ROOT)
+	path_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	tab.add_child(path_label)
+	var open_button := Button.new()
+	open_button.text = "打开日志文件夹"
+	open_button.pressed.connect(AppLog.open_folder)
+	tab.add_child(open_button)
+	var copy_button := Button.new()
+	copy_button.text = "复制日志路径"
+	copy_button.pressed.connect(func() -> void: DisplayServer.clipboard_set(ProjectSettings.globalize_path(AppLog.LOG_ROOT)))
+	tab.add_child(copy_button)
+	var status := Label.new()
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tab.add_child(status)
+	var timer := Timer.new()
+	timer.wait_time = 1.0
+	timer.autostart = true
+	timer.timeout.connect(func() -> void:
+		if not visible:
+			return
+		var data := AppLog.stats()
+		status.text = "已写入 %d 条；排队 %d 条；已丢弃 %d 条" % [data["written"], data["queued"], data["dropped"]]
+		if not str(data["io_error"]).is_empty():
+			status.text += "\n日志写入失败：" + str(data["io_error"]))
+	tab.add_child(timer)
+	return tab
+
+
 func _make_header(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -367,6 +415,7 @@ func _commit_window_settings() -> void:
 		spin.apply()
 		spin.set_block_signals(false)
 	_save_window_settings()
+	AppLog.info("settings", "window_applied", {"width": _width_spin.value, "height": _height_spin.value, "x": _pos_x_spin.value, "y": _pos_y_spin.value, "zoom": _zoom_spin.value, "pan_x": _pan_x_spin.value, "pan_y": _pan_y_spin.value})
 	settings_changed.emit()
 
 

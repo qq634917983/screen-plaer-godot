@@ -114,6 +114,7 @@ func _kick() -> void:
 	if _state != 0 or _queue.is_empty():
 		return
 	_current = _queue.pop_front()
+	AppLog.info("pptx", "conversion_started", AppLog.media_ref(_current))
 	_out_path = _out_paths.get(_current, global_cache_path(_current))
 	_out_paths.erase(_current)
 	_page_count = 0
@@ -204,6 +205,7 @@ func _on_html_content_requested(html: String, _browser_node: Node) -> void:
 
 
 func _finish(ok: bool) -> void:
+	AppLog.info("pptx", "conversion_finished", {"ok": ok, "resource": AppLog.media_ref(_current), "pages": _page_count, "seconds": _elapsed})
 	var out := _out_path
 	var pages := _page_count if ok else 0
 	if _browser != null:

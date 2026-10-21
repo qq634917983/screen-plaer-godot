@@ -23,6 +23,7 @@ boot_splash/minimum_display_time=500
 
 [autoload]
 
+LogService="*res://scripts/app_log.gd"
 _mcp_game_helper="*res://scripts/dev_game_helper.gd"
 
 [display]
@@ -42,3 +43,9 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/godot.log"
+file_logging/max_log_files=5

@@ -30,7 +30,8 @@
 
 ## 当前进度
 
-- 投屏窗口（2026-10-21）：修复宽高/坐标应用的时序问题；X、Y 各自可用 -1 自动居中并支持负坐标；增加可自定义的 Ctrl+Alt+P 显示/隐藏快捷键及窗口事件路由。
+- 投屏窗口几何修复（2026-10-21）：设置页应用前提交未确认的 SpinBox 文本；X/Y 各自以 -1 自动居中并支持负坐标；窗口几何有限帧校验重试。Ctrl+Alt+P 显示/隐藏投屏，可自定义组合键，窗口事件路由覆盖主窗口、投屏窗口和设置窗口。macOS 回归通过，Windows 真机仍待复测。
+- 日志系统：`LogService` autoload 管理生命周期，`AppLog` 静态门面用于业务事件；`AsyncLogWriter` 使用 Mutex/Semaphore + 专用线程、有界队列、WARN/ERROR 预留、JSONL、轮转和退出排空。默认 INFO，设置页可调整级别和查看状态。性能/持久性边界见 doc/LOGGING.md；并发、轮转和故障测试见 tests/logging_smoke.gd。
 
 - Windows 可安装发行包（2026-09-14）：新增 Inno Setup 安装定义与
   `tools/build_windows_installer.ps1`，完整包含 Release 目录的 MPV、CEF 和 VC++

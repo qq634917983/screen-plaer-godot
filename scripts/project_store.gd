@@ -86,7 +86,9 @@ static func set_setting(section: String, key: String, value: Variant) -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(SETTINGS_PATH)  # 保留其它设置项
 	cfg.set_value(section, key, value)
-	cfg.save(SETTINGS_PATH)
+	var err := cfg.save(SETTINGS_PATH)
+	if err != OK:
+		push_error("设置保存失败（%s/%s）：%s" % [section, key, error_string(err)])
 
 
 ## 一次写入同一分区的多个设置，避免窗口连续保存宽高时重复读写配置文件。
