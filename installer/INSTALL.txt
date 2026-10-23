@@ -1,0 +1,17 @@
+ScreenPlayer Windows 安装说明
+
+1. 将 ZIP 完整解压到可写目录，例如桌面上的新文件夹。
+2. 双击 Install-ScreenPlayer.cmd 开始安装。
+3. 按安装向导完成安装。
+
+请将 CMD、PS1 和 Setup EXE 保留在同一个文件夹。不要直接在 ZIP 内运行。
+默认临时目录出现“错误 5：拒绝访问”时，请使用 CMD 入口；直接运行 Setup EXE
+仍然会使用 Windows 默认临时目录。
+
+安装入口会优先在安装包旁创建 .screenplayer-install-temp，必要时尝试当前用户
+LocalAppData 下的 ScreenPlayer/InstallTemp。每次安装使用独立子目录，
+先实际写入测试，再只对安装进程设置 TEMP/TMP，不修改系统环境变量或目录权限。
+安装日志 install-*.log 保留在该目录；失败时窗口会显示日志位置。
+仅当安装进程退出且本次子目录为空时清理子目录。
+
+若仍失败，请提供入口窗口中的退出码及对应 install-*.log。

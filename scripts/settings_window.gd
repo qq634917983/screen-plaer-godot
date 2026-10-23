@@ -457,6 +457,9 @@ func open() -> void:
 	_load_window_settings()
 	set_layout_status("")
 	_refresh_hotkey_buttons()
+	# show()/grab_focus() 不会恢复 Windows 原生窗口的最小化状态。
+	if mode == Window.MODE_MINIMIZED:
+		mode = Window.MODE_WINDOWED
 	show()
 	grab_focus()
 

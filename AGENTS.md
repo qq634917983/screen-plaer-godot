@@ -30,6 +30,10 @@
 
 ## 当前进度
 
+- GitHub 主仓库迁移（2026-10-23）：确认 qq634917983/screen-plaer-godot 为项目主仓库，当前解压副本已恢复完整 Git 历史并配置 origin/master 跟踪 GitHub，现有工作文件保留；文档统一 GitHub 入口。
+- 常规 Windows 发行（2026-10-22）：用户确认新笔记本正常安装，停止针对开发机 Temp 报错修改标准流程。版本升至 0.1.2，默认生成安装 EXE 与 SHA256；历史临时目录入口仅通过 -IncludeTempWorkaround 可选生成。标准安装包与便携 ZIP 构建成功，MPV/CEF 加载及 ZIP 内 EXE 哈希校验通过；GitHub 上传待用户提供仓库地址与连接，当前解压副本无 .git，旧仓库仅有 Gitee 远程。
+- 安装临时目录入口（2026-10-21）：构建生成含 CMD/PS1/Setup EXE 的安装 ZIP，CMD 入口先探测可写目录，仅对安装子进程设置 TEMP/TMP 并保留日志。默认 TEMP 不可用、路径/参数、退出码、清理与真实 Inno 加载器回归通过；完整产品安装尚需普通桌面用户环境验证，直接运行原始 Setup EXE 仍使用默认 TEMP。
+- 设置窗口恢复（2026-10-21）：点击设置恢复最小化窗口，屏幕外窗口重新居中并限制在主窗口所在屏幕可用区域；新增 settings_window_reopen_smoke，Windows 原生回归覆盖首次打开、最小化恢复、屏幕外恢复与关闭后重开。
 - 投屏窗口几何修复（2026-10-21）：设置页应用前提交未确认的 SpinBox 文本；X/Y 各自以 -1 自动居中并支持负坐标；窗口几何有限帧校验重试。Ctrl+Alt+P 显示/隐藏投屏，可自定义组合键，窗口事件路由覆盖主窗口、投屏窗口和设置窗口。macOS 回归通过，Windows 真机仍待复测。
 - 日志系统：`LogService` autoload 管理生命周期，`AppLog` 静态门面用于业务事件；`AsyncLogWriter` 使用 Mutex/Semaphore + 专用线程、有界队列、WARN/ERROR 预留、JSONL、轮转和退出排空。默认 INFO，设置页可调整级别和查看状态。性能/持久性边界见 doc/LOGGING.md；并发、轮转和故障测试见 tests/logging_smoke.gd。
 

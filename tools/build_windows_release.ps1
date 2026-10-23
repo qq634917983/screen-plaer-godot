@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Godot = $env:GODOT_BIN,
     [string]$TemplateArchive = $env:GODOT_EXPORT_TEMPLATES,
     [string]$OutputDirectory = 'dist/ScreenPlayer-Windows-x86_64',
@@ -93,9 +93,12 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'bin/libGLESv2.dll') `
 
 # 使用 Visual Studio 官方 Redist 目录做 app-local 部署，新机器无需另装 VC++ 运行库。
 if (-not $VCRuntimeDirectory) {
-    $redistCandidates = @(Get-ChildItem 'C:/Program Files/Microsoft Visual Studio' -Directory `
-        -Filter 'Microsoft.VC*.CRT' -Recurse -ErrorAction SilentlyContinue | `
-        Where-Object { $_.FullName -match '\\x64\\Microsoft\.VC[^\\]+\.CRT$' } | `
+    # Visual Studio Build Tools 常安装在 Program Files (x86)，两处都要查找。
+    $redistRoots = @('C:/Program Files/Microsoft Visual Studio',
+        'C:/Program Files (x86)/Microsoft Visual Studio')
+    $redistCandidates = @($redistRoots | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object {
+        Get-ChildItem -LiteralPath $_ -Directory -Filter 'Microsoft.VC*.CRT' -Recurse -ErrorAction SilentlyContinue
+    } | Where-Object { $_.FullName -match '\\x64\\Microsoft\.VC[^\\]+\.CRT$' } |
         Sort-Object FullName -Descending)
     if ($redistCandidates.Count) { $VCRuntimeDirectory = $redistCandidates[0].FullName }
 }

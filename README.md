@@ -1,5 +1,8 @@
 # ScreenPlayer — 跨窗口同步播放器
 
+代码仓库：[GitHub · qq634917983/screen-plaer-godot](https://github.com/qq634917983/screen-plaer-godot)。
+项目使用 `origin/master` 跟踪 GitHub，不再使用 Gitee 作为远程仓库。
+
 基于 **Godot 4.7.2** 的 Windows x86_64 / macOS ARM64 桌面媒体播放器：单进程多窗口，预览端与输出端独立播放，
 独立投屏窗口共享输出端纹理实现零延迟画面同步。支持视频 / 音频 / 图片 / 网页 / PPT 混排播放。
 
@@ -157,6 +160,25 @@ x64 运行库部署到 exe 旁，并将 MPV 的 ANGLE 库隔离为 `mpvEGL.dll`�
 也可以在 Godot 中打开“项目 → 导出 → Windows Desktop”，取消 **Export With
 Debug** 后导出，但编辑器只完成 Godot 导出，不执行本项目的 ANGLE 隔离、VC++
 运行库部署和 DLL 加载检查。因此对外发布必须使用上述 PowerShell 构建脚本生成的 ZIP。
+
+## Windows 安装包
+
+`tools/build_windows_installer.ps1` 默认生成可直接双击安装的
+`dist/ScreenPlayer-Setup-<版本>.exe` 和对应 `.sha256` 校验文件。
+2026-10-22 用户在新的笔记本上确认正常安装，按常规 EXE 方式发布。
+
+曾在开发机遇到的临时目录拒绝访问问题不再作为标准安装流程处理。
+历史兼容入口仅在显式指定 `-IncludeTempWorkaround` 时打入额外的安装 ZIP。
+
+仅更新安装入口时，可复用已编译且不早于其输入的安装包：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\build_windows_installer.ps1 -SkipReleaseBuild -SkipInstallerCompile -IncludeTempWorkaround
+```
+
+`tests/installer_launcher_smoke.ps1` 验证不可用 TEMP、带空格及引号的参数、退出码、
+空目录清理和父进程环境不变；本机有 `.build/InnoSetup/ISCC.exe` 时，还会构建
+不安装文件、不写注册表的真实 Inno 探针，验证加载器运行成功。
 
 ## 目录结构
 

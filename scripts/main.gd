@@ -445,10 +445,22 @@ func _on_menu_window_id_pressed(_id: int) -> void:
 
 
 func _on_menu_settings_pressed() -> void:
-	if not _settings_window.visible:
+	var on_screen := false
+	var window_rect := Rect2i(_settings_window.position, _settings_window.size)
+	for screen_index in DisplayServer.get_screen_count():
+		if DisplayServer.screen_get_usable_rect(screen_index).encloses(window_rect):
+			on_screen = true
+			break
+	if not _settings_window.visible or _settings_window.mode == Window.MODE_MINIMIZED or not on_screen:
 		var main_win := get_window()
-		_settings_window.position = main_win.position + (main_win.size - _settings_window.size) / 2
+		var usable := DisplayServer.screen_get_usable_rect(main_win.current_screen)
+		var centered := main_win.position + (main_win.size - _settings_window.size) / 2
+		_settings_window.position = Vector2i(
+			clampi(centered.x, usable.position.x, maxi(usable.position.x, usable.end.x - _settings_window.size.x)),
+			clampi(centered.y, usable.position.y, maxi(usable.position.y, usable.end.y - _settings_window.size.y)))
 	_settings_window.open()
+	AppLog.info("settings", "window_opened", {"visible": _settings_window.visible,
+		"position": str(_settings_window.position), "mode": _settings_window.mode})
 
 
 func _on_menu_help_id_pressed(_id: int) -> void:

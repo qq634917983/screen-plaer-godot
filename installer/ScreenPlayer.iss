@@ -1,5 +1,5 @@
-#ifndef AppVersion
-  #define AppVersion "0.1.1"
+﻿#ifndef AppVersion
+  #define AppVersion "0.1.2"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\dist\ScreenPlayer-Windows-x86_64"

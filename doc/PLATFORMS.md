@@ -110,9 +110,21 @@ brew install mpv cmake
 需要完整 Xcode；本机已经构建好时只执行最后一行。
 详见 [MACOS.md](MACOS.md)。
 
-## Gitee 中包含什么
+## GitHub 中包含什么
 
 上传的是源代码、构建/启动脚本及已入库的 Windows 小型 DLL。
+主仓库为 https://github.com/qq634917983/screen-plaer-godot，默认分支 `master`。
+从旧 Gitee 克隆目录迁移时，将远程地址和分支上游改为 GitHub：
+
+```powershell
+git remote rename gitee origin
+git remote set-url origin https://github.com/qq634917983/screen-plaer-godot.git
+git fetch origin
+git branch --set-upstream-to=origin/master master
+```
+
+上述 `remote rename` 适用于仅有名为 `gitee` 的远程的旧目录；已存在 `origin` 时直接修改其 URL。
+
 大型 libmpv/CEF 和 Mac 本地构建产物仍按既有规则忽略。
 **仅克隆 Git 仓库并不包含完整运行环境**，必须按上面步骤补齐对应平台依赖。
 
