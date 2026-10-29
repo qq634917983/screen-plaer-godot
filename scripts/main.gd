@@ -2329,7 +2329,10 @@ func _capture_web_snapshot(slot: PlayerSlot, economy: bool) -> PackedByteArray:
 	var max_width := 480 if economy else 960
 	var max_height := 270 if economy else 540
 	if copy.get_width() > max_width or copy.get_height() > max_height:
-		copy.resize(max_width, max_height, Image.INTERPOLATE_BILINEAR)
+		var scale := minf(float(max_width) / copy.get_width(), float(max_height) / copy.get_height())
+		var scaled_width := maxi(1, roundi(copy.get_width() * scale))
+		var scaled_height := maxi(1, roundi(copy.get_height() * scale))
+		copy.resize(scaled_width, scaled_height, Image.INTERPOLATE_BILINEAR)
 	return copy.save_jpg_to_buffer(0.48 if economy else 0.68)
 
 func _web_upload_authorized(request: Dictionary) -> bool:
