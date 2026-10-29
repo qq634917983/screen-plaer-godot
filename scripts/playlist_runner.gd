@@ -50,6 +50,16 @@ func start(pl: PlaylistObject) -> bool:
 	return ok
 
 
+func jump_to(index: int) -> bool:
+	if playlist == null or index < 0 or index >= playlist.items.size():
+		return false
+	item_index = index - 1
+	_item_repeat = PlaylistObject.item_count(playlist.items[item_index]) - 1 if item_index >= 0 else 0
+	_item_clock_started = false
+	_advance(0)
+	return playlist != null
+
+
 func stop(reason := "manual") -> void:
 	if playlist == null:
 		return

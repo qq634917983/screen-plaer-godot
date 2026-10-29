@@ -22,6 +22,7 @@ const WebThumbnailerScene := preload("res://scripts/web_thumbnailer.gd")
 const PptxConverterScene := preload("res://scripts/pptx_converter.gd")
 const WindowResizerScript := preload("res://scripts/window_resizer.gd")
 const TouchPointsLayerScript := preload("res://scripts/touch_points_layer.gd")
+const WebControllerServerScript := preload("res://scripts/web_controller_server.gd")
 const BUILTIN_LAYOUT := {
 	"version": 1,
 	"split_x": 0.72,
@@ -72,6 +73,15 @@ var _restoring_main_window_size := false
 var _audio_item_controls := {}  # MediaObject -> {slider, value, mute}，媒体库音频调音台
 var _startup_initializing := true
 var _loading_tween: Tween
+var _web_server: Node
+var _web_root_dialog: FileDialog
+var _web_pair_code := ""
+var _web_pair_token := ""
+var _web_pair_attempts := 0
+var _web_pair_next_allowed_msec := 0
+var _web_preview_mode := "fast"
+var _web_snapshot_timer := 0.0
+var _web_snapshots := {"preview": PackedByteArray(), "output": PackedByteArray()}
 
 @onready var _menu_file: MenuButton = %MenuFile
 @onready var _menu_window: MenuButton = %MenuWindow
@@ -261,6 +271,7 @@ func _ready() -> void:
 	_set_startup_progress(88.0, "正在恢复媒体项目…")
 	await get_tree().process_frame
 	_load_initial_project()
+	_init_web_controller()
 	_apply_settings()
 	_update_status_bar()
 	_startup_initializing = false
@@ -351,6 +362,8 @@ func _hide_loading_overlay() -> void:
 
 
 func _exit_tree() -> void:
+	if _web_server != null and is_instance_valid(_web_server):
+		_web_server.stop_server()
 	# CEF 子进程需显式 shutdown 才能干净退出
 	if _cef != null and is_instance_valid(_cef):
 		_cef.shutdown()
@@ -360,6 +373,7 @@ func _process(delta: float) -> void:
 	if _startup_initializing:
 		return
 	_update_progress_ui()
+	_update_web_snapshots(delta)
 	_status_timer += delta
 	if _status_timer >= 0.5:
 		_status_timer = 0.0
@@ -409,6 +423,10 @@ func _setup_menus() -> void:
 	file_popup.add_item("保存项目", 12)
 	file_popup.add_item("项目另存为…", 13)
 	file_popup.add_separator()
+	file_popup.add_item("启动 Web 控制器", 14)
+	file_popup.add_item("添加 Web 媒体目录…", 15)
+	file_popup.add_item("管理 Web 媒体目录…", 16)
+	file_popup.add_separator()
 	file_popup.add_item("退出", 1)
 	file_popup.id_pressed.connect(_on_menu_file_id_pressed)
 
@@ -438,6 +456,12 @@ func _on_menu_file_id_pressed(id: int) -> void:
 			_save_current_project_or_ask()
 		13:
 			_project_save_dialog.popup_centered_ratio(0.6)
+		14:
+			_toggle_web_controller()
+		15:
+			_add_web_media_root()
+		16:
+			_manage_web_media_roots()
 
 
 func _on_menu_window_id_pressed(_id: int) -> void:
@@ -1975,3 +1999,412 @@ func _on_media_mixer_mute_pressed(media: MediaObject) -> void:
 		_output.set_muted(_output_muted_state())
 	_refresh_audio_ui()
 	_save_current_project()
+
+
+# ---------- Web controller: LAN pairing, authorized library access and playback ----------
+
+func _init_web_controller() -> void:
+	_web_server = WebControllerServerScript.new()
+	_web_server.name = "WebControllerServer"
+	_web_server.set_upload_authorizer(Callable(self, "_web_upload_authorized"))
+	add_child(_web_server)
+	_web_preview_mode = str(ProjectStore.get_setting("web", "preview_mode", "fast"))
+	if _web_preview_mode not in ["fast", "economy"]:
+		_web_preview_mode = "fast"
+
+func _toggle_web_controller() -> void:
+	if _web_server == null:
+		return
+	if _web_server.is_running():
+		_web_server.stop_server()
+		_web_pair_code = ""
+		_web_pair_token = ""
+		_update_web_menu_label()
+		AppLog.info("web", "controller_disabled")
+		return
+	var err: Error = _web_server.start_server(8765, Callable(self, "_handle_web_request"))
+	if err != OK:
+		AppLog.error("web", "server_start_failed", {"port": 8765, "error": error_string(err)})
+		var failed := AcceptDialog.new()
+		failed.title = "Web 控制器启动失败"
+		failed.dialog_text = "无法监听端口 8765。请检查端口是否被占用后重试。\n\n" + error_string(err)
+		add_child(failed)
+		failed.popup_centered()
+		return
+	_web_pair_code = "%06d" % randi_range(100000, 999999)
+	_web_pair_token = Crypto.new().generate_random_bytes(32).hex_encode()
+	_web_pair_attempts = 0
+	_web_pair_next_allowed_msec = 0
+	_update_web_menu_label()
+	var urls: Array[String] = []
+	for address in IP.get_local_addresses():
+		var ip := str(address)
+		if ip in ["127.0.0.1", "::1"] or ip.begins_with("fe80:") or ip.begins_with("169.254."):
+			continue
+		if ip.contains(":"):
+			urls.append("http://[%s]:8765" % ip)
+		else:
+			urls.append("http://%s:8765" % ip)
+	urls.append("http://127.0.0.1:8765")
+	var dialog := AcceptDialog.new()
+	dialog.title = "Web 控制器已启动"
+	dialog.dialog_text = "在同一局域网的手机或电脑浏览器打开：\n%s\n\n配对码：%s\n\n此码只在本次启动期间有效。上传和媒体控制均只对配对设备开放。" % ["\n".join(PackedStringArray(urls)), _web_pair_code]
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(560, 320))
+	AppLog.info("web", "controller_enabled", {"port": 8765, "url_count": urls.size()})
+
+func _update_web_menu_label() -> void:
+	var popup := _menu_file.get_popup()
+	var index := popup.get_item_index(14)
+	if index >= 0:
+		popup.set_item_text(index, "停止 Web 控制器" if _web_server != null and _web_server.is_running() else "启动 Web 控制器")
+
+func _add_web_media_root() -> void:
+	if _web_root_dialog == null:
+		_web_root_dialog = FileDialog.new()
+		_web_root_dialog.title = "允许 Web 浏览的媒体目录"
+		_web_root_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
+		_web_root_dialog.access = FileDialog.ACCESS_FILESYSTEM
+		_web_root_dialog.dir_selected.connect(_on_web_root_selected)
+		add_child(_web_root_dialog)
+	_web_root_dialog.popup_centered_ratio(0.65)
+
+func _manage_web_media_roots() -> void:
+	var dialog := Window.new()
+	dialog.title = "管理 Web 媒体目录授权"
+	dialog.size = Vector2i(600, 360)
+	dialog.min_size = Vector2i(480, 280)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 10)
+	var margins := MarginContainer.new()
+	margins.add_theme_constant_override("margin_left", 16)
+	margins.add_theme_constant_override("margin_right", 16)
+	margins.add_theme_constant_override("margin_top", 12)
+	margins.add_theme_constant_override("margin_bottom", 12)
+	margins.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dialog.add_child(margins)
+	margins.add_child(layout)
+	var message := Label.new()
+	message.text = "撤销后，Web 页面将无法继续浏览所选目录。"
+	layout.add_child(message)
+	var list := ItemList.new()
+	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.select_mode = ItemList.SELECT_MULTI
+	layout.add_child(list)
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_END
+	var close_button := Button.new()
+	close_button.text = "关闭"
+	var remove_button := Button.new()
+	remove_button.text = "撤销所选授权"
+	actions.add_child(close_button)
+	actions.add_child(remove_button)
+	layout.add_child(actions)
+	var refresh_roots := func() -> void:
+		list.clear()
+		for root in _web_allowed_roots():
+			list.add_item(root)
+	refresh_roots.call()
+	close_button.pressed.connect(dialog.queue_free)
+	dialog.close_requested.connect(dialog.queue_free)
+	remove_button.pressed.connect(func() -> void:
+		var selected := list.get_selected_items()
+		if selected.is_empty():
+			return
+		var remaining := _web_allowed_roots()
+		for index in selected:
+			var root := list.get_item_text(index)
+			remaining.erase(root)
+			AppLog.info("web", "media_root_removed", {"root": AppLog.media_ref(root)})
+		ProjectStore.set_setting("web", "allowed_roots", remaining)
+		refresh_roots.call())
+	add_child(dialog)
+	dialog.popup_centered()
+
+func _on_web_root_selected(path: String) -> void:
+	var roots := _web_allowed_roots()
+	var normalized := path.simplify_path()
+	if DirAccess.is_link(normalized):
+		AppLog.warn("web", "media_root_symlink_rejected", {"root": AppLog.media_ref(normalized)})
+		return
+	if not roots.has(normalized):
+		roots.append(normalized)
+		ProjectStore.set_setting("web", "allowed_roots", roots)
+		AppLog.info("web", "media_root_added", {"root": AppLog.media_ref(normalized), "root_count": roots.size()})
+
+func _web_allowed_roots() -> Array[String]:
+	var roots: Array[String] = []
+	var stored: Variant = ProjectStore.get_setting("web", "allowed_roots", [])
+	if stored is Array:
+		for item in stored:
+			var path := str(item).simplify_path()
+			if not path.is_empty() and DirAccess.dir_exists_absolute(path) and not DirAccess.is_link(path) and not roots.has(path):
+				roots.append(path)
+	return roots
+
+func _handle_web_request(request: Dictionary) -> Dictionary:
+	var method := str(request.get("method", "GET"))
+	var path := str(request.get("path", "/"))
+	var query: Dictionary = request.get("query", {})
+	var headers: Dictionary = request.get("headers", {})
+	if path == "/" or path in ["/web_controller/styles.css", "/web_controller/app.js"]:
+		if method != "GET":
+			return _web_response(405, {"error": "method not allowed"})
+		var file_path := "res://web_controller/index.html" if path == "/" else "res://web_controller/styles.css" if path.ends_with(".css") else "res://web_controller/app.js"
+		if not FileAccess.file_exists(file_path):
+			return _web_response(404, {"error": "not found"})
+		var static_file := FileAccess.open(file_path, FileAccess.READ)
+		var content_type := "text/html; charset=utf-8" if path == "/" else "text/css; charset=utf-8" if path.ends_with(".css") else "text/javascript; charset=utf-8"
+		return {"status": 200, "headers": {"Content-Type": content_type}, "body": static_file.get_buffer(static_file.get_length())}
+	if path == "/api/pair":
+		if method != "POST":
+			return _web_response(405, {"error": "method not allowed"})
+		if Time.get_ticks_msec() < _web_pair_next_allowed_msec:
+			return _web_response(401, {"error": "尝试次数过多，请稍后重试"})
+		var pair_body := _web_json_body(request)
+		if str(pair_body.get("code", "")) != _web_pair_code or _web_pair_code.is_empty():
+			_web_pair_attempts += 1
+			if _web_pair_attempts >= 6:
+				_web_pair_attempts = 0
+				_web_pair_next_allowed_msec = Time.get_ticks_msec() + 30000
+			AppLog.warn("web", "pair_rejected", {"cooldown": _web_pair_next_allowed_msec > Time.get_ticks_msec()})
+			return _web_response(401, {"error": "配对码不正确或已过期"})
+		_web_pair_attempts = 0
+		AppLog.info("web", "device_paired")
+		return _web_response(200, {"token": _web_pair_token})
+	if not _web_server.is_running() or str(headers.get("authorization", "")) != "Bearer " + _web_pair_token or _web_pair_token.is_empty():
+		return _web_response(401, {"error": "需要先配对"})
+	if path == "/api/state" and method == "GET":
+		return _web_response(200, _web_state())
+	if path == "/api/preview.jpg" and method == "GET":
+		var slot := str(query.get("slot", "output"))
+		if slot not in ["output", "preview"]:
+			return _web_response(400, {"error": "unknown slot"})
+		return {"status": 200, "headers": {"Content-Type": "image/jpeg", "Cache-Control": "no-store"}, "body": _web_snapshots[slot]}
+	if path.begins_with("/api/media/") and path.ends_with("/thumbnail") and method == "GET":
+		var media_id := path.trim_prefix("/api/media/").trim_suffix("/thumbnail").trim_suffix("/")
+		var media := _find_web_media(media_id)
+		if media == null:
+			return _web_response(404, {"error": "media not found"})
+		var cover := ProjectStore.find_cover(_project_cache_dir, media.path)
+		if cover.is_empty():
+			return _web_response(404, {"error": "thumbnail unavailable"})
+		return {"status": 200, "headers": {"Content-Type": "image/png", "Cache-Control": "no-store"}, "body": FileAccess.get_file_as_bytes(cover)}
+	if path == "/api/preview-mode" and method == "POST":
+		var mode_body := _web_json_body(request)
+		var mode := str(mode_body.get("mode", ""))
+		if mode not in ["fast", "economy"]:
+			return _web_response(400, {"error": "unknown preview mode"})
+		_web_preview_mode = mode
+		ProjectStore.set_setting("web", "preview_mode", mode)
+		AppLog.info("web", "preview_mode_changed", {"mode": mode})
+		return _web_response(200, {"mode": mode})
+	if path == "/api/playback/preview" and method == "POST":
+		var media := _find_web_media(str(_web_json_body(request).get("id", "")))
+		if media == null:
+			return _web_response(404, {"error": "媒体不存在"})
+		_load_preview(media)
+		return _web_response(200, {"ok": true})
+	if path == "/api/playback/output" and method == "POST":
+		var media := _find_web_media(str(_web_json_body(request).get("id", "")))
+		if media == null:
+			return _web_response(404, {"error": "媒体不存在"})
+		_runner.stop()
+		_load_output(media)
+		return _web_response(200, {"ok": true})
+	if path == "/api/playback/toggle" and method == "POST":
+		if not _output.media_path.is_empty():
+			if _output.source_kind == PlayerSlot.SourceKind.WEB:
+				_output.step_web(-1)
+			else:
+				_output.toggle_play()
+		return _web_response(200, {"ok": true})
+	if path == "/api/playback/stop" and method == "POST":
+		_runner.stop()
+		_output.stop()
+		return _web_response(200, {"ok": true})
+	if path == "/api/playback/prev" and method == "POST":
+		_web_step_output(-1)
+		return _web_response(200, {"ok": true})
+	if path == "/api/playback/next" and method == "POST":
+		_web_step_output(1)
+		return _web_response(200, {"ok": true})
+	if path == "/api/media/upload" and method == "POST":
+		return _handle_web_upload(request, headers)
+	if path == "/api/server-files" and method == "GET":
+		return _web_response(200, _web_server_files(str(query.get("path", ""))))
+	if path == "/api/server-files/import" and method == "POST":
+		var source_path := str(_web_json_body(request).get("path", "")).simplify_path()
+		if not _web_path_is_allowed(source_path) or DirAccess.is_link(source_path) or not FileAccess.file_exists(source_path):
+			return _web_response(403, {"error": "文件不在已授权目录中"})
+		if MediaObject.detect_type(source_path) == MediaObject.Type.OTHER:
+			return _web_response(400, {"error": "不支持的媒体格式"})
+		_import_media_paths(PackedStringArray([source_path]))
+		AppLog.info("web", "server_media_imported", {"resource": AppLog.media_ref(source_path)})
+		return _web_response(200, {"ok": true})
+	return _web_response(404, {"error": "not found"})
+
+func _web_step_output(direction: int) -> void:
+	if _runner.is_active():
+		_runner.jump_to(posmod(_runner.item_index + direction, _runner.playlist.items.size()))
+		return
+	if _media_items.is_empty():
+		return
+	var current := _find_media(_output.media_path)
+	var index := _media_items.find(current)
+	if index < 0:
+		index = -1 if direction > 0 else 0
+	var target_index := posmod(index + direction, _media_items.size())
+	_load_output(_media_items[target_index])
+
+func _web_response(status: int, payload: Dictionary) -> Dictionary:
+	return {"status": status, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body": JSON.stringify(payload)}
+
+func _web_json_body(request: Dictionary) -> Dictionary:
+	var bytes: PackedByteArray = request.get("body", PackedByteArray())
+	if bytes.is_empty():
+		return {}
+	var value: Variant = JSON.parse_string(bytes.get_string_from_utf8())
+	return value if value is Dictionary else {}
+
+func _web_media_type(media: MediaObject) -> String:
+	match media.type:
+		MediaObject.Type.VIDEO: return "video"
+		MediaObject.Type.AUDIO: return "audio"
+		MediaObject.Type.IMAGE: return "image"
+		MediaObject.Type.HTML: return "html"
+		MediaObject.Type.PPT: return "ppt"
+		_: return "other"
+
+func _web_state() -> Dictionary:
+	var items: Array[Dictionary] = []
+	for media in _media_items:
+		var id := media.path.md5_text()
+		var cover := ProjectStore.find_cover(_project_cache_dir, media.path)
+		items.append({"id": id, "name": media.display_name(), "type": _web_media_type(media),
+			"type_label": MediaObject.type_label(media.type), "thumbnail": "/api/media/%s/thumbnail" % id if not cover.is_empty() else "",
+			"missing": not media.exists(), "size_label": "可用" if media.exists() else "文件缺失"})
+	var out_media := _find_media(_output.media_path) if not _output.media_path.is_empty() else null
+	var pre_media := _find_media(_preview.media_path) if not _preview.media_path.is_empty() else null
+	return {"project": {"name": _project_name}, "media": items,
+		"output": _web_player_state(_output, out_media), "preview": _web_player_state(_preview, pre_media),
+		"cast_visible": _cast_window.visible, "preview_mode": _web_preview_mode,
+		"status_text": "%d 个媒体 · Web 控制器已连接" % _media_items.size()}
+
+func _web_player_state(slot: PlayerSlot, media: MediaObject) -> Dictionary:
+	return {"name": media.display_name() if media != null else "", "type": _web_media_type(media) if media != null else "",
+		"type_label": MediaObject.type_label(media.type) if media != null else "",
+		"playing": slot.playing, "elapsed": slot.elapsed, "duration": slot.duration}
+
+func _find_web_media(id: String) -> MediaObject:
+	if id.is_empty():
+		return null
+	for media in _media_items:
+		if media.path.md5_text() == id:
+			return media
+	return null
+
+func _update_web_snapshots(delta: float) -> void:
+	if _web_server == null or not _web_server.is_running():
+		return
+	_web_snapshot_timer += delta
+	var interval := 1.5 if _web_preview_mode == "economy" else 0.35
+	if _web_snapshot_timer < interval:
+		return
+	_web_snapshot_timer = 0.0
+	var capture_started := Time.get_ticks_usec()
+	_web_snapshots["output"] = _capture_web_snapshot(_output, _web_preview_mode == "economy")
+	_web_snapshots["preview"] = _capture_web_snapshot(_preview, _web_preview_mode == "economy")
+	var capture_usec := Time.get_ticks_usec() - capture_started
+	if _web_preview_mode == "fast" and capture_usec > 180000:
+		_web_preview_mode = "economy"
+		ProjectStore.set_setting("web", "preview_mode", _web_preview_mode)
+		AppLog.warn("web", "preview_auto_downgraded", {"capture_usec": capture_usec, "mode": _web_preview_mode})
+
+func _capture_web_snapshot(slot: PlayerSlot, economy: bool) -> PackedByteArray:
+	var image := slot.get_frame_image()
+	if image == null or image.is_empty():
+		return PackedByteArray()
+	var copy := image.duplicate()
+	var max_width := 480 if economy else 960
+	var max_height := 270 if economy else 540
+	if copy.get_width() > max_width or copy.get_height() > max_height:
+		copy.resize(max_width, max_height, Image.INTERPOLATE_BILINEAR)
+	return copy.save_jpg_to_buffer(0.48 if economy else 0.68)
+
+func _web_upload_authorized(request: Dictionary) -> bool:
+	var request_headers: Dictionary = request.get("headers", {})
+	return _web_server != null and _web_server.is_running() and not _web_pair_token.is_empty() and str(request_headers.get("authorization", "")) == "Bearer " + _web_pair_token
+
+func _handle_web_upload(request: Dictionary, headers: Dictionary) -> Dictionary:
+	var temp_path := str(request.get("upload_path", ""))
+	if temp_path.is_empty() or not FileAccess.file_exists(temp_path):
+		return _web_response(400, {"error": "上传文件为空"})
+	var filename := str(headers.get("x-filename", "media.bin")).uri_decode().replace("\\", "/").get_file().strip_edges()
+	for invalid_char in ["<", ">", "\"", ":", "/", "\\", "|", "?", "*"]:
+		filename = filename.replace(invalid_char, "_")
+	if filename.length() > 180:
+		var extension := filename.get_extension()
+		filename = filename.substr(0, 160) + ("." + extension if not extension.is_empty() else "")
+	if filename.is_empty() or MediaObject.detect_type(filename) == MediaObject.Type.OTHER:
+		return _web_response(400, {"error": "文件名无效或媒体格式不支持"})
+	var dest_name := "%s_%s" % [str(Time.get_ticks_usec()), filename]
+	var dest_path := "user://web_uploads".path_join(dest_name)
+	var move_error := DirAccess.rename_absolute(ProjectSettings.globalize_path(temp_path), ProjectSettings.globalize_path(dest_path))
+	if move_error != OK:
+		return _web_response(500, {"error": "无法保存上传文件"})
+	_import_media_paths(PackedStringArray([dest_path]))
+	var uploaded_file := FileAccess.open(dest_path, FileAccess.READ)
+	var uploaded_bytes := uploaded_file.get_length() if uploaded_file != null else 0
+	if uploaded_file != null:
+		uploaded_file.close()
+	AppLog.info("web", "media_uploaded", {"filename": filename, "bytes": uploaded_bytes})
+	return _web_response(201, {"ok": true, "name": filename})
+
+func _web_server_files(path: String) -> Dictionary:
+	var roots := _web_allowed_roots()
+	if path.is_empty():
+		var root_rows: Array[Dictionary] = []
+		for root in roots:
+			root_rows.append({"name": root.get_file() if not root.get_file().is_empty() else root, "path": root})
+		return {"path": "", "parent": "", "roots": roots, "directories": root_rows, "files": []}
+	var current := path.simplify_path()
+	if not _web_path_is_allowed(current) or not DirAccess.dir_exists_absolute(current):
+		return {"path": "", "parent": "", "roots": roots, "directories": [], "files": []}
+	var directories: Array[Dictionary] = []
+	var files: Array[Dictionary] = []
+	var dir := DirAccess.open(current)
+	if dir != null:
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while not entry.is_empty():
+			if not entry.begins_with("."):
+				var child := current.path_join(entry).simplify_path()
+				if DirAccess.is_link(child):
+					pass
+				elif dir.current_is_dir():
+					if _web_path_is_allowed(child):
+						directories.append({"name": entry, "path": child})
+				elif MediaObject.detect_type(entry) != MediaObject.Type.OTHER:
+					files.append({"name": entry, "path": child, "type_label": MediaObject.type_label(MediaObject.detect_type(entry))})
+			entry = dir.get_next()
+		dir.list_dir_end()
+	directories.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name).naturalnocasecmp_to(str(b.name)) < 0)
+	files.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name).naturalnocasecmp_to(str(b.name)) < 0)
+	var parent := current.get_base_dir()
+	if parent == current or not _web_path_is_allowed(parent):
+		parent = ""
+	return {"path": current, "parent": parent, "roots": roots, "directories": directories, "files": files}
+
+func _web_path_is_allowed(path: String) -> bool:
+	var candidate := path.simplify_path()
+	for root in _web_allowed_roots():
+		var normalized_root := root.simplify_path().trim_suffix("/")
+		var check_candidate := candidate
+		var check_root := normalized_root
+		if OS.get_name() == "Windows":
+			check_candidate = check_candidate.to_lower()
+			check_root = check_root.to_lower()
+		if check_candidate == check_root or check_candidate.begins_with(check_root + "/"):
+			return true
+	return false

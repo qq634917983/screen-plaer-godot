@@ -441,9 +441,11 @@ func step_web(d: int) -> void:
 ## 抓取当前帧画面（WEB/SLIDE 浏览器纹理），用于 PPT 封面等；不可用时返回 null
 func get_frame_image() -> Image:
 	if _browser != null and is_instance_valid(_browser):
-		var tex: Texture2D = _browser.get_texture()
-		if tex != null:
-			return tex.get_image()
+		var browser_texture: Texture2D = _browser.get_texture()
+		if browser_texture != null:
+			return browser_texture.get_image()
+	if _video_view != null and _video_view.texture != null:
+		return _video_view.texture.get_image()
 	return null
 
 

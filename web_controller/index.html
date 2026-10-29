@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>ScreenPlayer Web Controller</title>
+  <link rel="stylesheet" href="/web_controller/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#library"><span class="brand-mark">S</span><span>ScreenPlayer</span></a>
+      <div class="project-picker"><span class="muted">当前项目</span><strong id="project-name">默认项目</strong><span class="chevron">⌄</span></div>
+      <div class="connection"><span class="status-dot"></span><span id="connection-label">正在连接播放器…</span></div>
+      <button class="icon-button" aria-label="设置" title="设置">⚙</button>
+      <div class="avatar">SP</div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="section-label">工作区</div>
+        <button class="nav-item active" data-view="library"><span>▦</span> 媒体库 <kbd>⌘1</kbd></button>
+        <button class="nav-item" data-view="playlist"><span>☷</span> 播放列表 <kbd>⌘2</kbd></button>
+        <div class="section-label library-label">媒体类型 <button class="tiny-action" aria-label="添加分类">＋</button></div>
+        <button class="nav-item filter active" data-filter="all"><span class="type-icon all">▦</span> 全部媒体 <span class="count" id="count-all">—</span></button>
+        <button class="nav-item filter" data-filter="video"><span class="type-icon video">▶</span> 视频 <span class="count" id="count-video">—</span></button>
+        <button class="nav-item filter" data-filter="image"><span class="type-icon image">▧</span> 图片 <span class="count" id="count-image">—</span></button>
+        <button class="nav-item filter" data-filter="audio"><span class="type-icon audio">♫</span> 音频 <span class="count" id="count-audio">—</span></button>
+        <button class="nav-item filter" data-filter="web"><span class="type-icon web">◎</span> 网页与演示 <span class="count" id="count-web">—</span></button>
+        <div class="sidebar-footer"><span class="storage-icon">◫</span><div><strong>播放器本机</strong><small>媒体仅存储在本机</small></div><span class="green-dot"></span></div>
+      </aside>
+
+      <section class="library-pane" id="library-view">
+        <div class="page-heading"><div><div class="eyebrow">LIBRARY</div><h1>媒体库</h1><p>管理内容，并发送到预览或投屏输出。</p></div><div class="heading-actions"><button class="button secondary" id="browse-server">▣ <span>选择服务器文件</span></button><button class="button primary" id="upload-button">＋ <span>上传媒体</span></button><input id="upload-input" type="file" multiple hidden accept="video/*,audio/*,image/*,.ppt,.pptx,.html,.htm"></div></div>
+        <div class="toolbar"><label class="search"><span>⌕</span><input id="search-input" placeholder="搜索媒体名称…"><kbd>⌘ K</kbd></label><div class="toolbar-right"><span class="muted" id="result-count">载入媒体中</span><button class="button view-toggle selected" aria-label="网格视图">▦</button><button class="button view-toggle" aria-label="列表视图">☷</button></div></div>
+        <div class="media-grid" id="media-grid" aria-live="polite"></div>
+        <div class="empty-state" id="empty-state" hidden><div class="empty-icon">▧</div><h2>还没有媒体</h2><p>上传文件，或从播放器电脑选择已有媒体。</p><button class="button primary" id="empty-upload">＋ 上传第一个媒体</button></div>
+      </section>
+
+      <aside class="preview-pane">
+        <div class="preview-header"><div><div class="eyebrow">NOW PLAYING</div><h2>输出画面预览</h2></div><span class="live-badge"><i></i><span id="output-connection">输出在线</span></span></div>
+        <div class="preview-screen" id="preview-screen"><img id="preview-image" alt="播放器输出画面截图"><div class="preview-placeholder" id="preview-placeholder"><div class="screen-glyph">▷</div><strong>等待播放</strong><span>选择媒体后可预览或输出</span></div><span class="preview-time" id="preview-time">等待画面</span></div>
+        <div class="preview-mode-row"><span class="muted">画面预览</span><div class="segmented" role="group" aria-label="预览更新模式"><button class="mode-option selected" data-mode="fast">流畅</button><button class="mode-option" data-mode="economy">省性能</button></div></div>
+        <div class="preview-caption"><div class="caption-thumb">♫</div><div class="caption-copy"><strong id="now-title">暂无播放内容</strong><span id="now-subtitle">选中媒体以开始</span></div><button class="icon-button subtle" title="更多">···</button></div>
+        <div class="transport"><button class="transport-button" id="previous-button" title="上一条">|◀</button><button class="transport-button play-button" id="play-button" title="播放或暂停">▶</button><button class="transport-button" id="stop-button" title="停止">■</button><button class="transport-button" id="next-button" title="下一条">▶|</button><button class="transport-button output-button" id="output-button" title="输出到投屏">⇧<span>输出</span></button></div>
+        <div class="timeline"><span id="elapsed">00:00</span><div class="timeline-track"><i id="timeline-progress"></i></div><span id="duration">--:--</span></div>
+        <div class="preview-note"><span>ⓘ</span><span id="preview-status">预览为定时截图，不传输声音</span></div>
+        <div class="output-card"><div class="output-icon">▣</div><div><span>投屏窗口</span><strong id="cast-status">状态读取中</strong></div><span class="green-dot"></span></div>
+      </aside>
+    </div>
+    <footer class="statusbar"><span><i class="green-dot"></i> 播放器已连接</span><span id="status-message">就绪</span><span>局域网访问需要配对</span></footer>
+  </main>
+  <dialog id="server-dialog" class="server-dialog"><form method="dialog"><div class="dialog-heading"><div><div class="eyebrow">SERVER FILES</div><h2>选择播放器电脑上的文件</h2></div><button class="icon-button" aria-label="关闭">×</button></div><div class="breadcrumb" id="server-path">/</div><div class="server-list" id="server-list"></div><div class="dialog-footer"><span id="server-selection">选择媒体文件加入当前项目</span><button class="button primary" id="import-server-file" value="import" disabled>加入媒体库</button></div></form></dialog>
+  <script src="/web_controller/app.js" defer></script>
+</body>
+</html>

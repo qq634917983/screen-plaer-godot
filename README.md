@@ -180,6 +180,10 @@ powershell -ExecutionPolicy Bypass -File .\tools\build_windows_installer.ps1 -Sk
 空目录清理和父进程环境不变；本机有 `.build/InnoSetup/ISCC.exe` 时，还会构建
 不安装文件、不写注册表的真实 Inno 探针，验证加载器运行成功。
 
+## Web 局域网控制器
+
+从「文件 → 启动 Web 控制器」开启配对服务，并在桌面端授权可浏览的媒体目录。手机/电脑浏览器可上传媒体、浏览已授权目录、预览截图及控制输出。预览提供流畅/省性能两档截图；服务默认关闭。完整操作和安全说明见 [Web 控制器文档](doc/WEB_CONTROLLER.md)。
+
 ## 目录结构
 
 ```
@@ -192,6 +196,8 @@ scripts/media_item_card.gd    媒体库卡片
 scripts/playlist_*.gd         播放列表（数据 / 执行器 / 卡片 / 设置窗口）
 scripts/pptx_converter.gd     PPTX→HTML 后台转换器
 scripts/project_store.gd      项目持久化（*.splproj + settings.cfg）
+scripts/web_controller_server.gd 局域网 Web 服务与流式上传
+web_controller/                内置 Web 控制器页面（CSS/JS）
 pptx_renderer/                PPT 播放器壳 + vendor 依赖
 doc/                          设计稿、任务清单（TODO.md）、测试文件
 ```
